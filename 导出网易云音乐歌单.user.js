@@ -46,8 +46,8 @@
     }
 
     function insertButton() {
-        console.log("insertting...");
-        console.log($("#g_iframe").contents().find("#playlist-track-count"));
+        // console.log("insertting...");
+        // console.log($("#g_iframe").contents().find("#playlist-track-count"));
         $("#g_iframe").contents().find("#playlist-track-count").parent().after("<a id='c4r-exportPlaylist' class='u-btni u-btni-dl' style='margin-left:20px'><i>导出歌单</i></a>");
         $("#g_iframe").contents().find("#flag_trackCount").parent().after("<a id='c4r-exportPlaylist' class='u-btni u-btni-dl' style='margin-left:20px'><i>导出歌单</i></a>");
         $("#g_iframe").contents().find("#c4r-exportPlaylist").on("click", savePlaylist);
