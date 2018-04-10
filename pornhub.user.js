@@ -99,10 +99,16 @@
 
         let array_filter_y = filter_av(array_y);
 
-        console.log("====");
-        console.log(array_filter_y);
-        console.log("====");
-        console.log(find_peak(array_filter_y));
+        // console.log("====");
+        // console.log(array_filter_y);
+        // console.log("====");
+        let array_peek = find_peak(array_filter_y);
+
+
+        let nodevideo = $("video").get(0);
+        console.log("时长 : " + nodevideo.duration);
+        // console.log(nodevideo.currentTime);
+
 
     });
 
