@@ -102,11 +102,15 @@
         // console.log("====");
         // console.log(array_filter_y);
         // console.log("====");
-        let array_peek = find_peak(array_filter_y);
+
+        // <============得到峰值对应的index============>
+        let array_peek_index = find_peak(array_filter_y);
 
 
         let nodevideo = $("video").get(0);
         console.log("时长 : " + nodevideo.duration);
+
+        // 当前播放进度
         // console.log(nodevideo.currentTime);
 
 
