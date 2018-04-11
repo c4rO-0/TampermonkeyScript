@@ -32,7 +32,7 @@
         return merge(mergeSort(left), mergeSort(right));//子数组继续递归拆分,然后再合并
     }
     function filter_av(array_y){
-        let av_n = 11;
+        let av_n = 5;
         let array_r = new Array(array_y.length);
         for(let i=0;i<array_y.length;i++){
             if(i< (av_n-1)/2){
