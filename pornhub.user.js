@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Free your hand -Pornhub
+// @name         Free your hand - Pornhub
 // @namespace    
 // @version      0.1.0
 // @description  easily fast forward video to the high time.
@@ -56,7 +56,7 @@
         mergeSort(array_sort);
         let average =  array_sort[Math.floor(array_sort.length*0.25)];
         // average = 0;
-        // console.log("av : " + average);
+        console.log("av : " + average);
 
         let peek = new Array();
         if(array_y[1]< array_y[0] && array_y[0] > average){
@@ -65,7 +65,7 @@
 
         for(let i=1;i<array_y.length-1;i++){
             if(array_y[i-1]< array_y[i] &&  array_y[i+1]<= array_y[i] && array_y[i] > average){
-                // console.log(i,array_y[i-1], array_y[i], array_y[i+1])
+                console.log(i,array_y[i-1], array_y[i], array_y[i+1])
                 peek.push(i);
             }
         }
@@ -105,7 +105,7 @@
         // if(array_point.length %2 == 0){
         //     let len_array = array_point.length+1;
         // }else{
-        //     let len_array = array_point.length;        
+        //     let len_array = array_point.length;
         // }
 
 
@@ -115,7 +115,7 @@
         }
         let array_eq_point = new Array(len_array);
         let dis=len_video/(len_array-1);
-        
+
         let array_y = new Array();
         let array_x = new Array();
         for(i=0;i<len_array;i++){
@@ -135,15 +135,6 @@
 
         let array_filter_y = filter_av(array_y);
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-        console.log("====");
-        console.log(array_filter_y);
-        console.log("====");
-        console.log(find_peak(array_filter_y));
-=======
->>>>>>> Stashed changes
         // console.log("====");
         // console.log(array_filter_y);
         // console.log("====");
@@ -151,50 +142,32 @@
         // <============得到峰值对应的index============>
         let array_peek_index = find_peak(array_filter_y);
 
-<<<<<<< Updated upstream
-
-        let nodevideo = $("video").get(0);
-        console.log("时长 : " + nodevideo.duration);
-
-        // 当前播放进度
-        // console.log(nodevideo.currentTime);
-
-=======
         console.log("时长 : " + nodevideo.duration);
 
         // 得到对应的时间
         for(let i=0;i<array_peek_index.length;i++){
             array_peek_index[i] = array_peek_index[i] * dis/len_video * nodevideo.duration;
         }
-        
+
 
 
         // console.log(array_peek_index);
         // 当前播放进度
         // console.log(nodevideo.currentTime);
 
->>>>>>> Stashed changes
 
         $(document).keydown(function(event){
 
             if(event.keyCode == 190){ // 前进
 
-                if(array_peek_index[array_peek_index.length-1]>nodevideo.currentTime){
-                    // 下一个视频
-                    // 目前不会
+                for(let i=0;i<array_peek_index.length;i++){
 
-                }else{
-
-
-                    for(let i=0;i<array_peek_index.length;i++){
-
-                        if(array_peek_index[i]>nodevideo.currentTime){
-                            nodevideo.currentTime = array_peek_index[i];
-                            break;
-                        }
+                    if(array_peek_index[i]>nodevideo.currentTime){
+                        nodevideo.currentTime = array_peek_index[i];
+                        break;
                     }
                 }
-               
+
             }else if (event.keyCode == 188){ // 后退
 
                 for(let i=array_peek_index.length-1;i>0;i--){
@@ -233,8 +206,6 @@
 
             }
         });
-
->>>>>>> Stashed changes
 
     });
 
