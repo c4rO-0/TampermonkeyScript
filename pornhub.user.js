@@ -2,6 +2,7 @@
 // @name         Free your hand - Pornhub
 // @namespace    
 // @version      0.1.0
+// @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r
 // @match        https://www.pornhub.com/view_video.php?viewkey=*
