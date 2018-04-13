@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      0.1.0
+// @version      0.2.0
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r
@@ -66,8 +66,11 @@
 
         for(let i=1;i<array_y.length-1;i++){
             if(array_y[i-1]< array_y[i] &&  array_y[i+1]<= array_y[i] && array_y[i] > average){
-                console.log(i,array_y[i-1], array_y[i], array_y[i+1])
-                peek.push(i);
+                // console.log(i,array_y[i-1], array_y[i], array_y[i+1])
+                if(i - peek[peek.length-1] > 5){
+                    peek.push(i);
+                }
+                
             }
         }
 
@@ -75,6 +78,27 @@
             peek.push(array_y.length-1);
         }
         return peek;
+    }
+
+    function mark(array_y, duration){
+
+        let objBar = $("div.mhp1138_progressOverflow");
+        // console.log(objBar);
+        let markP1 = "<div data-tag=\"HighTime\" class=\"mhp1138_actionTag\" style=\"left: ";
+        let markP3 = "%; width: 0.178995%;\"></div>";
+
+        for(let i=0;i<array_y.length;i++){
+            // console.log(i);
+            $(objBar).append(markP1 + (array_y[i]/duration*100.).toString() + markP3);
+        }
+
+        $(objBar).find("div.mhp1138_actionTag").each((index, element) => {
+            if($(element).attr("data-tag") == "HighTime"){
+
+               $( element).css("background-color","red");
+
+            }
+        });
     }
 
     $( document ).ready(function() {
@@ -150,7 +174,10 @@
             array_peek_index[i] = array_peek_index[i] * dis/len_video * nodevideo.duration;
         }
 
+        // console.log("peak : " + array_peek_index.length);
 
+        // 做标记
+        mark(array_peek_index,nodevideo.duration);
 
         // console.log(array_peek_index);
         // 当前播放进度
