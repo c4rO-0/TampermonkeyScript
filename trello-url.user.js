@@ -7,8 +7,10 @@
 // @author       c4r
 // @match        https://*trello.com/b/*
 // @match        https://*trello.com/c/*
+// @match        https://*trello.com/*
 // @include      https://*trello.com/b/*
 // @include      https://*trello.com/c/*
+// @include      https://*trello.com*
 // @require      https://code.jquery.com/jquery-latest.js
 // @grant        none
 // ==/UserScript==
