@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         open link in new window - Trello
 // @namespace    
-// @version      0.2.0
+// @version      0.2.1
 // @license      MPL-2.0
 // @description  Open the link in card description from new window. 
 // @author       c4r
