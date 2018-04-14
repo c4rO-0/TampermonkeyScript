@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      0.2.0
+// @version      0.2.1
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r
@@ -33,7 +33,13 @@
         return merge(mergeSort(left), mergeSort(right));//子数组继续递归拆分,然后再合并
     }
     function filter_av(array_y){
-        let av_n = 5;
+        let av_n = Math.floor(array_y.length/100.);
+        if(av_n < 5) {
+            av_n = 5;
+        }
+        if(av_n%2 == 0){
+            av_n = av_n +1;
+        }
         let array_r = new Array(array_y.length);
         for(let i=0;i<array_y.length;i++){
             if(i< (av_n-1)/2){
@@ -55,7 +61,7 @@
 
         let array_sort = array_y;
         mergeSort(array_sort);
-        let average =  array_sort[Math.floor(array_sort.length*0.25)];
+        let average =  array_sort[Math.floor(array_sort.length*0.7)];
         // average = 0;
         console.log("av : " + average);
 
