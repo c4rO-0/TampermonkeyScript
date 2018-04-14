@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      0.2.1
+// @version      0.2.2
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r
@@ -72,8 +72,8 @@
 
         for(let i=1;i<array_y.length-1;i++){
             if(array_y[i-1]< array_y[i] &&  array_y[i+1]<= array_y[i] && array_y[i] > average){
-                // console.log(i,array_y[i-1], array_y[i], array_y[i+1])
-                if(i - peek[peek.length-1] > 5){
+                // console.log(peek.length, i,peek[peek.length-1], array_y[i]);
+                if(peek.length == 0 || i - peek[peek.length-1] > 5){
                     peek.push(i);
                 }
                 
