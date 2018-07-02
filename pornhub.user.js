@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      0.3.1
+// @version      0.3.2
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r
@@ -107,13 +107,7 @@
         });
     }
 
-    $( document ).ready(function() {
-        console.log( "ready!" );
-
-
-
-
-
+    function actionVideo(){
         let str_point = $("polygon").attr("points");
         let str_array_point=str_point.split(" ");
 
@@ -131,6 +125,120 @@
             // console.log(x,y);
             array_point.push([x,y]);
         }
+        
+        
+        let nodevideo = $("video").get(0);
+        let len_array = Math.floor(nodevideo.duration);
+        
+        console.log("debug : len_array : ", len_array)
+        if(len_array % 2 == 0){
+            len_array = len_array +1;
+        }
+        let array_eq_point = new Array(len_array);
+        let dis=len_video/(len_array-1);
+
+        let array_y = new Array();
+        let array_x = new Array();
+        for(i=0;i<len_array;i++){
+            let x = dis*(i);
+            let y = 0.;
+            let xInRange= false;
+            for(let j=0;j<array_point.length;j++){
+                if((array_point[j])[0] > x ){
+                    y = ((array_point[j])[1]-(array_point[j-1])[1])/((array_point[j])[0]-(array_point[j-1])[0])*(x-(array_point[j-1])[0])+(array_point[j-1])[1];
+                    break;
+                }
+            }
+            array_y.push(y);
+            array_x.push(x);
+            // console.log(i, x,y, (array_point[i]) )
+        }
+
+        let array_filter_y = filter_av(array_y);
+
+        // console.log("====");
+        // console.log(array_filter_y);
+        // console.log("====");
+
+        // <============得到峰值对应的index============>
+        let array_peek_index = find_peak(array_filter_y);
+
+        console.log("时长 : " + nodevideo.duration);
+
+        // 得到对应的时间
+        for(let i=0;i<array_peek_index.length;i++){
+            array_peek_index[i] = array_peek_index[i] * dis/len_video * nodevideo.duration;
+        }
+
+        // console.log("peak : " + array_peek_index.length);
+
+        // 做标记
+        mark(array_peek_index,nodevideo.duration);
+
+        // console.log(array_peek_index);
+        // 当前播放进度
+        // console.log(nodevideo.currentTime);
+
+
+        $(document).keydown(function(event){
+
+            if(event.keyCode == 190){ // 前进
+
+                for(let i=0;i<array_peek_index.length;i++){
+
+                    if(array_peek_index[i]>nodevideo.currentTime){
+                        nodevideo.currentTime = array_peek_index[i];
+                        break;
+                    }
+                }
+
+            }else if (event.keyCode == 188){ // 后退
+
+                for(let i=array_peek_index.length-1;i>0;i--){
+
+                    if(array_peek_index[i]<nodevideo.currentTime){
+
+                        if( i == 0 ){
+
+                            if((nodevideo.currentTime - array_peek_index[i])< (array_peek_index[i+1]-array_peek_index[i])/3.){
+                                nodevideo.currentTime = 0;
+                                break;
+                            }else{
+                                nodevideo.currentTime = array_peek_index[i];
+                                break;
+                            }
+
+                        }else if(i == array_peek_index.length-1){
+                            if((nodevideo.currentTime - array_peek_index[i])< (nodevideo.duration-array_peek_index[i])/3.){
+                                nodevideo.currentTime = array_peek_index[i-1];
+                                break;
+                            }else{
+                                nodevideo.currentTime = array_peek_index[i];
+                                break;
+                            }
+                        }else{
+                            if((nodevideo.currentTime - array_peek_index[i])< (array_peek_index[i+1]-array_peek_index[i])/3.){
+                                nodevideo.currentTime = array_peek_index[i-1];
+                                break;
+                            }else{
+                                nodevideo.currentTime = array_peek_index[i];
+                                break;
+                            }
+                        }
+                    }
+                }
+
+            }else if (event.keyCode >= 48 && event.keyCode <= 57){ // 数字键
+                
+                nodevideo.currentTime = (event.keyCode-48) * nodevideo.duration/10.
+
+            }
+        });        
+    }
+
+    $( document ).ready(function() {
+        console.log( "ready!" );
+
 
         // 准备等分数组
         // if(array_point.length %2 == 0){
@@ -140,115 +248,17 @@
         // }
 
         
-        $("video").on('loadedmetadata', function() {
-            let nodevideo = $("video").get(0);
-            let len_array = Math.floor(nodevideo.duration);
-            
-            console.log("debug : len_array : ", len_array)
-            if(len_array % 2 == 0){
-                len_array = len_array +1;
-            }
-            let array_eq_point = new Array(len_array);
-            let dis=len_video/(len_array-1);
 
-            let array_y = new Array();
-            let array_x = new Array();
-            for(i=0;i<len_array;i++){
-                let x = dis*(i);
-                let y = 0.;
-                let xInRange= false;
-                for(let j=0;j<array_point.length;j++){
-                    if((array_point[j])[0] > x ){
-                        y = ((array_point[j])[1]-(array_point[j-1])[1])/((array_point[j])[0]-(array_point[j-1])[0])*(x-(array_point[j-1])[0])+(array_point[j-1])[1];
-                        break;
-                    }
-                }
-                array_y.push(y);
-                array_x.push(x);
-                // console.log(i, x,y, (array_point[i]) )
-            }
-
-            let array_filter_y = filter_av(array_y);
-
-            // console.log("====");
-            // console.log(array_filter_y);
-            // console.log("====");
-
-            // <============得到峰值对应的index============>
-            let array_peek_index = find_peak(array_filter_y);
-
-            console.log("时长 : " + nodevideo.duration);
-
-            // 得到对应的时间
-            for(let i=0;i<array_peek_index.length;i++){
-                array_peek_index[i] = array_peek_index[i] * dis/len_video * nodevideo.duration;
-            }
-
-            // console.log("peak : " + array_peek_index.length);
-
-            // 做标记
-            mark(array_peek_index,nodevideo.duration);
-
-            // console.log(array_peek_index);
-            // 当前播放进度
-            // console.log(nodevideo.currentTime);
-
-
-            $(document).keydown(function(event){
-
-                if(event.keyCode == 190){ // 前进
-
-                    for(let i=0;i<array_peek_index.length;i++){
-
-                        if(array_peek_index[i]>nodevideo.currentTime){
-                            nodevideo.currentTime = array_peek_index[i];
-                            break;
-                        }
-                    }
-
-                }else if (event.keyCode == 188){ // 后退
-
-                    for(let i=array_peek_index.length-1;i>0;i--){
-
-                        if(array_peek_index[i]<nodevideo.currentTime){
-
-                            if( i == 0 ){
-
-                                if((nodevideo.currentTime - array_peek_index[i])< (array_peek_index[i+1]-array_peek_index[i])/3.){
-                                    nodevideo.currentTime = 0;
-                                    break;
-                                }else{
-                                    nodevideo.currentTime = array_peek_index[i];
-                                    break;
-                                }
-
-                            }else if(i == array_peek_index.length-1){
-                                if((nodevideo.currentTime - array_peek_index[i])< (nodevideo.duration-array_peek_index[i])/3.){
-                                    nodevideo.currentTime = array_peek_index[i-1];
-                                    break;
-                                }else{
-                                    nodevideo.currentTime = array_peek_index[i];
-                                    break;
-                                }
-                            }else{
-                                if((nodevideo.currentTime - array_peek_index[i])< (array_peek_index[i+1]-array_peek_index[i])/3.){
-                                    nodevideo.currentTime = array_peek_index[i-1];
-                                    break;
-                                }else{
-                                    nodevideo.currentTime = array_peek_index[i];
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                }else if (event.keyCode >= 48 && event.keyCode <= 57){ // 数字键
-                    
-                    nodevideo.currentTime = (event.keyCode-48) * nodevideo.duration/10.
-
-                }
-            });
-        })
+        console.log("check video : " , $("video").get(0).duration)
+        if(isNaN($("video").get(0).duration) ){
+            console.log("wait load")
+            $("video").on('loadedmetadata', function() {
+                actionVideo()
+            })
+        }else{
+            console.log("load directly")
+            actionVideo()
+        }
     });
 
 })();
