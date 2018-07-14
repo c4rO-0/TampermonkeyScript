@@ -73,9 +73,9 @@
         for(let i=1;i<array_y.length-1;i++){
             if(array_y[i-1]< array_y[i] &&  array_y[i+1]<= array_y[i] && array_y[i] > average){
                 // console.log(peek.length, i,peek[peek.length-1], array_y[i]);
-                if(peek.length == 0 || i - peek[peek.length-1] > 5){
+                // if(peek.length == 0 || (i - peek[peek.length-1] > array_y.length/40) || (array_y[i] > array_y[peek[peek.length-1]]) ){
                     peek.push(i);
-                }
+                // }
                 
             }
         }
@@ -83,7 +83,34 @@
         if(array_y[array_y.length-2]< array_y[array_y.length-1] && array_y[array_y.length-1] > average ){
             peek.push(array_y.length-1);
         }
-        return peek;
+
+        // console.log(peek)
+        // console.log("============")
+        // console.log(array_y.length/40)
+        // console.log("============")
+        // 去除多余
+        let peek_del = new Array();
+        for(let i=0;i<peek.length;i++){
+            let toSave = true
+            for(let j=0; j<peek.length;j++){
+                // 红点间距最短为视频时长40等分, 在前后40等分中取最高的
+                if(toSave && i != j && Math.abs(peek[j] - peek[i]) < array_y.length/40 && array_y[peek[i]] <= array_y[peek[j]] ){
+
+                    
+                    toSave = false
+                    // console.log('del-----')
+                    // console.log(i,peek[i],array_y[peek[i]])
+                    // console.log(j,peek[j],array_y[peek[j]])
+                }
+            }
+            if(toSave){
+                peek_del.push(peek[i])
+                // console.log('save-----')
+                // console.log(i,peek[i],array_y[peek[i]])
+            }
+        }        
+
+        return peek_del;
     }
 
     function mark(array_y, duration){
