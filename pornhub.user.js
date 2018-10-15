@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      0.4.2
+// @version      0.5.0
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r
@@ -82,6 +82,7 @@
             btargetsFound = false;
         }
 
+
         //--- Get the timer-control variable for this selector.
         var controlObj = waitForKeyElements.controlObj || {};
         var controlKey = selectorTxt.replace(/[^\w]/g, "_");
@@ -111,7 +112,23 @@
         waitForKeyElements.controlObj = controlObj;
     }
 
-
+    // Returns rotation in degrees when obtaining transform-styles using javascript
+    // author : adamcbrewer
+    // https://gist.github.com/adamcbrewer/4202226
+    function getRotationDegrees(obj) {
+        var matrix = obj.css("-webkit-transform") ||
+            obj.css("-moz-transform") ||
+            obj.css("-ms-transform") ||
+            obj.css("-o-transform") ||
+            obj.css("transform");
+        if (matrix !== 'none') {
+            var values = matrix.split('(')[1].split(')')[0].split(',');
+            var a = values[0];
+            var b = values[1];
+            var angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
+        } else { var angle = 0; }
+        return angle;
+    }
 
     function merge(left, right) { //合并两个子数组
         var result = [];
@@ -357,9 +374,19 @@
 
             } else if (event.keyCode >= 48 && event.keyCode <= 57) { // 数字键
 
+                console.log("press ", (event.keyCode - 48))
                 nodevideo.currentTime = (event.keyCode - 48) * nodevideo.duration / 10.
 
+            } else if (event.keyCode == 219) { // 旋转 t 逆时针
+                // console.log("press [")
+                var angle = getRotationDegrees($(nodevideo)) - 90;
+                $(nodevideo).css("transform","rotate("+ angle +"deg)")
+                
+            } else if (event.keyCode == 221) { // 旋转 U 顺时针
+                var angle = getRotationDegrees($(nodevideo)) + 90;
+                $(nodevideo).css("transform","rotate("+ angle +"deg)")
             }
+
         });
     }
 
@@ -391,16 +418,15 @@
 
 
         // 要添加的广告代码
-        // if ($("$div.joinWrapper")) {
-            // console.log($("div.joinWrapper"))
-            $("div.joinWrapper").append(
-                "<div class=\"row justify-content-center\">\
-                    <a href=\"https://www.seedboxco.net/?affiliate=727\" target=\"_blank\">\
-                        <img src=\"https://www.seedboxco.net/img/banners/SBC.gif\" height=\"90px\" width=\"728px\">\
-                    </a>\
-                </div>"
+        waitForKeyElements("div#player", function () {
+            $("div#player").closest(".video-wrapper").append(
+                "<a href=\"https://www.seedboxco.net/?affiliate=727\" target=\"_blank\">\
+<img src=\"https://www.seedboxco.net/img/banners/SBC.gif\" width=\"100%\">\
+</a>"
             )
-        // }
+        });
+
+
 
 
 
