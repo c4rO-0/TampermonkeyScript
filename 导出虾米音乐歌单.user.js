@@ -32,8 +32,8 @@
     // }
 
     function checkElementII(callback) {
-        let checkPlaylist = $("div.quote_song_list ul li").toArray().length;
-        let checkInsertAnchorI = $("#list_collect div.chapter_act").length;
+        let checkPlaylist = $("div.table-container table tbody tr").toArray().length;
+        let checkInsertAnchorI = $("div.collect-handler").length;
         let checkInsertAnchor = checkInsertAnchorI;
         let test = checkPlaylist == 0 || checkInsertAnchor == 0;
         if (test && count < limit) {
@@ -47,9 +47,14 @@
 
     function insertButton() {
         console.log("insertting...");
-        let strButton = "<a id='c4r-exportPlaylist' class='u-btni u-btni-dl' style='margin-left:20px'><i>导出歌单</i></a>"
+        let strButton = 
+        "<div class='button unselectable remarkable'> \
+            <a id='c4r-exportPlaylist' class='u-btni u-btni-dl' style='margin-left:20px'>\
+            导出歌单\
+            </a>\
+        </div>"
         // console.log($("#g_iframe").contents().find("#playlist-track-count"));
-        $("#list_collect div.chapter_act").append(strButton);
+        $("div.collect-handler").append(strButton);
         $("#c4r-exportPlaylist").on("click", savePlaylist);
     }
 
@@ -59,14 +64,41 @@
         let str_store = "";
         let objMusicList = $("div.quote_song_list ul li");
 
+        console.log("obtain list...")
         $(objMusicList).each((index, element) => {
-            // if (index >= 1) {
-                // 单个歌曲element, 抓取信息
-                // 未完
-                let objAuther = $(element).find("span.song_name a");
+            // if (index == 0) {
+            // 单个歌曲element, 抓取信息
+            // 未完
+            // 判断歌曲名时候有链接
+
+            let strName = ''
+            
+            if ($(element).find("span.song_name a[title]").attr("title")) {
+                // 有
+                strName = $(element).find("span.song_name a[title]").attr('title')
+            } else {
+                // 没有
+                strName = $(element).find("span.song_name").clone()    //clone the element
+                    .children() //select all the children
+                    .remove()   //remove all the children
+                    .end()  //again go back to selected element
+                    .text();    //get the text of element
+            }
 
 
-                str_store = str_store + $(element).find("b").attr("title") + " - " + $(objAuther).find("div").attr("title") + "\r\n";
+            let strAuther = ''
+            let objAuther = $(element).find("span.song_name").contents();
+            $(objAuther).each((elIndex, elValue) => {
+
+                if (elValue.nodeName == 'A' && $(elValue).attr("title") == "") {
+                    strAuther = strAuther + $.trim($(elValue).text()) + ';'
+                }
+
+            })
+
+            // strAuther = strAuther.substr
+            console.log(index, strName, strAuther)
+            // str_store = str_store + $(element).find("b").attr("title") + " - " + $(objAuther).find("div").attr("title") + "\r\n";
             // }
         });
 
@@ -75,13 +107,15 @@
 
         var blob = new Blob([str_store], { type: "text/plain;charset=utf-8" });
 
-        var namePlaylist = $.trim($("div.info_collect_main h2").text());
+        // var namePlaylist = $.trim($("div.info_collect_main div.collect-user-item").text());
+        let strTitle = $("title").text()
+        let namePlaylist = $.trim(strTitle.substr(1,strTitle.lastIndexOf("》")-1))
         // if (namePlaylist == "") {
         //     namePlaylist = $("#g_iframe").contents().find("h2.f-ff2.f-thide").text();
 
         // }
-
-        saveAs(blob, namePlaylist + ".txt");
+        console.log(namePlaylist)
+        // saveAs(blob, namePlaylist + ".txt");
     }
 
     // if (window.top != window.self)  //-- Don't run on frames or iframes
