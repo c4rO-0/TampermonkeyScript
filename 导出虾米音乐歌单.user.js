@@ -62,43 +62,21 @@
     function savePlaylist() {
 
         let str_store = "";
-        let objMusicList = $("div.quote_song_list ul li");
+        let objMusicList = $("div.collect-songs tbody tr:not(.extended-row)");
 
         console.log("obtain list...")
         $(objMusicList).each((index, element) => {
             // if (index == 0) {
             // 单个歌曲element, 抓取信息
             // 未完
-            // 判断歌曲名时候有链接
 
-            let strName = ''
-            
-            if ($(element).find("span.song_name a[title]").attr("title")) {
-                // 有
-                strName = $(element).find("span.song_name a[title]").attr('title')
-            } else {
-                // 没有
-                strName = $(element).find("span.song_name").clone()    //clone the element
-                    .children() //select all the children
-                    .remove()   //remove all the children
-                    .end()  //again go back to selected element
-                    .text();    //get the text of element
-            }
+            let strSongName = $(element).find("div.song-name").text()
 
-
-            let strAuther = ''
-            let objAuther = $(element).find("span.song_name").contents();
-            $(objAuther).each((elIndex, elValue) => {
-
-                if (elValue.nodeName == 'A' && $(elValue).attr("title") == "") {
-                    strAuther = strAuther + $.trim($(elValue).text()) + ';'
-                }
-
-            })
+            let strAuther = $(element).find("div.singers").text()
 
             // strAuther = strAuther.substr
-            console.log(index, strName, strAuther)
-            // str_store = str_store + $(element).find("b").attr("title") + " - " + $(objAuther).find("div").attr("title") + "\r\n";
+            // console.log(index, strSongName, strAuther)
+            str_store = str_store + strSongName + " - " + strAuther + "\r\n";
             // }
         });
 
@@ -114,8 +92,8 @@
         //     namePlaylist = $("#g_iframe").contents().find("h2.f-ff2.f-thide").text();
 
         // }
-        console.log(namePlaylist)
-        // saveAs(blob, namePlaylist + ".txt");
+        // console.log(namePlaylist)
+        saveAs(blob, namePlaylist + ".txt");
     }
 
     // if (window.top != window.self)  //-- Don't run on frames or iframes
