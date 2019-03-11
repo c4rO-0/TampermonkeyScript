@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         导出虾米音乐歌单
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @license      MPL-2.0
 // @description  导出并保存虾米音乐歌单
 // @author       c4r
@@ -72,8 +72,9 @@
         var blob = new Blob([str_store], { type: "text/plain;charset=utf-8" });
 
         // var namePlaylist = $.trim($("div.info_collect_main div.collect-user-item").text());
-        let strTitle = $("title").text()
-        let namePlaylist = $.trim(strTitle.substr(1, strTitle.lastIndexOf("》") - 1))
+        // let strTitle = $("div.collect-info div[data-spm-anchor-id]").text()
+        // let namePlaylist = $.trim(strTitle.substr(1, strTitle.lastIndexOf("》") - 1))
+        let namePlaylist = $("div.collect-info > div:not(.collect-user-item, .song-tags)").text()
         // if (namePlaylist == "") {
         //     namePlaylist = $("#g_iframe").contents().find("h2.f-ff2.f-thide").text();
 
