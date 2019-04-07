@@ -2,6 +2,7 @@
 // @name         导出网易云音乐歌单
 // @namespace    http://tampermonkey.net/
 // @version      0.5
+// @license      MPL-2.0
 // @description  导出并保存网易云音乐歌单
 // @author       c4r
 // @match        *://music.163.com/*

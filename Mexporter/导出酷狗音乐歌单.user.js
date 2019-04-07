@@ -2,6 +2,7 @@
 // @name         导出酷狗音乐歌单
 // @namespace    http://tampermonkey.net/
 // @version      0.1
+// @license      MPL-2.0
 // @description  导出并保存酷狗音乐歌单
 // @author       c4r
 // @match        *://www.kugou.com/*
