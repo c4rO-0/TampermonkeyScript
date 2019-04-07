@@ -20,28 +20,28 @@
         constructor() {
 
             let lastPage = localStorage.getItem("lastPage");
-            if (lastPage == undefined || lastPage == '' || parseInt(lastPage) <= 0) {
+            if (lastPage == undefined || lastPage == null  || lastPage == '' || parseInt(lastPage) <= 0) {
                 this.lastPage = undefined
             } else {
                 this.lastPage = parseInt(lastPage)
             }
 
             let strStore = localStorage.getItem("strStore");
-            if (strStore == undefined || strStore == '') {
+            if (strStore == undefined || strStore == null || strStore == '') {
                 this.strStore = ''
             } else {
                 this.strStore = strStore
             }
 
             let listID = localStorage.getItem("listID");
-            if (listID == undefined || listID == '') {
+            if (listID == undefined || listID == null || listID == '') {
                 this.listID = undefined
             } else {
                 this.listID = listID
             }
 
             let exporting = localStorage.getItem("exporting");
-            if (exporting == undefined || exporting == '' || exporting === 'false') {
+            if (exporting == undefined || exporting == null || exporting == '' || exporting === 'false') {
                 this.exporting = false
             } else {
                 this.exporting = true
