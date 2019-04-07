@@ -59,7 +59,7 @@
 
         var blob = new Blob([str_store], { type: "text/plain;charset=utf-8" });
 
-        var namePlaylist = $("#songs > strong").text();
+        var namePlaylist = $("#songs > strong").text().slice(1,-8);
 
         saveAs(blob, namePlaylist + ".txt");
     }
