@@ -13,7 +13,11 @@
 (function () {
     'use strict';
 
-    // let buttonCoin = '<button id="coin-gen" style="font-size:20px;color:red;">test</button>'
+    let sureButton =[
+        '.coin-operated-m .coin-bottom span.bi-btn', // 新, 老版本 
+        '.coin-sure', // watching list
+        '.coin-bottom span.bi-btn' // 未订阅
+    ]
     /**
      * 判断新老版本
      */
@@ -59,17 +63,17 @@
      * 对应 -> 已投, 处理中, 投币, 错误
      */
     function changeCoinTaken(status) {
-        if(status == 'taken'){
+        if (status == 'taken') {
             $('#coin-gen').attr('status', 'taken')
             $('#coin-gen').text('已投')
-        }else if(status =='taking'){
+        } else if (status == 'taking') {
             $('#coin-gen').attr('status', 'taking')
             $('#coin-gen').text('处理中')
 
-        }else if(status =='untaken'){
+        } else if (status == 'untaken') {
             $('#coin-gen').attr('status', 'untaken')
             $('#coin-gen').text('投币')
-        }else{
+        } else {
             $('#coin-gen').attr('status', 'undefined')
             $('#coin-gen').text('错误')
         }
@@ -88,25 +92,26 @@
 
 
     // ===========================================================================================
-    $(document).ready(function () {
-
-        console.log('take-coin : ready ...')
-        document.onfullscreenchange = function (event) {
-            console.log("FULL SCREEN CHANGE")
-
-            if (isVideoInFullscreen()) {
-                console.log("take-coin : add button")
-                $('#bilibiliPlayer').append(genButtonCoin())
-            } else {
-                // 移除
-                $('#coin-gen').remove()
-                console.log(isVideoInFullscreen(), $('#coin-gen').length)
-                console.log(document.fullscreenElement)
-            }
 
 
+    console.log('take-coin : ready ...')
+    document.onfullscreenchange = function (event) {
+        console.log("FULL SCREEN CHANGE")
+
+        if (isVideoInFullscreen()) {
+            console.log("take-coin : add button")
+            $('#bilibiliPlayer').append(genButtonCoin())
+            watching()
+        } else {
+            // 移除
+            $('#coin-gen').remove()
+            console.log(isVideoInFullscreen(), $('#coin-gen').length)
+            console.log(document.fullscreenElement)
         }
 
+
+    }
+    function watching() {
         $(document).on('click', '#coin-gen[status="untaken"]', function (event) {
             console.log("take-coin : 投币")
             if (isOldVersion()) {
@@ -117,19 +122,26 @@
             changeCoinTaken('taking')
             setTimeout(() => {
                 console.log('take-coin : click coin...')
-                $('.coin-operated-m .coin-bottom span.bi-btn').click()
+
+                sureButton.forEach((button)=>{
+                    console.log(button, $(button).length)
+                    if($(button).length > 0){
+                        $(button).get(0).click()
+                    }
+                })
+
                 setTimeout(() => {
                     console.log('check : ', isCoinTaken())
                     if (isCoinTaken()) {
                         changeCoinTaken('taken')
-                    }else{
+                    } else {
                         changeCoinTaken('unknown')
                     }
                 }, 2000)
             }, 2000);
 
         })
-    })
+    }
 
 
 })();
