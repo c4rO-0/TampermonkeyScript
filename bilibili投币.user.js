@@ -12,25 +12,36 @@
 (function () {
     'use strict';
 
-    // let buttonCoin = '<button id="corn-gen" style="font-size:20px;color:red;">test</button>'
+    // let buttonCoin = '<button id="coin-gen" style="font-size:20px;color:red;">test</button>'
+    function isOldVersion(){
+        return $('i.icon-move.c-icon-moved').length > 0
+    }
 
     function isCoinTaken(){
-        return $('i.icon-move.c-icon-moved').is(':visible')
+
+        if(isOldVersion()){
+            return $('i.icon-move.c-icon-moved').is(':visible')
+        }else{
+            return $('span.coin.on').length  == 1
+        }
+        
+        
     }
 
     function genButtonCoin() {
+        console.log('status : ', isCoinTaken())
         if(isCoinTaken()){
             // 已投币
-            return '<button id="corn-gen" style="font-size:20px;color:blue;" status="taken">已投</button>'
+            return '<button id="coin-gen" style="font-size:20px;color:blue;" status="taken">已投</button>'
         }else{
-            return '<button id="corn-gen" style="font-size:20px;color:red;" status="untaken">投币</button>'
+            return '<button id="coin-gen" style="font-size:20px;color:red;" status="untaken">投币</button>'
         }
         
     }
 
     function changeCoinTaken(){
-        $('#corn-gen').attr('status','taken')
-        $('#corn-gen').text('已投')        
+        $('#coin-gen').attr('status','taken')
+        $('#coin-gen').text('已投')        
     }
 
     function isVideoInFullscreen() {
@@ -48,25 +59,31 @@
             $('#bilibiliPlayer').append(genButtonCoin())
         } else {
             // 移除
-            $('#corn-gen').remove()
-            console.log(isVideoInFullscreen(), $('#corn-gen').length)
+            // $('#coin-gen').remove()
+            console.log(isVideoInFullscreen(), $('#coin-gen').length)
             console.log(document.fullscreenElement)
         }
 
 
     }
 
-    $(document).on('click', '#corn-gen[status="untaken"]', function (event) {
+    $(document).on('click', '#coin-gen', function (event) {
         console.log("投币")
-        $('.coin-box').click()
+        if(isOldVersion){
+            $('.coin-box').click()
+        }else{
+            $('.coin').click()
+        }
         setTimeout(() => {
+            console.log('click coin...')
             $('.coin-operated-m .coin-bottom span.bi-btn').click()
             setTimeout(() => {
-                if($('i.icon-move.c-icon-moved').is(':visible')){
+                console.log('check : ', isCoinTaken())
+                if(isCoinTaken()){
                     changeCoinTaken()
                 }
-            },1000)
-        }, 1000);
+            },2000)
+        }, 2000);
 
     })
     // if (document.getElementById("myVideo")) {
