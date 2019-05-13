@@ -13,11 +13,13 @@
 (function () {
     'use strict';
 
-    let sureButton =[
+    let sureButton = [
         '.coin-operated-m .coin-bottom span.bi-btn', // 新, 老版本 
         '.coin-sure', // watching list
         '.coin-bottom span.bi-btn' // 未订阅
     ]
+
+
     /**
      * 判断新老版本
      */
@@ -92,6 +94,27 @@
 
 
     // ===========================================================================================
+    let callbackVideo = function (mutationList, observer) {
+        // console.log(mutationList)
+        mutationList.forEach((mutation) => {
+            if ($(mutation.target).hasClass('bilibili-player-video')) {
+                // console.log('take-coin : ', mutation, mutation.removedNodes.length)
+                // console.log('take-coin : 视频变更...')
+                watching()
+                observer.disconnect()
+                console.log('take-coin : continue observing...')
+                observerVideo.observe($('.bilibili-player-video-wrap').get(0),
+                    {
+                        subtree: true, childList: true, characterData: false, attributes: true,
+                        attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
+                    })
+
+
+            }
+        })
+
+    }
+    let observerVideo = new MutationObserver(callbackVideo)
 
 
     console.log('take-coin : ready ...')
@@ -99,48 +122,62 @@
         console.log("FULL SCREEN CHANGE")
 
         if (isVideoInFullscreen()) {
-            console.log("take-coin : add button")
-            $('#bilibiliPlayer').append(genButtonCoin())
+
             watching()
+            console.log('take-coin : observing...')
+            observerVideo.observe($('.bilibili-player-video-wrap').get(0),
+                {
+                    subtree: true, childList: true, characterData: false, attributes: true,
+                    attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
+                })
         } else {
             // 移除
             $('#coin-gen').remove()
             console.log(isVideoInFullscreen(), $('#coin-gen').length)
             console.log(document.fullscreenElement)
         }
-
-
     }
+
+
+
     function watching() {
-        $(document).on('click', '#coin-gen[status="untaken"]', function (event) {
-            console.log("take-coin : 投币")
-            if (isOldVersion()) {
-                $('.coin-box').click()
-            } else {
-                $('.coin').click()
-            }
-            changeCoinTaken('taking')
-            setTimeout(() => {
-                console.log('take-coin : click coin...')
+        // 添加按钮
+        if (isVideoInFullscreen()) {
+            console.log("take-coin : add button")
+            $('#coin-gen').remove()
+            $('#bilibiliPlayer').append(genButtonCoin())
 
-                sureButton.forEach((button)=>{
-                    console.log(button, $(button).length)
-                    if($(button).length > 0){
-                        $(button).get(0).click()
-                    }
-                })
-
+            $(document).on('click', '#coin-gen[status="untaken"]', function (event) {
+                console.log("take-coin : 投币")
+                if (isOldVersion()) {
+                    $('.coin-box').click()
+                } else {
+                    $('.coin').click()
+                }
+                changeCoinTaken('taking')
                 setTimeout(() => {
-                    console.log('check : ', isCoinTaken())
-                    if (isCoinTaken()) {
-                        changeCoinTaken('taken')
-                    } else {
-                        changeCoinTaken('unknown')
-                    }
-                }, 2000)
-            }, 2000);
+                    console.log('take-coin : click coin...')
 
-        })
+                    sureButton.forEach((button) => {
+                        // console.log(button, $(button).length)
+                        if ($(button).length > 0) {
+                            $(button).get(0).click()
+                        }
+                    })
+
+                    setTimeout(() => {
+                        console.log('check : ', isCoinTaken())
+                        if (isCoinTaken()) {
+                            changeCoinTaken('taken')
+                        } else {
+                            changeCoinTaken('unknown')
+                        }
+                    }, 2000)
+                }, 2000);
+
+            })
+        }
+
     }
 
 
