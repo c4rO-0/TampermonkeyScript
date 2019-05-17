@@ -6,6 +6,7 @@
 // @author       You
 // @match        https://www.bilibili.com/watchlater/
 // @match        https://www.bilibili.com/video/*
+// @match        https://www.bilibili.com/bangumi/play/*
 // @grant        none
 // @require      https://code.jquery.com/jquery-latest.js
 // ==/UserScript==
@@ -16,7 +17,14 @@
     let sureButton = [
         '.coin-operated-m .coin-bottom span.bi-btn', // 新, 老版本 
         '.coin-sure', // watching list
-        '.coin-bottom span.bi-btn' // 未订阅
+        '.coin-bottom span.bi-btn', // 未订阅
+        '.coin-bottom span.coin-btn' // 番剧
+    ]
+
+    let coinBox = [
+        '.coin-box', // 老版本
+        '.coin', //新版本
+        '.bangumi-coin-wrap' //番剧
     ]
 
 
@@ -27,17 +35,24 @@
         return $('i.icon-move.c-icon-moved').length > 0
     }
 
+    function isBangumi(){
+        return $('div.bangumi-coin-wrap').length > 0
+    }
+
     /**
      * 返回投币状态
      */
     function isCoinTaken() {
 
-        if (isOldVersion()) {
-            return $('i.icon-move.c-icon-moved').is(':visible')
-        } else {
-            return $('span.coin.on').length == 1
+        if(isBangumi()){
+            return $('i.bangumi-coin-d').is(':visible')
+        }else{
+            if (isOldVersion()) {
+                return $('i.icon-move.c-icon-moved').is(':visible')
+            } else {
+                return $('span.coin.on').length == 1
+            }
         }
-
 
     }
 
@@ -154,6 +169,13 @@
                 } else {
                     $('.coin').click()
                 }
+                coinBox.forEach((coinButton) => {
+                    // console.log(button, $(button).length)
+                    if ($(coinButton).length > 0) {
+                        $(coinButton).get(0).click()
+                    }
+                })
+
                 changeCoinTaken('taking')
                 setTimeout(() => {
                     console.log('take-coin : click coin...')
