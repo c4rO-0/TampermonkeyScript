@@ -35,7 +35,7 @@
         return $('i.icon-move.c-icon-moved').length > 0
     }
 
-    function isBangumi(){
+    function isBangumi() {
         return $('div.bangumi-coin-wrap').length > 0
     }
 
@@ -44,9 +44,9 @@
      */
     function isCoinTaken() {
 
-        if(isBangumi()){
+        if (isBangumi()) {
             return $('i.bangumi-coin-d').is(':visible')
-        }else{
+        } else {
             if (isOldVersion()) {
                 return $('i.icon-move.c-icon-moved').is(':visible')
             } else {
@@ -63,13 +63,19 @@
      * - status(string) : taken, taking, untaken, undefined
      * - text : 已投, 处理中, 投币, 错误
      */
-    function genButtonCoin() {
+    function genButton() {
         console.log('status : ', isCoinTaken())
         if (isCoinTaken()) {
             // 已投币
-            return '<button id="coin-gen" style="font-size:20px;color:blue;" status="taken">已投</button>'
+            return '<div>\
+            <button id="coin-gen" style="font-size:20px;color:blue;" status="taken">已投</button>\
+            <div id="bcoin-watch-list"></div>\
+            </div>'
         } else {
-            return '<button id="coin-gen" style="font-size:20px;color:red;" status="untaken">投币</button>'
+            return '<div>\
+            <button id="coin-gen" style="font-size:20px;color:red;" status="untaken">投币</button>\
+            <div id="bcoin-watch-list"></div>\
+            </div>'
         }
 
     }
@@ -107,99 +113,121 @@
         return false;
     }
 
+    /**
+     * 视频fullscreen时候要做的事情
+     */
+    function processFullScreen() {
+
+        // 加载watching list
+        // if (isVideoInFullscreen()) {
+        //     $("#bcoin-watch-list").append($(".bilibili-player-wraplist").html())
+        // } else {
+        //     $("#bcoin-watch-list").empty()
+        // }
+    }
 
     // ===========================================================================================
+    // 运行主体函数
+    // -------------------------------------------------------------------------------------------    
+    /**
+     * 实际运行部分
+     */
+    function watching() {
+        // 添加按钮
+
+        console.log("take-coin : add button")
+        $('#coin-gen').remove()
+        $('#bilibiliPlayer').append(genButton())
+
+        processFullScreen()
+
+        // 检测按钮被按
+        // 为防止按钮被删, $(document).on 必须放在这里
+        $(document).on('click', '#coin-gen[status="untaken"]', function (event) {
+            console.log("take-coin : 投币")
+            if (isOldVersion()) {
+                $('.coin-box').click()
+            } else {
+                $('.coin').click()
+            }
+            coinBox.forEach((coinButton) => {
+                // console.log(button, $(button).length)
+                if ($(coinButton).length > 0) {
+                    $(coinButton).get(0).click()
+                }
+            })
+
+            changeCoinTaken('taking')
+            setTimeout(() => {
+                console.log('take-coin : click coin...')
+
+                sureButton.forEach((button) => {
+                    // console.log(button, $(button).length)
+                    if ($(button).length > 0) {
+                        $(button).get(0).click()
+                    }
+                })
+
+                setTimeout(() => {
+                    console.log('check : ', isCoinTaken())
+                    if (isCoinTaken()) {
+                        changeCoinTaken('taken')
+                    } else {
+                        changeCoinTaken('unknown')
+                    }
+                }, 2000)
+            }, 2000);
+
+        })
+
+    }
+
+    // ===========================================================================================
+    // 检测和开始添加按钮
+    // -------------------------------------------------------------------------------------------
     let callbackVideo = function (mutationList, observer) {
         // console.log(mutationList)
         mutationList.forEach((mutation) => {
             if ($(mutation.target).hasClass('bilibili-player-video')) {
                 // console.log('take-coin : ', mutation, mutation.removedNodes.length)
                 // console.log('take-coin : 视频变更...')
+
+                // 添加按钮
                 watching()
+
                 observer.disconnect()
                 console.log('take-coin : continue observing...')
-                observerVideo.observe($('.bilibili-player-video-wrap').get(0),
+                observerVideo.observe($('.player').get(0),
                     {
                         subtree: true, childList: true, characterData: false, attributes: true,
                         attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
                     })
-
-
             }
         })
 
     }
     let observerVideo = new MutationObserver(callbackVideo)
 
+    $(document).ready(function () {
+        console.log('take-coin : ready ...')
+        // 添加按钮
+        watching()
 
-    console.log('take-coin : ready ...')
+        // 检测按钮消失, 重新加载
+        console.log('take-coin : observing...', $('.player').length)
+        observerVideo.observe($('.player').get(0),
+            {
+                subtree: true, childList: true, characterData: false, attributes: true,
+                attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
+            })
+    })
+
+    // ===========================================================================================
+    // 检测到全屏变化
+    // -------------------------------------------------------------------------------------------
     document.onfullscreenchange = function (event) {
         console.log("FULL SCREEN CHANGE")
-
-        if (isVideoInFullscreen()) {
-
-            watching()
-            console.log('take-coin : observing...')
-            observerVideo.observe($('.bilibili-player-video-wrap').get(0),
-                {
-                    subtree: true, childList: true, characterData: false, attributes: true,
-                    attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
-                })
-        } else {
-            // 移除
-            $('#coin-gen').remove()
-            console.log(isVideoInFullscreen(), $('#coin-gen').length)
-            console.log(document.fullscreenElement)
-        }
-    }
-
-
-
-    function watching() {
-        // 添加按钮
-        if (isVideoInFullscreen()) {
-            console.log("take-coin : add button")
-            $('#coin-gen').remove()
-            $('#bilibiliPlayer').append(genButtonCoin())
-
-            $(document).on('click', '#coin-gen[status="untaken"]', function (event) {
-                console.log("take-coin : 投币")
-                if (isOldVersion()) {
-                    $('.coin-box').click()
-                } else {
-                    $('.coin').click()
-                }
-                coinBox.forEach((coinButton) => {
-                    // console.log(button, $(button).length)
-                    if ($(coinButton).length > 0) {
-                        $(coinButton).get(0).click()
-                    }
-                })
-
-                changeCoinTaken('taking')
-                setTimeout(() => {
-                    console.log('take-coin : click coin...')
-
-                    sureButton.forEach((button) => {
-                        // console.log(button, $(button).length)
-                        if ($(button).length > 0) {
-                            $(button).get(0).click()
-                        }
-                    })
-
-                    setTimeout(() => {
-                        console.log('check : ', isCoinTaken())
-                        if (isCoinTaken()) {
-                            changeCoinTaken('taken')
-                        } else {
-                            changeCoinTaken('unknown')
-                        }
-                    }, 2000)
-                }, 2000);
-
-            })
-        }
-
+        processFullScreen()
     }
 
 
