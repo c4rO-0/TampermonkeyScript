@@ -188,12 +188,15 @@
     let callbackVideo = function (mutationList, observer) {
         // console.log(mutationList)
         mutationList.forEach((mutation) => {
-            if ($(mutation.target).hasClass('bilibili-player-video')) {
+            if ($(mutation.target).hasClass('bilibili-player-video')) { 
                 // console.log('take-coin : ', mutation, mutation.removedNodes.length)
                 // console.log('take-coin : 视频变更...')
 
                 // 添加按钮
-                watching()
+                if($('#coin-gen').length == 0){
+                    watching()
+                }
+                
 
                 observer.disconnect()
                 console.log('take-coin : continue observing...')
