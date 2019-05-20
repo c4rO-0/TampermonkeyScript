@@ -39,6 +39,10 @@
         return $('div.bangumi-coin-wrap').length > 0
     }
 
+    function isWatchList() {
+        return $('.bilibili-player-watchlater-nav-header').length > 0
+    }
+
     /**
      * 返回投币状态
      */
@@ -50,6 +54,7 @@
             if (isOldVersion()) {
                 return $('i.icon-move.c-icon-moved').is(':visible')
             } else {
+                // new version , watch list, bangumi
                 return $('span.coin.on').length == 1
             }
         }
@@ -113,10 +118,65 @@
         return false;
     }
 
+
+    // 检查是否隐藏
+    let callbackHide = function (mutationList, observer) {
+        // console.log(mutationList)
+        mutationList.forEach((mutation) => {
+            // console.log(mutation.oldValue, $(".bilibili-player-video-control").attr('style'))
+            if (isOldVersion() || isWatchList() || isBangumi()) {
+                if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;' ||
+                    $(".bilibili-player-video-control").attr('style') == 'opacity: 1;') {
+                    if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;') {
+                        // console.log("Bcoin : hide")
+                        $('#coin-gen').hide()
+                    } else {
+                        $('#coin-gen').show()
+                    }
+                }
+            } else {
+
+                if ($("#bilibiliPlayer > div.bilibili-player-area").hasClass('video-control-show')) {
+                    // console.log("Bcoin : hide")
+                    $('#coin-gen').show()
+                } else {
+                    $('#coin-gen').hide()
+                }
+
+            }
+        })
+
+    }
+    let observerHide = new MutationObserver(callbackHide)
+
     /**
      * 视频fullscreen时候要做的事情
      */
     function processFullScreen() {
+
+        if (isVideoInFullscreen()) { // 视频为全屏
+
+            if (isOldVersion() || isWatchList() || isBangumi()) {
+                console.log("Bcoin : start watching hide bar")
+                observerHide.observe($('.bilibili-player-video-control').get(0),
+                    {
+                        subtree: false, childList: false, characterData: false, attributes: true,
+                        attributeFilter: ["style"], attributeOldValue: true, characterDataOldValue: false
+                    })
+            } else {
+                console.log("Bcoin : new version")
+                observerHide.observe($('#bilibiliPlayer > div.bilibili-player-area').get(0),
+                    {
+                        subtree: false, childList: false, characterData: false, attributes: true,
+                        attributeFilter: ["class"], attributeOldValue: true, characterDataOldValue: false
+                    })
+            }
+
+        } else { // 视频退出全屏
+
+            observerHide.disconnect()
+            $('#coin-gen').show()
+        }
 
         // 加载watching list
         // if (isVideoInFullscreen()) {
@@ -137,7 +197,13 @@
 
         console.log("take-coin : add button")
         $('#coin-gen').remove()
-        $('#bilibiliPlayer').append(genButton())
+        if(isOldVersion() || isWatchList() || isBangumi()){
+            $('#bilibiliPlayer').append(genButton())
+        }else{
+            console.log($('#bilibiliPlayer .bilibili-player-video-top').length)
+            $('#bilibiliPlayer .bilibili-player-video-top').append(genButton())
+        }
+        
 
         processFullScreen()
 
@@ -148,6 +214,7 @@
             if (isOldVersion()) {
                 $('.coin-box').click()
             } else {
+                // new version || watchlist || bangumi
                 $('.coin').click()
             }
             coinBox.forEach((coinButton) => {
@@ -188,15 +255,17 @@
     let callbackVideo = function (mutationList, observer) {
         // console.log(mutationList)
         mutationList.forEach((mutation) => {
-            if ($(mutation.target).hasClass('bilibili-player-video')) { 
+
+            // 旧版, 以及发生视频变化
+            if ($(mutation.target).hasClass('bilibili-player-video')) {
                 // console.log('take-coin : ', mutation, mutation.removedNodes.length)
                 // console.log('take-coin : 视频变更...')
 
                 // 添加按钮
-                if($('#coin-gen').length == 0){
+                if ($('#coin-gen').length == 0) {
                     watching()
                 }
-                
+
 
                 observer.disconnect()
                 console.log('take-coin : continue observing...')
@@ -205,6 +274,14 @@
                         subtree: true, childList: true, characterData: false, attributes: true,
                         attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
                     })
+            }
+
+            //新版插入位置
+            if( $(mutation.target).is('#bilibiliPlayer .bilibili-player-video-wrap')){
+                // 添加按钮
+                if ($('#coin-gen').length == 0) {
+                    watching()
+                }                
             }
         })
 
