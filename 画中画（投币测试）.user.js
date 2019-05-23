@@ -15,7 +15,7 @@
     'use strict';
 
     // Your code here...
-    //玩法：修改第二层div.c4r的类，可改的类名包括（.initial .success .error .processing .surprise），其中.inital和.success需要保证有且仅有一个存在。
+    //玩法：修改第二层div.c4r的类，可改的类名包括（.initial .success .error .processing .surprise .hide），其中.inital和.success需要保证有且仅有一个存在。
     GM_addStyle (`
 .processing {
   animation: rotate 2s infinite linear;
@@ -47,8 +47,14 @@
 .error {
   background-color: #fd676f;
 }
-.surprise {
+.surprise, .c4r:hover {
   animation:big 0.5s ease 1 forwards;
+}
+.c4r {
+  transition: opacity 0.25s ease;
+}
+.hide{
+  opacity: 0;
 }
 @keyframes big{
   to{
