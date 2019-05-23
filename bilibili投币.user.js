@@ -265,6 +265,22 @@
     // ===========================================================================================
     // 运行主体函数
     // -------------------------------------------------------------------------------------------    
+    let callbackCoin = function(mutationList, observer) {
+        // console.log("coin change : ", mutationList)
+        mutationList.forEach((mutation) => {
+            // if($(mutation.target).is('.van-icon-videodetails_throw')){
+                // console.log($.trim($('.coin').text()))
+                if($('.coin').hasClass('on')) {
+                    $('#coin-gen').remove()
+                    $('#bilibiliPlayer').append(genButton())   
+                    observer.disconnect()        
+                    // console.log('disconnect coin observe')         
+                }
+            // }
+        })
+
+    }
+    let observerCoin = new MutationObserver(callbackCoin)
     /**
      * 实际运行部分
      */
@@ -273,12 +289,22 @@
 
         console.log("take-coin : add button")
         $('#coin-gen').remove()
-        // if (isOldVersion() || isWatchList() || isBangumi()) {
-        $('#bilibiliPlayer').append(genButton())
-        // } else {
-        //     console.log($('#bilibiliPlayer .bilibili-player-video-top').length)
-        //     $('#bilibiliPlayer .bilibili-player-video-top').append(genButton())
-        // }
+        if (isOldVersion() || isWatchList() || isBangumi()) {
+            
+            $('.bilibili-player-video-wrap').append(genButton())
+        } else {
+            $('#bilibiliPlayer').append(genButton())
+        }
+        if (isOldVersion() || isWatchList() || isBangumi()) {
+        }else{
+            // new version
+            // console.log("coin observing...")
+            observerCoin.observe($('.coin').get(0),
+            {
+                subtree: true, childList: true, characterData: false, attributes: true,
+                attributeFilter: ["class"], attributeOldValue: false, characterDataOldValue: false
+            })
+        }
 
 
         processFullScreen()
@@ -288,10 +314,10 @@
         $(document).on('click', '#coin-gen.initial', function (event) {
             console.log("take-coin : 投币")
             if (isOldVersion()) {
-                console.log("old version")
+                // console.log("old version")
                 $('.coin-box').click()
             } else {
-                console.log("other version")
+                // console.log("other version")
                 // new version || watchlist || bangumi
                 $('.coin').click()
             }
