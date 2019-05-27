@@ -4,7 +4,7 @@
 // @version      0.1
 // @description  try to take over the world!
 // @author       You
-// @match        https://www.bilibili.com/watchlater/
+// @match        https://www.bilibili.com/watchlater/*
 // @match        https://www.bilibili.com/video/*
 // @match        https://www.bilibili.com/bangumi/play/*
 // @require      https://code.jquery.com/jquery-latest.js
@@ -111,7 +111,7 @@
      */
     function getSureButtonSelector() {
         // console.log('version : ', isFollowing(), isOldVersion(), isBangumi(), isWatchList(),isNewVersion())
-        if ($('.coin-bottom span.bi-btn').length > 0 ) { // 未订阅
+        if ($('.coin-bottom span.bi-btn').length > 0) { // 未订阅
             return '.coin-bottom span.bi-btn'
         } else {
             if (isOldVersion()) {
@@ -455,16 +455,44 @@
 
     $(document).ready(function () {
         console.log('take-coin : ready ...')
-        // 添加按钮
-        watching()
+        if ($('.watch-later-list').length > 0) {
+            // 在列表页面
+            // 通过检测是否含有.player元素判断
+            let callbackGoToWatch = function (mutationList, observer) {
+                if ($('.player').length > 0) {
+                    // 添加按钮
+                    watching()
 
-        // 检测按钮消失, 重新加载
-        console.log('take-coin : observing...', $('.player').length)
-        observerVideo.observe($('.player').get(0),
-            {
-                subtree: true, childList: true, characterData: false, attributes: true,
-                attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
-            })
+                    // 检测按钮消失, 重新加载
+                    console.log('take-coin : observing...', $('.player').length)
+                    observerVideo.observe($('.player').get(0),
+                        {
+                            subtree: true, childList: true, characterData: false, attributes: true,
+                            attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
+                        })
+                    observer.disconnect()
+                }
+            }
+            let observerGoToWatch = new MutationObserver(callbackGoToWatch)
+            observerGoToWatch.observe($('.app-wrap').get(0),
+                {
+                    subtree: true, childList: true, characterData: false, attributes: true,
+                    attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
+                })
+
+        } else {
+            // 添加按钮
+            watching()
+
+            // 检测按钮消失, 重新加载
+            console.log('take-coin : observing...', $('.player').length)
+            observerVideo.observe($('.player').get(0),
+                {
+                    subtree: true, childList: true, characterData: false, attributes: true,
+                    attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
+                })
+        }
+
     })
 
     // ===========================================================================================
@@ -479,7 +507,7 @@
     // 为防止按钮被删, $(document).on 必须放在这里
     $(document).on('click', function (event) {
 
-        console.log("click : ", event)
+        // console.log("click : ", event)
         if ($(event.target).closest('#coin-gen.initial').length) {
             console.log("take-coin : 投币")
             if (isOldVersion()) {
@@ -503,7 +531,7 @@
                     hideSelector = '.coin-mask, .coin-wrap'
                 } else if (isOldVersion() || isNewVersion()) {
                     hideSelector = '.bili-dialog-m'
-                }else if(isBangumi()){
+                } else if (isBangumi()) {
                     hideSelector = '.dialog-mask'
                 }
                 console.log(button, $(button).length, hideSelector, "callbackCoinBox : ", mutationList)
@@ -541,15 +569,15 @@
                 CoinBoxObserverSelector = 'div[coinnum]'
             } else if (isOldVersion() || isNewVersion()) {
                 CoinBoxObserverSelector = '#app > div'
-            }else if(isBangumi() ){
+            } else if (isBangumi()) {
                 CoinBoxObserverSelector = '#app'
             }
             observerCoinBox.observe($(CoinBoxObserverSelector).get(0),
-            {
-                subtree: true, childList: true, characterData: false, attributes: false,
-                // attributeFilter: ["src"], 
-                attributeOldValue: false, characterDataOldValue: false
-            })
+                {
+                    subtree: true, childList: true, characterData: false, attributes: false,
+                    // attributeFilter: ["src"], 
+                    attributeOldValue: false, characterDataOldValue: false
+                })
 
             let coinButton = getCoinBoxSelector()
             $(coinButton).get(0).click()
