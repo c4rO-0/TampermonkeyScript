@@ -73,35 +73,86 @@
 }
 `)
 
-    let sureButton = [
-        '.coin-operated-m .coin-bottom span.bi-btn', // 新, 老版本 
-        '.coin-sure', // watching list
-        '.coin-bottom span.bi-btn', // 未订阅
-        '.coin-bottom span.coin-btn' // 番剧
-    ]
+    // let sureButton = [
+    //     '.coin-operated-m .coin-bottom span.bi-btn', // 新, 老版本 
+    //     '.coin-sure', // watching list
+    //     '.coin-bottom span.bi-btn', // 未订阅
+    //     '.coin-bottom span.coin-btn' // 番剧
+    // ]
 
-    let coinBox = [
-        '.coin-box', // 老版本
-        '.coin', //新版本
-        '.bangumi-coin-wrap' //番剧
-    ]
-
+    // let coinBox = [
+    //     '.coin-box', // 老版本, watching list
+    //     '.coin', //新版本
+    //     '.bangumi-coin-wrap' //番剧
+    // ]
 
     /**
-     * 判断新老版本
+     * 返回投币按钮JQ Selector
+     * @returns {string} JQ Selector
+     */
+    function getCoinBoxSelector(){
+        if (isOldVersion()) {
+            return '.coin-box'
+        } else if (isBangumi()) {
+            return '.bangumi-coin-wrap'
+        } else if (isWatchList()) {
+            return '.coin-box'
+        } else if(isNewVersion()){
+            return '.coin'
+        } else{
+            console.log("take-coin : error : ", "unknown version")
+            return undefined 
+        }
+    }
+
+    /**
+     * 返回确认投币的JQ Selector
+     * @returns {string} JQ Selector
+     */
+    function getSureButtonSelector(){
+        if(isFollowing()){
+            return '.coin-bottom span.bi-btn'
+        }else{
+            if (isOldVersion()) {
+                return '.coin-operated-m .coin-bottom span.bi-btn'
+            } else if (isBangumi()) {
+                return '.coin-bottom span.coin-btn'
+            } else if (isWatchList()) {
+                return '.coin-sure'
+            } else if(isNewVersion()){
+                return '.coin-operated-m .coin-bottom span.bi-btn'
+            } else{
+                console.log("take-coin : error : ", "unknown version")
+                return undefined 
+            }
+        }        
+
+    }    
+
+    /**
+     * 是否为老版本一般视频
      */
     function isOldVersion() {
         return $('i.icon-move.c-icon-moved').length > 0
     }
 
+    /**
+     * 是否为番剧(不区分新老版本)
+     */
     function isBangumi() {
         return $('div.bangumi-coin-wrap').length > 0
     }
 
+    /**
+     * 是否为稍后再看
+     */
     function isWatchList() {
         return $('.bilibili-player-watchlater-nav-header').length > 0
     }
 
+    /**
+     * 是否为新版本一般视频
+     */
     function isNewVersion() {
         return $('.coin:not(.u)').length > 0
     }
@@ -121,6 +172,21 @@
             }
         }
 
+    }
+    /**
+     * 是否关注up
+     */
+    function isFollowing(){
+        if (isOldVersion() || isWatchList()) {
+            return $('div.btn.followed').length > 0
+        } else if (isBangumi()) {
+            return $('.func-btns.followed').length > 0
+        } else if(isNewVersion()){
+            return $('.b-gz.following').length > 0
+        } else{
+            console.log("take-coin : error : ", "unknown version")
+            return undefined 
+        }
     }
 
     /**
@@ -423,24 +489,21 @@
                 // new version || watchlist || bangumi
                 $('.coin').click()
             }
-            coinBox.forEach((coinButton) => {
-                // console.log(button, $(button).length)
-                if ($(coinButton).length > 0) {
-                    $(coinButton).get(0).click()
-                }
-            })
+
+            // 等待CoinBox
+            // let observerCoinBox = new MutationObserver(callbackCoinBox)
+
+            let coinButton = getCoinBoxSelector()
+            $(coinButton).get(0).click()
     
             console.log("changeCoinTaken...")
             changeCoinTaken('taking')
+
             setTimeout(() => {
                 console.log('take-coin : click coin...')
     
-                sureButton.forEach((button) => {
-                    // console.log(button, $(button).length)
-                    if ($(button).length > 0) {
-                        $(button).get(0).click()
-                    }
-                })
+                let button = getSureButtonSelector()
+                $(button).get(0).click()
     
                 setTimeout(() => {
                     console.log('check : ', isCoinTaken())
