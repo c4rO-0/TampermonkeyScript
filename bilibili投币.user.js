@@ -90,18 +90,18 @@
      * 返回投币按钮JQ Selector
      * @returns {string} JQ Selector
      */
-    function getCoinBoxSelector(){
+    function getCoinBoxSelector() {
         if (isOldVersion()) {
             return '.coin-box'
         } else if (isBangumi()) {
             return '.bangumi-coin-wrap'
         } else if (isWatchList()) {
             return '.coin-box'
-        } else if(isNewVersion()){
+        } else if (isNewVersion()) {
             return '.coin'
-        } else{
+        } else {
             console.log("take-coin : error : ", "unknown version")
-            return undefined 
+            return undefined
         }
     }
 
@@ -109,25 +109,26 @@
      * 返回确认投币的JQ Selector
      * @returns {string} JQ Selector
      */
-    function getSureButtonSelector(){
-        if(isFollowing()){
+    function getSureButtonSelector() {
+        // console.log('version : ', isFollowing(), isOldVersion(), isBangumi(), isWatchList(),isNewVersion())
+        if ($('.coin-bottom span.bi-btn').length > 0 ) { // 未订阅
             return '.coin-bottom span.bi-btn'
-        }else{
+        } else {
             if (isOldVersion()) {
                 return '.coin-operated-m .coin-bottom span.bi-btn'
             } else if (isBangumi()) {
                 return '.coin-bottom span.coin-btn'
             } else if (isWatchList()) {
                 return '.coin-sure'
-            } else if(isNewVersion()){
+            } else if (isNewVersion()) {
                 return '.coin-operated-m .coin-bottom span.bi-btn'
-            } else{
+            } else {
                 console.log("take-coin : error : ", "unknown version")
-                return undefined 
+                return undefined
             }
-        }        
+        }
 
-    }    
+    }
 
     /**
      * 是否为老版本一般视频
@@ -175,17 +176,18 @@
     }
     /**
      * 是否关注up
+     * bug : 新版, 联合创造返回错误结果
      */
-    function isFollowing(){
+    function isFollowing() {
         if (isOldVersion() || isWatchList()) {
             return $('div.btn.followed').length > 0
         } else if (isBangumi()) {
             return $('.func-btns.followed').length > 0
-        } else if(isNewVersion()){
+        } else if (isNewVersion()) {
             return $('.b-gz.following').length > 0
-        } else{
+        } else {
             console.log("take-coin : error : ", "unknown version")
-            return undefined 
+            return undefined
         }
     }
 
@@ -231,11 +233,11 @@
 
     }
 
-    function logoHide(){
+    function logoHide() {
         $('#coin-gen').addClass('hide')
     }
 
-    function logoShow(){
+    function logoShow() {
         $('#coin-gen').removeClass('hide')
     }
 
@@ -380,11 +382,11 @@
                     // console.log("coin change : ", mutationList)
                     mutationList.forEach((mutation) => {
                         // if($(mutation.target).is('.van-icon-videodetails_throw')){
-                        if ($('.bilibili-player-video-wrap').length > 0 && $('#coin-gen').length ==0 ) {
+                        if ($('.bilibili-player-video-wrap').length > 0 && $('#coin-gen').length == 0) {
                             // $('#c4r-oxgs73w7rh').remove()
                             $('.bilibili-player-video-wrap').append(genButton())
                             observer.disconnect()
-                            console.log('disconnect coin observe')         
+                            console.log('disconnect coin observe')
                         }
                         // }
                     })
@@ -434,7 +436,7 @@
 
                 // 添加按钮
                 // if ($('#coin-gen').length == 0) {
-                    watching()
+                watching()
                 // }
 
 
@@ -473,13 +475,12 @@
         processFullScreen()
     }
 
-
     // 检测按钮被按
     // 为防止按钮被删, $(document).on 必须放在这里
     $(document).on('click', function (event) {
 
         console.log("click : ", event)
-        if($(event.target).closest('#coin-gen.initial').length){
+        if ($(event.target).closest('#coin-gen.initial').length) {
             console.log("take-coin : 投币")
             if (isOldVersion()) {
                 // console.log("old version")
@@ -490,41 +491,98 @@
                 $('.coin').click()
             }
 
-            // 等待CoinBox
-            // let observerCoinBox = new MutationObserver(callbackCoinBox)
+            // 等待投币确认按钮弹出
+            let callbackCoinBox = function (mutationList, observer) {
+
+                let button = getSureButtonSelector()
+                let isClicked = false
+                let isDisconnect = false
+
+                let hideSelector = ''
+                if (isWatchList()) {
+                    hideSelector = '.coin-mask, .coin-wrap'
+                } else if (isOldVersion() || isNewVersion()) {
+                    hideSelector = '.bili-dialog-m'
+                }else if(isBangumi()){
+                    hideSelector = '.dialog-mask'
+                }
+                console.log(button, $(button).length, hideSelector, "callbackCoinBox : ", mutationList)
+                mutationList.forEach((mutation) => {
+                    if ((!isClicked) && mutation.addedNodes.length > 0 && $(button).length > 0) {
+
+                        // console.log("take-coin :", "click")
+                        $(hideSelector).css('opacity', '0')
+                        $(button).get(0).click()
+                        isClicked = true
+                    }
+
+                    if ((!isDisconnect) && mutation.removedNodes.length > 0) {
+                        // console.log("take-coin :", "remove surebutton")
+                        setTimeout(() => {
+                            console.log('check : ', isCoinTaken())
+                            if (isCoinTaken()) {
+                                changeCoinTaken('taken')
+                            } else {
+                                changeCoinTaken('unknown')
+                            }
+                        }, 1000)
+                        observer.disconnect()
+
+                        isDisconnect = true
+
+                    }
+                })
+            }
+
+            let observerCoinBox = new MutationObserver(callbackCoinBox)
+
+            let CoinBoxObserverSelector = ''
+            if (isWatchList()) {
+                CoinBoxObserverSelector = 'div[coinnum]'
+            } else if (isOldVersion() || isNewVersion()) {
+                CoinBoxObserverSelector = '#app > div'
+            }else if(isBangumi() ){
+                CoinBoxObserverSelector = '#app'
+            }
+            observerCoinBox.observe($(CoinBoxObserverSelector).get(0),
+            {
+                subtree: true, childList: true, characterData: false, attributes: false,
+                // attributeFilter: ["src"], 
+                attributeOldValue: false, characterDataOldValue: false
+            })
 
             let coinButton = getCoinBoxSelector()
             $(coinButton).get(0).click()
-    
+
             console.log("changeCoinTaken...")
             changeCoinTaken('taking')
 
-            setTimeout(() => {
-                console.log('take-coin : click coin...')
-    
-                let button = getSureButtonSelector()
-                $(button).get(0).click()
-    
-                setTimeout(() => {
-                    console.log('check : ', isCoinTaken())
-                    if (isCoinTaken()) {
-                        changeCoinTaken('taken')
-                    } else {
-                        changeCoinTaken('unknown')
-                    }
-                }, 2000)
-            }, 2000);
+            // setTimeout(() => {
+            //     console.log('take-coin : click coin...')
+
+            //     let button = getSureButtonSelector()
+            //     $(button).get(0).click()
+
+            //     setTimeout(() => {
+            //         console.log('check : ', isCoinTaken())
+            //         if (isCoinTaken()) {
+            //             changeCoinTaken('taken')
+            //         } else {
+            //             changeCoinTaken('unknown')
+            //         }
+            //     }, 2000)
+            // }, 2000);
         }
 
 
     })
 
-    function watchVideo(){
-        $('video').on("timeupdate", ()=>{
+    function watchVideo() {
+        $('video').on("timeupdate", () => {
             // console.log("video time : ", $('video').get(0).currentTime)
-            if($('video').get(0).currentTime / $('video').get(0).duration > 3./4.){
+            if ($('video').get(0).currentTime / $('video').get(0).duration > 3. / 4.) {
                 $("#coin-gen").addClass('surprise')
-            }else{
+            } else {
                 $("#coin-gen").removeClass('surprise')
             }
         });
