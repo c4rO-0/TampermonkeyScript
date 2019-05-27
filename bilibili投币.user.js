@@ -297,8 +297,13 @@
     function watchVideo() {
         $('video').on("timeupdate", () => {
             // console.log("video time : ", $('video').get(0).currentTime)
-            if ($('video').get(0).currentTime / $('video').get(0).duration > 3. / 4.) {
-                $("#coin-gen").addClass('surprise')
+            if ($('video').get(0).currentTime > 3. / 4. *$('video').get(0).duration ) {
+                if($("#coin-gen").hasClass("success")){
+
+                }else{
+                    $("#coin-gen").addClass('surprise')
+                }
+                
             } else {
                 $("#coin-gen").removeClass('surprise')
             }
