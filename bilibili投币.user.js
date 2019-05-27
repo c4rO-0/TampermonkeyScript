@@ -1,20 +1,23 @@
 // ==UserScript==
 // @name         bilibili投币
-// @namespace    http://tampermonkey.net/
+// @namespace    www.papercomment.tech
 // @version      0.1
-// @description  try to take over the world!
-// @author       You
+// @description  辅助b站投币
+// @author       c4r
 // @match        https://www.bilibili.com/watchlater/*
 // @match        https://www.bilibili.com/video/*
 // @match        https://www.bilibili.com/bangumi/play/*
 // @require      https://code.jquery.com/jquery-latest.js
 // @grant        GM_addStyle
+// @license      MPL-2.0
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    //玩法：修改第二层div.c4r的类，可改的类名包括（.initial .success .error .processing .surprise .hide），其中.inital和.success需要保证有且仅有一个存在。
+    /**
+     *  玩法：修改第二层div.c4r的类，可改的类名包括（.initial .success .error .processing .surprise .hide），其中.inital和.success需要保证有且仅有一个存在。
+     */
     GM_addStyle(`
 .processing {
   animation: rotate 2s infinite linear;
@@ -73,6 +76,10 @@
 }
 `)
 
+
+    // ===========================================================================================
+    // 全局变量
+    // -------------------------------------------------------------------------------------------
     // let sureButton = [
     //     '.coin-operated-m .coin-bottom span.bi-btn', // 新, 老版本 
     //     '.coin-sure', // watching list
@@ -86,6 +93,9 @@
     //     '.bangumi-coin-wrap' //番剧
     // ]
 
+    // ===========================================================================================
+    // 没有改动类函数...
+    // -------------------------------------------------------------------------------------------
     /**
      * 返回投币按钮JQ Selector
      * @returns {string} JQ Selector
@@ -229,14 +239,32 @@
         <svg class="bcoin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28"><path d="M14.89 8.664h3.276c.541 0 .979-.4.979-.892s-.438-.892-.979-.892H9.681c-.541 0-.979.4-.979.892s.438.892.979.892h3.425v1.637a5.64 5.64 0 0 0-5.355 5.616v1.19a.892.892 0 1 0 1.784.001v-1.19a3.855 3.855 0 0 1 3.57-3.831v8.329a.892.892 0 0 0 1.784 0v-8.329a3.855 3.855 0 0 1 3.57 3.831v1.19a.892.892 0 0 0 1.784 0v-1.19a5.64 5.64 0 0 0-5.355-5.616V8.664zM14 26C7.373 26 2 20.627 2 14S7.373 2 14 2s12 5.373 12 12a12.002 12.002 0 0 1-12 12z"/></svg>\
         </div>\
         </div>'
-
-
     }
 
+    /**
+     * 判断视频是否全屏状态
+     */
+    function isVideoInFullscreen() {
+        if (document.fullscreenElement && document.fullscreenElement.id == 'bilibiliPlayer') {
+            return true;
+        }
+        return false;
+    }
+
+
+    // ===========================================================================================
+    // 功能函数
+    // -------------------------------------------------------------------------------------------
+    /**
+     * 隐藏logo
+     */
     function logoHide() {
         $('#coin-gen').addClass('hide')
     }
 
+    /**
+     * logo出现
+     */
     function logoShow() {
         $('#coin-gen').removeClass('hide')
     }
@@ -264,49 +292,18 @@
     }
 
     /**
-     * 判断视频是否全屏状态
+     * 检测进度条
      */
-    function isVideoInFullscreen() {
-        if (document.fullscreenElement && document.fullscreenElement.id == 'bilibiliPlayer') {
-            return true;
-        }
-        return false;
-    }
-
-
-    // 检查是否隐藏
-    let callbackHide = function (mutationList, observer) {
-        // console.log(mutationList)
-        mutationList.forEach((mutation) => {
-            // console.log(mutation.oldValue, $(".bilibili-player-video-control").attr('style'))
-            if (isOldVersion() || isWatchList() || isBangumi()) {
-                if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;' ||
-                    $(".bilibili-player-video-control").attr('style') == 'opacity: 1;') {
-                    if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;') {
-                        // console.log("Bcoin : hide")
-                        // $('#coin-gen').hide()
-                        // logoHide()
-                    } else {
-                        // $('#coin-gen').show()
-                        // logoShow()
-                    }
-                }
+    function watchVideo() {
+        $('video').on("timeupdate", () => {
+            // console.log("video time : ", $('video').get(0).currentTime)
+            if ($('video').get(0).currentTime / $('video').get(0).duration > 3. / 4.) {
+                $("#coin-gen").addClass('surprise')
             } else {
-                // 新版
-                if ($("#bilibiliPlayer > div.bilibili-player-area").hasClass('video-control-show')) {
-                    // console.log("Bcoin : hide")
-                    // $('#coin-gen').show()
-                    // logoShow()
-                } else {
-                    // $('#coin-gen').hide()
-                    // logoHide()
-                }
-
+                $("#coin-gen").removeClass('surprise')
             }
-        })
-
+        });
     }
-    let observerHide = new MutationObserver(callbackHide)
 
     /**
      * 视频fullscreen时候要做的事情
@@ -346,26 +343,6 @@
         // }
     }
 
-    // ===========================================================================================
-    // 运行主体函数
-    // -------------------------------------------------------------------------------------------    
-    // 新版用来等待加载coin
-    let callbackCoin = function (mutationList, observer) {
-        // console.log("coin change : ", mutationList)
-        mutationList.forEach((mutation) => {
-            // if($(mutation.target).is('.van-icon-videodetails_throw')){
-            // console.log($.trim($('.coin').text()))
-            if ($('.coin').hasClass('on')) {
-                $('#c4r-oxgs73w7rh').remove()
-                $('#bilibiliPlayer').append(genButton())
-                observer.disconnect()
-                // console.log('disconnect coin observe')         
-            }
-            // }
-        })
-
-    }
-    let observerCoin = new MutationObserver(callbackCoin)
     /**
      * 实际运行部分
      */
@@ -419,12 +396,72 @@
 
         watchVideo()
 
-
-    }
+    }    
 
     // ===========================================================================================
-    // 检测和开始添加按钮
+    // observation
     // -------------------------------------------------------------------------------------------
+    /**
+     * 检查是否视频周边控制器隐藏状态是否变化
+     */
+    let callbackHide = function (mutationList, observer) {
+        // console.log(mutationList)
+        mutationList.forEach((mutation) => {
+            // console.log(mutation.oldValue, $(".bilibili-player-video-control").attr('style'))
+            if (isOldVersion() || isWatchList() || isBangumi()) {
+                if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;' ||
+                    $(".bilibili-player-video-control").attr('style') == 'opacity: 1;') {
+                    if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;') {
+                        // console.log("Bcoin : hide")
+                        // $('#coin-gen').hide()
+                        // logoHide()
+                    } else {
+                        // $('#coin-gen').show()
+                        // logoShow()
+                    }
+                }
+            } else {
+                // 新版
+                if ($("#bilibiliPlayer > div.bilibili-player-area").hasClass('video-control-show')) {
+                    // console.log("Bcoin : hide")
+                    // $('#coin-gen').show()
+                    // logoShow()
+                } else {
+                    // $('#coin-gen').hide()
+                    // logoHide()
+                }
+
+            }
+        })
+
+    }
+    let observerHide = new MutationObserver(callbackHide)
+
+    //-------------------------------------------------------------------------------------------
+    /**
+     * 新版coin图标会晚一点加载出来, 用来等待加载coin
+     */
+    let callbackCoin = function (mutationList, observer) {
+        // console.log("coin change : ", mutationList)
+        mutationList.forEach((mutation) => {
+            // if($(mutation.target).is('.van-icon-videodetails_throw')){
+            // console.log($.trim($('.coin').text()))
+            if ($('.coin').hasClass('on')) {
+                $('#c4r-oxgs73w7rh').remove()
+                $('#bilibiliPlayer').append(genButton())
+                observer.disconnect()
+                // console.log('disconnect coin observe')         
+            }
+            // }
+        })
+
+    }
+    let observerCoin = new MutationObserver(callbackCoin)
+
+    //-------------------------------------------------------------------------------------------
+    /**
+     * 检测video变化, 开始添加按钮
+     */
     let callbackVideo = function (mutationList, observer) {
         // console.log(mutationList)
         mutationList.forEach((mutation) => {
@@ -453,6 +490,110 @@
     }
     let observerVideo = new MutationObserver(callbackVideo)
 
+    //-------------------------------------------------------------------------------------------
+    /**
+     * 等待投币确认按钮弹出
+     */
+    let callbackCoinBox = function (mutationList, observer) {
+
+        let button = getSureButtonSelector()
+        let isClicked = false
+        let isDisconnect = false
+
+        let hideSelector = ''
+        if (isWatchList()) {
+            hideSelector = '.coin-mask, .coin-wrap'
+        } else if (isOldVersion() || isNewVersion()) {
+            hideSelector = '.bili-dialog-m'
+        } else if (isBangumi()) {
+            hideSelector = '.dialog-mask'
+        }
+        console.log(button, $(button).length, hideSelector, "callbackCoinBox : ", mutationList)
+        mutationList.forEach((mutation) => {
+            if ((!isClicked) && mutation.addedNodes.length > 0 && $(button).length > 0) {
+
+                // console.log("take-coin :", "click")
+                $(hideSelector).css('opacity', '0')
+                $(button).get(0).click()
+                isClicked = true
+            }
+
+            if ((!isDisconnect) && mutation.removedNodes.length > 0) {
+                // console.log("take-coin :", "remove surebutton")
+                setTimeout(() => {
+                    console.log('check : ', isCoinTaken())
+                    if (isCoinTaken()) {
+                        changeCoinTaken('taken')
+                    } else {
+                        changeCoinTaken('unknown')
+                    }
+                }, 1000)
+                observer.disconnect()
+
+                isDisconnect = true
+
+            }
+        })
+    }
+    let observerCoinBox = new MutationObserver(callbackCoinBox)
+
+    // ===========================================================================================
+    // 全局listener
+    // -------------------------------------------------------------------------------------------
+    /**
+     * 全屏变化
+     */
+    document.onfullscreenchange = function (event) {
+        console.log("FULL SCREEN CHANGE")
+        processFullScreen()
+    }
+
+    //-------------------------------------------------------------------------------------------
+    // 检测按钮被按
+    // 为防止按钮被删, $(document).on 必须放在这里
+    $(document).on('click', function (event) {
+
+        // console.log("click : ", event)
+        if ($(event.target).closest('#coin-gen.initial').length) {
+            console.log("take-coin : 投币")
+            if (isOldVersion()) {
+                // console.log("old version")
+                $('.coin-box').click()
+            } else {
+                // console.log("other version")
+                // new version || watchlist || bangumi
+                $('.coin').click()
+            }
+
+            let CoinBoxObserverSelector = ''
+            if (isWatchList()) {
+                CoinBoxObserverSelector = 'div[coinnum]'
+            } else if (isOldVersion() || isNewVersion()) {
+                CoinBoxObserverSelector = '#app > div'
+            } else if (isBangumi()) {
+                CoinBoxObserverSelector = '#app'
+            }
+            observerCoinBox.observe($(CoinBoxObserverSelector).get(0),
+                {
+                    subtree: true, childList: true, characterData: false, attributes: false,
+                    // attributeFilter: ["src"], 
+                    attributeOldValue: false, characterDataOldValue: false
+                })
+
+            let coinButton = getCoinBoxSelector()
+            $(coinButton).get(0).click()
+
+            console.log("changeCoinTaken...")
+            changeCoinTaken('taking')
+        }
+
+
+    })
+
+
+    // ===========================================================================================
+    // ready
+    // -------------------------------------------------------------------------------------------
     $(document).ready(function () {
         console.log('take-coin : ready ...')
         if ($('.watch-later-list').length > 0) {
@@ -494,128 +635,6 @@
         }
 
     })
-
-    // ===========================================================================================
-    // 检测到全屏变化
-    // -------------------------------------------------------------------------------------------
-    document.onfullscreenchange = function (event) {
-        console.log("FULL SCREEN CHANGE")
-        processFullScreen()
-    }
-
-    // 检测按钮被按
-    // 为防止按钮被删, $(document).on 必须放在这里
-    $(document).on('click', function (event) {
-
-        // console.log("click : ", event)
-        if ($(event.target).closest('#coin-gen.initial').length) {
-            console.log("take-coin : 投币")
-            if (isOldVersion()) {
-                // console.log("old version")
-                $('.coin-box').click()
-            } else {
-                // console.log("other version")
-                // new version || watchlist || bangumi
-                $('.coin').click()
-            }
-
-            // 等待投币确认按钮弹出
-            let callbackCoinBox = function (mutationList, observer) {
-
-                let button = getSureButtonSelector()
-                let isClicked = false
-                let isDisconnect = false
-
-                let hideSelector = ''
-                if (isWatchList()) {
-                    hideSelector = '.coin-mask, .coin-wrap'
-                } else if (isOldVersion() || isNewVersion()) {
-                    hideSelector = '.bili-dialog-m'
-                } else if (isBangumi()) {
-                    hideSelector = '.dialog-mask'
-                }
-                console.log(button, $(button).length, hideSelector, "callbackCoinBox : ", mutationList)
-                mutationList.forEach((mutation) => {
-                    if ((!isClicked) && mutation.addedNodes.length > 0 && $(button).length > 0) {
-
-                        // console.log("take-coin :", "click")
-                        $(hideSelector).css('opacity', '0')
-                        $(button).get(0).click()
-                        isClicked = true
-                    }
-
-                    if ((!isDisconnect) && mutation.removedNodes.length > 0) {
-                        // console.log("take-coin :", "remove surebutton")
-                        setTimeout(() => {
-                            console.log('check : ', isCoinTaken())
-                            if (isCoinTaken()) {
-                                changeCoinTaken('taken')
-                            } else {
-                                changeCoinTaken('unknown')
-                            }
-                        }, 1000)
-                        observer.disconnect()
-
-                        isDisconnect = true
-
-                    }
-                })
-            }
-
-            let observerCoinBox = new MutationObserver(callbackCoinBox)
-
-            let CoinBoxObserverSelector = ''
-            if (isWatchList()) {
-                CoinBoxObserverSelector = 'div[coinnum]'
-            } else if (isOldVersion() || isNewVersion()) {
-                CoinBoxObserverSelector = '#app > div'
-            } else if (isBangumi()) {
-                CoinBoxObserverSelector = '#app'
-            }
-            observerCoinBox.observe($(CoinBoxObserverSelector).get(0),
-                {
-                    subtree: true, childList: true, characterData: false, attributes: false,
-                    // attributeFilter: ["src"], 
-                    attributeOldValue: false, characterDataOldValue: false
-                })
-
-            let coinButton = getCoinBoxSelector()
-            $(coinButton).get(0).click()
-
-            console.log("changeCoinTaken...")
-            changeCoinTaken('taking')
-
-            // setTimeout(() => {
-            //     console.log('take-coin : click coin...')
-
-            //     let button = getSureButtonSelector()
-            //     $(button).get(0).click()
-
-            //     setTimeout(() => {
-            //         console.log('check : ', isCoinTaken())
-            //         if (isCoinTaken()) {
-            //             changeCoinTaken('taken')
-            //         } else {
-            //             changeCoinTaken('unknown')
-            //         }
-            //     }, 2000)
-            // }, 2000);
-        }
-
-
-    })
-
-    function watchVideo() {
-        $('video').on("timeupdate", () => {
-            // console.log("video time : ", $('video').get(0).currentTime)
-            if ($('video').get(0).currentTime / $('video').get(0).duration > 3. / 4.) {
-                $("#coin-gen").addClass('surprise')
-            } else {
-                $("#coin-gen").removeClass('surprise')
-            }
-        });
-    }
-
 
 
 })();
