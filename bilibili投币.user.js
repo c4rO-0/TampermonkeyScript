@@ -75,14 +75,14 @@
     opacity: 1;
   }
 }
-.coin {
+.bcoin {
   fill: #1890ff;
 }
 .c4r.initial .c4r-logo,
-.c4r.success .coin{
+.c4r.success .bcoin{
   display:;
 }
-.c4r.initial .coin,
+.c4r.initial .bcoin,
 .c4r.success .c4r-logo{
   display: none;
 }
@@ -105,6 +105,7 @@
     //     '.bangumi-coin-wrap' //番剧
     // ]
     let islogoShowTime = false
+    let isMouseInLogo = false
 
     // ===========================================================================================
     // 没有改动类函数...
@@ -466,7 +467,7 @@
                     $(".bilibili-player-video-control").attr('style') == 'opacity: 1;') {
                     if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;') {
                         // console.log("Bcoin : hide")
-                        if (!islogoForeShow()) {
+                        if (!islogoForeShow() && !isMouseInLogo) {
                             logoHide()
                         }
                     } else {
@@ -481,8 +482,9 @@
                     // $('#coin-gen').show()
                     logoShow()
                 } else {
-
-                    logoHide()
+                    if (!islogoForeShow() && !isMouseInLogo) {
+                        logoHide()
+                    }
 
                 }
 
@@ -609,7 +611,7 @@
     $(document).on('click', function (event) {
 
         // console.log("click : ", event)
-        if ($(event.target).closest('#coin-gen.initial').length) {
+        if ($(event.target).closest('#coin-gen.initial').length > 0) {
             console.log("take-coin : 投币")
             if (isOldVersion()) {
                 // console.log("old version")
@@ -644,6 +646,24 @@
 
 
     })
+
+    $(document).on('mouseover', function(event) {
+        if ($(event.target).closest('#coin-gen').length > 0) {
+            console.log('take-coin :', 'mousenter')
+            isMouseInLogo = true
+            logoShow()
+        }
+    })
+
+    $(document).on('mouseout', function(event) {
+        if ($(event.target).closest('#coin-gen').length > 0) {
+            console.log('take-coin :', 'leave')
+            isMouseInLogo = false
+            if (!islogoForeShow()) {
+                logoHide()
+            }
+        }
+    })    
 
 
     // ===========================================================================================
