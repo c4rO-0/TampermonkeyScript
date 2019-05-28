@@ -18,7 +18,7 @@
     /**
      *  玩法：修改第二层div.c4r的类，可改的类名包括（.initial .success .error .processing .surprise .hide .fade），其中.inital和.success需要保证有且仅有一个存在。
      */
-    GM_addStyle (`
+    GM_addStyle(`
 .processing {
   animation: rotate 2s infinite linear;
 }
@@ -58,7 +58,7 @@
 .hide{
   opacity: 0;
 }
-.fade, .c4r:hover {
+.fade {
   animation: fade 1s 0.3s forwards;
 }
 @keyframes fade {
@@ -104,6 +104,7 @@
     //     '.coin', //新版本
     //     '.bangumi-coin-wrap' //番剧
     // ]
+    let islogoShowTime = false
 
     // ===========================================================================================
     // 没有改动类函数...
@@ -213,6 +214,14 @@
         }
     }
 
+    function islogoForeShow() {
+        if (isCoinTaken()) {
+            return false
+        } else {
+            return islogoShowTime
+        }
+    }
+
     /**
      * 插入投币按钮的html代码
      * 包含 : 
@@ -307,17 +316,43 @@
      * 检测进度条
      */
     function watchVideo() {
+
+        let timePoint1_s = 3. / 4. * $('video').get(0).duration
+        let timePoint1_e = 3. / 4. * $('video').get(0).duration + 3
+
+
         $('video').on("timeupdate", () => {
             // console.log("video time : ", $('video').get(0).currentTime)
-            if ($('video').get(0).currentTime > 3. / 4. *$('video').get(0).duration ) {
-                if($("#coin-gen").hasClass("success")){
+            if ($('video').get(0).currentTime > timePoint1_s
+                && $('video').get(0).currentTime < timePoint1_e) {
 
-                }else{
-                    $("#coin-gen").addClass('surprise')
+                islogoShowTime = true
+
+                if ($("#coin-gen").hasClass("success")) {
+
+                } else {
+
+                    $("#coin-gen").addClass('surprise fade')
                 }
-                
-            } else {
+
+            } else if ($('video').get(0).currentTime > timePoint1_e) {
+
+                islogoShowTime = true
+
+                if ($("#coin-gen").hasClass("success")) {
+
+                } else {
+
+                    $("#coin-gen").removeClass('fade').addClass('surprise')
+                }
+            }
+            else {
+                islogoShowTime = false
                 $("#coin-gen").removeClass('surprise')
+            }
+
+            if (islogoForeShow()) {
+                logoShow()
             }
         });
     }
@@ -349,7 +384,7 @@
 
             observerHide.disconnect()
             // $('#coin-gen').show()
-            // logoShow()
+            logoShow()
         }
 
         // 加载watching list
@@ -368,6 +403,7 @@
 
         console.log("take-coin : add button")
         $('#c4r-oxgs73w7rh').remove()
+
 
         if (!isNewVersion()) {
             console.log("oldversion")
@@ -413,7 +449,7 @@
 
         watchVideo()
 
-    }    
+    }
 
     // ===========================================================================================
     // observation
@@ -430,22 +466,24 @@
                     $(".bilibili-player-video-control").attr('style') == 'opacity: 1;') {
                     if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;') {
                         // console.log("Bcoin : hide")
-                        // $('#coin-gen').hide()
-                        // logoHide()
+                        if (!islogoForeShow()) {
+                            logoHide()
+                        }
                     } else {
                         // $('#coin-gen').show()
-                        // logoShow()
+                        logoShow()
                     }
                 }
             } else {
                 // 新版
                 if ($("#bilibiliPlayer > div.bilibili-player-area").hasClass('video-control-show')) {
-                    // console.log("Bcoin : hide")
+
                     // $('#coin-gen').show()
-                    // logoShow()
+                    logoShow()
                 } else {
-                    // $('#coin-gen').hide()
-                    // logoHide()
+
+                    logoHide()
+
                 }
 
             }
