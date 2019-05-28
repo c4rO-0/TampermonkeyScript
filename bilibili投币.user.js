@@ -55,7 +55,7 @@
 .c4r {
   transition: opacity 0.25s ease, transform 0.3s ease;
 }
-.hide{
+.c4rHide{
   opacity: 0;
 }
 .fade {
@@ -281,14 +281,14 @@
      * 隐藏logo
      */
     function logoHide() {
-        $('#coin-gen').addClass('hide')
+        $('#coin-gen').addClass('c4rHide')
     }
 
     /**
      * logo出现
      */
     function logoShow() {
-        $('#coin-gen').removeClass('hide')
+        $('#coin-gen').removeClass('c4rHide')
     }
 
     /**
@@ -468,7 +468,7 @@
                     if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;') {
                         // console.log("Bcoin : hide")
                         if (!islogoForeShow() && !isMouseInLogo) {
-                            logoHide()
+                            // logoHide()
                         }
                     } else {
                         // $('#coin-gen').show()
