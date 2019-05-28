@@ -73,14 +73,14 @@
     opacity: 1;
   }
 }
-.coin {
+.bcoin {
   fill: #1890ff;
 }
 .c4r.initial .c4r-logo,
-.c4r.success .coin{
+.c4r.success .bcoin{
   display:;
 }
-.c4r.initial .coin,
+.c4r.initial .bcoin,
 .c4r.success .c4r-logo{
   display: none;
 }
