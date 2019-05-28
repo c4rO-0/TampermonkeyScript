@@ -16,9 +16,9 @@
     'use strict';
 
     /**
-     *  玩法：修改第二层div.c4r的类，可改的类名包括（.initial .success .error .processing .surprise .hide），其中.inital和.success需要保证有且仅有一个存在。
+     *  玩法：修改第二层div.c4r的类，可改的类名包括（.initial .success .error .processing .surprise .hide .fade），其中.inital和.success需要保证有且仅有一个存在。
      */
-    GM_addStyle(`
+    GM_addStyle (`
 .processing {
   animation: rotate 2s infinite linear;
 }
@@ -50,20 +50,32 @@
   background-color: #fd676f;
 }
 .surprise, .c4r:hover {
-  animation:big 0.5s ease 1 forwards;
+  transform: scale(2) translate(-7px,7px);
 }
 .c4r {
-  transition: opacity 0.25s ease;
+  transition: opacity 0.25s ease, transform 0.3s ease;
 }
 .hide{
   opacity: 0;
 }
-@keyframes big{
-  to{
-    transform: scale(2) translate(-7px,7px);
+.fade, .c4r:hover {
+  animation: fade 1s 0.3s forwards;
+}
+@keyframes fade {
+  25% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 1;
   }
 }
-.bcoin {
+.coin {
   fill: #1890ff;
 }
 .c4r.initial .c4r-logo,
