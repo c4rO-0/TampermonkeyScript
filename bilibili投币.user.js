@@ -104,7 +104,8 @@
     //     '.coin', //新版本
     //     '.bangumi-coin-wrap' //番剧
     // ]
-    let islogoShowTime = false
+    let logoShowStatus = []
+    // let islogoShowTime = false
     let isMouseInLogo = false
 
     // ===========================================================================================
@@ -216,10 +217,12 @@
     }
 
     function islogoForeShow() {
-        if (isCoinTaken()) {
+        if (isCoinTaken() && logoShowStatus.indexOf("actTakingCoin") == -1) {
+            // console.log('forec : taken')
             return false
         } else {
-            return islogoShowTime
+            // console.log('forec : logoShowStatus ', logoShowStatus.length)
+            return logoShowStatus.length > 0
         }
     }
 
@@ -298,17 +301,30 @@
      */
     function changeCoinTaken(status) {
         if (status == 'taken') {
-            $('#coin-gen').attr('class', 'c4r success')
+            $('#coin-gen').attr('class', 'c4r success surprise')
+            setTimeout(() => {
+                if (logoShowStatus.indexOf("actTakingCoin") != -1) {
+                    delete logoShowStatus[logoShowStatus.indexOf("actTakingCoin")]
+                }                
+                if (!islogoForeShow() && !isMouseInLogo) {
+                    logoHide()
+                }  
+                $('#coin-gen').removeClass('surprise')
+            }, 1000);
+                  
 
         } else if (status == 'taking') {
-            $('#coin-gen').attr('class', 'c4r success processing')
+            $('#coin-gen').attr('class', 'c4r success surprise processing')
+            // $('#coin-gen').attr('class', 'c4r success surprise')
 
         } else if (status == 'untaken') {
             $('#coin-gen').attr('class', 'c4r initial')
 
         } else {
             $('#coin-gen').attr('class', 'c4r initial error')
-            islogoForeShow = true
+            if (logoShowStatus.indexOf("actCoinError") == -1) {
+                logoShowStatus.push("actCoinError")
+            }  
         }
 
     }
@@ -321,13 +337,21 @@
         let timePoint1_s = 3. / 4. * $('video').get(0).duration
         let timePoint1_e = 3. / 4. * $('video').get(0).duration + 3
 
+        let strStartRemind = 'timeStartRemind'
+        let strKeepRemind = 'timeKeepRemind'
+
 
         $('video').on("timeupdate", () => {
             // console.log("video time : ", $('video').get(0).currentTime)
+
             if ($('video').get(0).currentTime > timePoint1_s
                 && $('video').get(0).currentTime < timePoint1_e) {
+                // 闪烁    
 
-                islogoShowTime = true
+                if (logoShowStatus.indexOf(strStartRemind) == -1) {
+                    logoShowStatus.push(strStartRemind)
+                }
+
 
                 if ($("#coin-gen").hasClass("success")) {
 
@@ -338,7 +362,14 @@
 
             } else if ($('video').get(0).currentTime > timePoint1_e) {
 
-                islogoShowTime = true
+                if (logoShowStatus.indexOf(strStartRemind) != -1) {
+                    delete logoShowStatus[logoShowStatus.indexOf(strStartRemind)]
+                }
+
+
+                if (logoShowStatus.indexOf(strKeepRemind) == -1) {
+                    logoShowStatus.push(strKeepRemind)
+                }                
 
                 if ($("#coin-gen").hasClass("success")) {
 
@@ -348,8 +379,8 @@
                 }
             }
             else {
-                islogoShowTime = false
-                $("#coin-gen").removeClass('surprise')
+
+                // $("#coin-gen").removeClass('surprise')
             }
 
             if (islogoForeShow()) {
@@ -468,7 +499,8 @@
                     if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;') {
                         // console.log("Bcoin : hide")
                         if (!islogoForeShow() && !isMouseInLogo) {
-                            // logoHide()
+
+                            logoHide()
                         }
                     } else {
                         // $('#coin-gen').show()
@@ -573,6 +605,7 @@
                 $(hideSelector).css('opacity', '0')
                 $(button).get(0).click()
                 isClicked = true
+             
             }
 
             if ((!isDisconnect) && mutation.removedNodes.length > 0) {
@@ -581,10 +614,12 @@
                     console.log('check : ', isCoinTaken())
                     if (isCoinTaken()) {
                         changeCoinTaken('taken')
+                         
                     } else {
                         changeCoinTaken('unknown')
                     }
-                }, 1000)
+            
+                }, 1500)
                 observer.disconnect()
 
                 isDisconnect = true
@@ -642,28 +677,32 @@
 
             console.log("changeCoinTaken...")
             changeCoinTaken('taking')
+            if (logoShowStatus.indexOf("actTakingCoin") == -1) {
+                logoShowStatus.push("actTakingCoin")
+            }              
         }
 
 
     })
 
-    $(document).on('mouseover', function(event) {
+    $(document).on('mouseover', function (event) {
         if ($(event.target).closest('#coin-gen').length > 0) {
-            console.log('take-coin :', 'mousenter')
+            // console.log('take-coin :', 'mousenter')
             isMouseInLogo = true
             logoShow()
         }
     })
 
-    $(document).on('mouseout', function(event) {
+    $(document).on('mouseout', function (event) {
         if ($(event.target).closest('#coin-gen').length > 0) {
-            console.log('take-coin :', 'leave')
+            // console.log('take-coin :', 'leave')
             isMouseInLogo = false
             if (!islogoForeShow()) {
+                // console.log(logoShowStatus)
                 logoHide()
             }
         }
-    })    
+    })
 
 
     // ===========================================================================================
