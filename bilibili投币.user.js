@@ -314,7 +314,7 @@
                   
 
         } else if (status == 'taking') {
-            $('#coin-gen').attr('class', 'c4r success surprise processing')
+            $('#coin-gen').attr('class', 'c4r initial surprise processing')
             // $('#coin-gen').attr('class', 'c4r success surprise')
 
         } else if (status == 'untaken') {
