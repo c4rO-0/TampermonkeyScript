@@ -281,10 +281,19 @@
     // 功能函数
     // -------------------------------------------------------------------------------------------
     /**
-     * 隐藏logo
+     * 强制隐藏logo
      */
     function logoHide() {
         $('#coin-gen').addClass('c4rHide')
+    }
+
+    /**
+     * 根据情况判断隐藏图标
+     */
+    function autoLogoHide() {
+        if (!islogoForeShow() && !isMouseInLogo) {
+            logoHide()
+        }  
     }
 
     /**
@@ -306,9 +315,7 @@
                 if (logoShowStatus.indexOf("actTakingCoin") != -1) {
                     delete logoShowStatus[logoShowStatus.indexOf("actTakingCoin")]
                 }                
-                if (!islogoForeShow() && !isMouseInLogo) {
-                    logoHide()
-                }  
+                autoLogoHide()
                 $('#coin-gen').removeClass('surprise')
             }, 1000);
                   
@@ -498,10 +505,7 @@
                     $(".bilibili-player-video-control").attr('style') == 'opacity: 1;') {
                     if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;') {
                         // console.log("Bcoin : hide")
-                        if (!islogoForeShow() && !isMouseInLogo) {
-
-                            logoHide()
-                        }
+                        autoLogoHide()
                     } else {
                         // $('#coin-gen').show()
                         logoShow()
@@ -514,9 +518,7 @@
                     // $('#coin-gen').show()
                     logoShow()
                 } else {
-                    if (!islogoForeShow() && !isMouseInLogo) {
-                        logoHide()
-                    }
+                    autoLogoHide()
 
                 }
 
@@ -697,10 +699,7 @@
         if ($(event.target).closest('#coin-gen').length > 0) {
             // console.log('take-coin :', 'leave')
             isMouseInLogo = false
-            if (!islogoForeShow()) {
-                // console.log(logoShowStatus)
-                logoHide()
-            }
+            autoLogoHide()
         }
     })
 
