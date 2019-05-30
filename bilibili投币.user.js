@@ -505,10 +505,10 @@
                     $(".bilibili-player-video-control").attr('style') == 'opacity: 1;') {
                     if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;') {
                         // console.log("Bcoin : hide")
-                        autoLogoHide()
+                        // autoLogoHide()
                     } else {
                         // $('#coin-gen').show()
-                        logoShow()
+                        // logoShow()
                     }
                 }
             } else {
@@ -516,9 +516,9 @@
                 if ($("#bilibiliPlayer > div.bilibili-player-area").hasClass('video-control-show')) {
 
                     // $('#coin-gen').show()
-                    logoShow()
+                    // logoShow()
                 } else {
-                    autoLogoHide()
+                    // autoLogoHide()
 
                 }
 
@@ -691,7 +691,7 @@
         if ($(event.target).closest('#coin-gen').length > 0) {
             // console.log('take-coin :', 'mousenter')
             isMouseInLogo = true
-            logoShow()
+            // logoShow()
         }
     })
 
@@ -702,6 +702,15 @@
             autoLogoHide()
         }
     })
+
+    $(document).on('mousemove', function (event) {
+        if ($('#coin-gen').length > 0) {
+            logoShow()
+            setTimeout(() => {
+                autoLogoHide()
+            }, 3000);
+        }
+    })    
 
 
     // ===========================================================================================
