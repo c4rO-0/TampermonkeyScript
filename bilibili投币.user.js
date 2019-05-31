@@ -703,12 +703,19 @@
         }
     })
 
+    let mousemoveTimeoutID = 0
     $(document).on('mousemove', function (event) {
         if ($('#coin-gen').length > 0) {
+            // console.log('take-coin :', 'mousemove')
             logoShow()
-            setTimeout(() => {
+
+            if(mousemoveTimeoutID) {
+                clearTimeout(mousemoveTimeoutID)
+            }
+            mousemoveTimeoutID = setTimeout(() => {
+                // console.log('take-coin :', 'Hide')
                 autoLogoHide()
-            }, 3000);
+            }, 1000);
         }
     })    
 
