@@ -49,7 +49,7 @@
 .error {
   background-color: #fd676f;
 }
-.surprise, .c4r:hover {
+.surprise, #c4r-oxgs73w7rh:hover .c4r {
   transform: scale(2) translate(-7px,7px);
 }
 .c4r {
