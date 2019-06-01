@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili一键投币
 // @namespace    www.papercomment.tech
-// @version      0.1
+// @version      0.3
 // @description  在视频右上角添加快捷按钮帮助用户在全屏和非全屏下一键投币. 投币不需要退出全屏, 过程没有弹出遮挡提示,不需要暂停视频. 方便支持自己喜欢的作者, 投币获得经验5级帐号不再遥不可及. 
 // @author       c4r
 // @match        https://www.bilibili.com/watchlater/*
@@ -49,7 +49,7 @@
 .error {
   background-color: #fd676f;
 }
-.surprise, #c4r-oxgs73w7rh:hover .c4r {
+.surprise, #c4r-takecoin:hover .c4r {
   height:100%;
   width:100%;
   top:0;
@@ -234,7 +234,7 @@
         }
 
 
-        return '<div id="c4r-oxgs73w7rh" style="width: 6.5%;padding-top: 6.5%;position: absolute;overflow: hidden;top: 0px;right: 0px;cursor: pointer;z-index: 100">\
+        return '<div id="c4r-takecoin" style="width: 6.5%;padding-top: 6.5%;position: absolute;overflow: hidden;top: 0px;right: 0px;cursor: pointer;z-index: 100">\
         <div id="coin-gen" class="c4r '+ strClass + '" style="position: absolute;">\
         <svg class="c4r-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 162.65 162.65"><path d="M102.74,20.66C67.1,13.31,7,103.51,31.89,108.3c13.7,2.65,24.31-4.73,33.83-6.17l13,.31a1.1,1.1,0,0,1,1.43.57,1.08,1.08,0,0,1-.57,1.43c-11,10.93-6.16,8.84-19.75,13-30.17,9.27-57.47,3.07-43.47-33.52C27.2,55.58,71.12,5,105.59,12.2a4.46,4.46,0,1,1-2.85,8.46Z" style="fill:#414042;fill-rule:evenodd"/><path d="M88.73,71.39a74.35,74.35,0,0,1,9.86,22.25c9.45-11.26,23-18.66,35.69-5.72a3.28,3.28,0,0,1-4.22,5c-12.77-4.54-18.35-1.41-26.57,10.46a41.16,41.16,0,0,0-2.9,5.13c.22,8.56-.94,17.53-2.93,27.55-.71,3.53-4.87,24.87-13.45,16.15-6.79-6.9,2.87-39.31,6.21-46,.19-.39.4-.78.6-1.18C90.49,94,88.23,83.34,83.59,75.51a3.28,3.28,0,0,1,5.14-4.07Zm-3.29,73.12a2.36,2.36,0,0,0-.62.85C85.29,144.85,85.3,144.89,85.44,144.51Z" style="fill:#414042;fill-rule:evenodd"/></svg>\
         <svg class="bcoin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28"><path d="M14.89 8.664h3.276c.541 0 .979-.4.979-.892s-.438-.892-.979-.892H9.681c-.541 0-.979.4-.979.892s.438.892.979.892h3.425v1.637a5.64 5.64 0 0 0-5.355 5.616v1.19a.892.892 0 1 0 1.784.001v-1.19a3.855 3.855 0 0 1 3.57-3.831v8.329a.892.892 0 0 0 1.784 0v-8.329a3.855 3.855 0 0 1 3.57 3.831v1.19a.892.892 0 0 0 1.784 0v-1.19a5.64 5.64 0 0 0-5.355-5.616V8.664zM14 26C7.373 26 2 20.627 2 14S7.373 2 14 2s12 5.373 12 12a12.002 12.002 0 0 1-12 12z"/></svg>\
@@ -469,9 +469,9 @@
         // 添加按钮
 
         console.log("take-coin : add button")
-        $('#c4r-oxgs73w7rh').remove()
+        $('#c4r-takecoin').remove()
 
-
+        logoShowStatus = []
         if (isOldVersion() ||  isWatchList() || isBangumiOld()) {
             console.log("oldversion")
             if ($('.bilibili-player-video-wrap').length == 0) {
@@ -480,7 +480,7 @@
                     mutationList.forEach((mutation) => {
                         // if($(mutation.target).is('.van-icon-videodetails_throw')){
                         if ($('.bilibili-player-video-wrap').length > 0 && $('#coin-gen').length == 0) {
-                            // $('#c4r-oxgs73w7rh').remove()
+                            // $('#c4r-takecoin').remove()
                             $('.bilibili-player-video-wrap').append(genButton())
                             observer.disconnect()
                             console.log('disconnect coin observe')
@@ -496,13 +496,13 @@
                         attributeOldValue: false, characterDataOldValue: false
                     })
             } else {
-                $('#c4r-oxgs73w7rh').remove()
+                $('#c4r-takecoin').remove()
                 $('.bilibili-player-video-wrap').append(genButton())
             }
 
         } else if(isNewVersion()){
             console.log("new version")
-            $('#c4r-oxgs73w7rh').remove()
+            $('#c4r-takecoin').remove()
             $('#bilibiliPlayer').append(genButton())
             if (!$('.coin').hasClass('on')) {
                 observerNewVersionCoin.observe($('.coin').get(0),
@@ -514,7 +514,7 @@
 
         }else if(isBangumiNew()){
             console.log("Bangumi New version")
-            $('#c4r-oxgs73w7rh').remove()
+            $('#c4r-takecoin').remove()
             $('#bilibiliPlayer').append(genButton())
             if ($('.coin-info span').text().trim() == '--' ) {
                 observerBangumiNewCoin.observe($('.coin-info').get(0),
@@ -548,10 +548,10 @@
                 if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;' ||
                     $(".bilibili-player-video-control").attr('style') == 'opacity: 1;') {
                     if ($(".bilibili-player-video-control").attr('style') == 'opacity: 0;') {
-                        console.log("Bcoin : hide")
+                        // console.log("Bcoin : hide")
                         // autoLogoHide()
                     } else {
-                        console.log("Bcoin : show")
+                        // console.log("Bcoin : show")
                         // $('#coin-gen').show()
                         // logoShow()
                     }
@@ -583,7 +583,7 @@
             // if($(mutation.target).is('.van-icon-videodetails_throw')){
             // console.log($.trim($('.coin').text()))
             if ($('.coin').hasClass('on')) {
-                $('#c4r-oxgs73w7rh').remove()
+                $('#c4r-takecoin').remove()
                 $('#bilibiliPlayer').append(genButton())
                 observer.disconnect()
                 // console.log('disconnect coin observe')
@@ -603,7 +603,7 @@
             // if($(mutation.target).is('.van-icon-videodetails_throw')){
             // console.log($.trim($('.coin').text()))
             if ($('.coin-info span').text().trim() != '--' ) {
-                $('#c4r-oxgs73w7rh').remove()
+                $('#c4r-takecoin').remove()
                 $('#bilibiliPlayer').append(genButton())
                 observer.disconnect()
                 // console.log('disconnect coin observe')
@@ -776,6 +776,7 @@
 
     let mousemoveTimeoutID = 0
     $(document).on('mousemove', function (event) {
+        // console.log('take-coin :', 'mousemove out')
         if ($('#coin-gen').length > 0) {
             // console.log('take-coin :', 'mousemove')
             logoShow()
