@@ -388,7 +388,7 @@
                 }
 
 
-                if ($("#coin-gen").hasClass("success")) {
+                if ($("#coin-gen").hasClass("success") || $("#coin-gen").hasClass("error")) {
 
                 } else {
 
@@ -406,7 +406,7 @@
                     logoShowStatus.push(strKeepRemind)
                 }
 
-                if ($("#coin-gen").hasClass("success")) {
+                if ($("#coin-gen").hasClass("success") || $("#coin-gen").hasClass("error")) {
 
                 } else {
 
@@ -750,7 +750,12 @@
             }
         }
 
-
+        if ($(event.target).closest('#coin-gen.success').length > 0) {
+            $('#coin-gen').addClass('processing')
+            setTimeout(() => {
+                $('#coin-gen').removeClass('processing')
+            }, 2000);
+        }
     })
 
     $(document).on('mouseover', function (event) {
@@ -781,7 +786,7 @@
             mousemoveTimeoutID = setTimeout(() => {
                 // console.log('take-coin :', 'Hide')
                 autoLogoHide()
-            }, 1000);
+            }, 1500);
         }
     })
 
