@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili一键投币
 // @namespace    www.papercomment.tech
-// @version      0.3
+// @version      0.4
 // @description  在视频右上角添加快捷按钮帮助用户在全屏和非全屏下一键投币. 投币不需要退出全屏, 过程没有弹出遮挡提示,不需要暂停视频. 方便支持自己喜欢的作者, 投币获得经验5级帐号不再遥不可及. 
 // @author       c4r
 // @match        https://www.bilibili.com/watchlater/*
@@ -580,12 +580,12 @@
     let callbackNewVersionCoin = function (mutationList, observer) {
         // console.log("coin change : ", mutationList)
         mutationList.forEach((mutation) => {
-            // if($(mutation.target).is('.van-icon-videodetails_throw')){
+            if($(mutation.target).is('span.coin')){
             // console.log($.trim($('.coin').text()))
-            if ($('.coin').hasClass('on')) {
+            // if ($('.coin').hasClass('on')) {
                 $('#c4r-takecoin').remove()
                 $('#bilibiliPlayer').append(genButton())
-                observer.disconnect()
+                // observer.disconnect()
                 // console.log('disconnect coin observe')
             }
             // }
@@ -624,22 +624,22 @@
 
             // 旧版, 以及发生视频变化
             if ($(mutation.target).hasClass('bilibili-player-video')) {
-                console.log('take-coin : ', mutation)
+                console.log('take-coin : 视频变更 ', mutation)
                 // console.log('take-coin : 视频变更...')
 
                 // 添加按钮
                 // if ($('#coin-gen').length == 0) {
-                watching()
+                // watching()
                 // }
 
-
-                observer.disconnect()
+                observerVideo.disconnect()
                 console.log('take-coin : continue observing...')
                 observerVideo.observe($('.player').get(0),
                     {
                         subtree: true, childList: true, characterData: false, attributes: true,
                         attributeFilter: ["src"], attributeOldValue: false, characterDataOldValue: false
                     })
+                watching()
             }
         })
 
