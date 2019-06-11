@@ -26,24 +26,31 @@
         // console.log("coin change : ", mutationList)
 
         if($('video').length > 0){
-            if($('video').attr('src') && videoUrl != $('video').attr('src')){
+            if(videoUrl != $('video').attr('src')){
 
                 // 视频地址发生变更
                 videoUrl = $('video').attr('src')
                 console.log("picInpic : video address changed ", $('video').attr('src'))
                 if (document.pictureInPictureElement) {
                     // 在画中画里
-                    
-                    // 
-                    setTimeout(() => {
+                    // console.log("picInpic : pictureInPictureElement ", document.pictureInPictureElement)
+                    console.log("picInpic : pictureInPictureElement ", document.getElementsByTagName('video')[0])
+                    // setTimeout(() => {
+                    //     document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
+                    //         // 视频无法进入画中画模式
+                    //         console.log('picInpic error : ', error, document.getElementsByTagName('video')[0])
+                    //     });
+                    // }, 1000);
+
+                  
+                    document.getElementsByTagName('video')[0].addEventListener("loadeddata", () =>{
                         console.log("picInpic : requestPictureInPicture")
                         // document.exitPictureInPicture()
                         document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
                             // 视频无法进入画中画模式
                             console.log('picInpic error : ', error, document.getElementsByTagName('video')[0])
                         });
-                    }, 10000);
-                    
+                    })
                 }
             }
         }
