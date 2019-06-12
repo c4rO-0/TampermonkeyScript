@@ -35,12 +35,12 @@
                     // 在画中画里
                     // console.log("picInpic : pictureInPictureElement ", document.pictureInPictureElement)
                     console.log("picInpic : pictureInPictureElement ", document.getElementsByTagName('video')[0])
-                    // setTimeout(() => {
-                    //     document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
-                    //         // 视频无法进入画中画模式
-                    //         console.log('picInpic error : ', error, document.getElementsByTagName('video')[0])
-                    //     });
-                    // }, 1000);
+                    setTimeout(() => {
+                        document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
+                            // 视频无法进入画中画模式
+                            console.log('picInpic error : ', error,document.pictureInPictureElement)
+                        });
+                    }, 1000);
 
                   
                     document.getElementsByTagName('video')[0].addEventListener("loadeddata", () =>{
@@ -48,7 +48,7 @@
                         // document.exitPictureInPicture()
                         document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
                             // 视频无法进入画中画模式
-                            console.log('picInpic error : ', error, document.getElementsByTagName('video')[0])
+                            console.log('picInpic error : ', error, document.pictureInPictureElement)
                         });
                     })
                 }
