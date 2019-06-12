@@ -11,6 +11,7 @@
 // @match        https://live.bilibili.com/*
 // @match        https://www.mgtv.com/b/*
 // @match        https://www.bilibili.com/watchlater/*
+// @match        https://www.youtube.com/watch*
 // @grant        none
 // ==/UserScript==
 
