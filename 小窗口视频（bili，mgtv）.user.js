@@ -19,17 +19,24 @@
     'use strict';
 
     let videoUrl = undefined;
+    let timeID = 0
 
-    let loadmetaRespon = function(){
+    let loadmetaRespon = function (timeID) {
+
         if (document.pictureInPictureElement
             && (!document.pictureInPictureElement.src
                 || document.pictureInPictureElement.src != $('video').attr('src'))) {
-            console.log("picInpic : loadeddata")
-            document.exitPictureInPicture()
+
+            // if (timeID) {
+            //     clearTimeout(timeID)
+            // }
+            console.log("picInpic : loadedmetadata")
+            // document.exitPictureInPicture()
             document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
                 // 视频无法进入画中画模式
                 console.log('picInpic error : ', error, document.pictureInPictureElement)
             });
+            // document.getElementsByTagName('video')[0].removeEventListener("loadeddata", loadmetaRespon(timeID))
         }
     }
 
@@ -39,55 +46,53 @@
     let callbackVideo = function (mutationList, observer) {
         // console.log("coin change : ", mutationList)
 
-        if ($('video').length > 0 && $('video').attr('src') && $('video').attr('src').length > 0) {
-            // if (videoUrl != $('video').attr('src')) {
+        // 保证video已经有url
+        if (document.pictureInPictureElement && $('video').length > 0 && $('video').attr('src') && $('video').attr('src').length > 0) {
 
-            // 视频地址发生变更
-            videoUrl = $('video').attr('src')
+            // 抓到url之后就不再处理了
+            if (videoUrl != $('video').attr('src')) {
 
-            if (document.pictureInPictureElement
-                && (!document.pictureInPictureElement.src
-                    || document.pictureInPictureElement.src != $('video').attr('src'))) {
-                // console.log("picInpic : video address changed ", $('video').attr('src'))
-                // 在画中画里
-                // console.log("picInpic : pictureInPictureElement ", document.pictureInPictureElement)
-                
-                // setTimeout(() => {
+                // 视频地址发生变更
+                videoUrl = $('video').attr('src')
+                console.log("picInpic : video address changed ", $('video').attr('src'))
+                // 如果pictureInPictureElement的src与当前video的src不一致
+                if (!document.pictureInPictureElement.src
+                    || document.pictureInPictureElement.src != $('video').attr('src')) {
+                    // console.log("picInpic : video address changed ", $('video').attr('src'))
+                    // 在画中画里
+                    // console.log("picInpic : pictureInPictureElement ", document.pictureInPictureElement)
 
-                if ($('video').length > 0 && $('video').get(0).currentTime > 1) {
-                    console.log("picInpic : pictureInPictureElement ")
-                    document.exitPictureInPicture()
-                    $('video').get(0).requestPictureInPicture().catch(error => {
-                        // 视频无法进入画中画模式
-                        console.log('picInpic error : ', error, document.pictureInPictureElement)
-                    });
+                    timeID = setTimeout(() => {
+
+                        if (document.pictureInPictureElement
+                            && (!document.pictureInPictureElement.src
+                                || document.pictureInPictureElement.src != $('video').attr('src'))) {
+                            // 首次尝试进入画中画
+                            console.log("picInpic : setTimeout : pictureInPictureElement ")
+                            // document.exitPictureInPicture()
+                            $('video').get(0).requestPictureInPicture()
+                            document.getElementsByTagName('video')[0].removeEventListener("loadedmetadata", loadmetaRespon(timeID))
+                        }
+
+                    }, 5000);
                 }
 
-                // }, 1000);
+                // document.getElementsByTagName('video')[0].removeEventListener("loadeddata", loadmetaRespon(timeID))
+                document.getElementsByTagName('video')[0].addEventListener("loadedmetadata", loadmetaRespon(timeID), { once: true })
+
+
+                // $('video').on("timeupdate", () => {
+                //     if (document.pictureInPictureElement 
+                //         && document.pictureInPictureElement.src != document.getElementsByTagName('video')[0].src) {
+                //         document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
+                //             // 视频无法进入画中画模式
+                //             console.log('picInpic error : ', error, document.pictureInPictureElement)
+                //         });
+                //     }
+                // })
+
+
             }
-            // setTimeout(() => {
-            //     console.log("picInpic : setTimeout")
-            //     document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
-            //         // 视频无法进入画中画模式
-            //         console.log('picInpic error : ', error, document.pictureInPictureElement)
-            //     });
-            // }, 6000);
-            document.getElementsByTagName('video')[0].removeEventListener("loadeddata", loadmetaRespon)
-            document.getElementsByTagName('video')[0].addEventListener("loadeddata", loadmetaRespon)
-
-
-            // $('video').on("timeupdate", () => {
-            //     if (document.pictureInPictureElement 
-            //         && document.pictureInPictureElement.src != document.getElementsByTagName('video')[0].src) {
-            //         document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
-            //             // 视频无法进入画中画模式
-            //             console.log('picInpic error : ', error, document.pictureInPictureElement)
-            //         });
-            //     }
-            // })
-
-
-            // }
         }
 
     }
@@ -102,6 +107,7 @@
 
         //        if (!document.pictureInPictureElement) {
         document.getElementsByTagName('video')[0].requestPictureInPicture().then(() => {
+            videoUrl = $('video').attr('src')
             observerVideo.disconnect()
             observerVideo.observe($('body').get(0),
                 {
