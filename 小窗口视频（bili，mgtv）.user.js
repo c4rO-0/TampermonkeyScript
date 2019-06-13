@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         小窗口视频（bili，mgtv）
-// @version      0.2
+// @version      0.3
 // @license      MPL-2.0
 // @namespace    
 // @description  小窗口视频（bili，mgtv）。网页右下角会出现一个小按钮，点击之后视频会通过小窗口播放。基于chrome浏览器的画中画（Picture in Picture）。
@@ -20,61 +20,73 @@
 
     let videoUrl = undefined;
 
+    let loadmetaRespon = function(){
+        if (document.pictureInPictureElement
+            && (!document.pictureInPictureElement.src
+                || document.pictureInPictureElement.src != $('video').attr('src'))) {
+            console.log("picInpic : loadeddata")
+            document.exitPictureInPicture()
+            document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
+                // 视频无法进入画中画模式
+                console.log('picInpic error : ', error, document.pictureInPictureElement)
+            });
+        }
+    }
+
     /**
      * 
      */
     let callbackVideo = function (mutationList, observer) {
         // console.log("coin change : ", mutationList)
 
-        if ($('video').length > 0) {
+        if ($('video').length > 0 && $('video').attr('src') && $('video').attr('src').length > 0) {
             // if (videoUrl != $('video').attr('src')) {
 
-                // 视频地址发生变更
-                videoUrl = $('video').attr('src')
+            // 视频地址发生变更
+            videoUrl = $('video').attr('src')
 
-                if (document.pictureInPictureElement  
-                    && document.pictureInPictureElement.src != document.getElementsByTagName('video')[0].src) {
-                        // console.log("picInpic : video address changed ", $('video').attr('src'))
-                    // 在画中画里
-                    // console.log("picInpic : pictureInPictureElement ", document.pictureInPictureElement)
-                    console.log("picInpic : pictureInPictureElement ", document.getElementsByTagName('video')[0])
-                    setTimeout(() => {
-                        console.log("picInpic : setTimeout")
-                        document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
-                            // 视频无法进入画中画模式
-                            console.log('picInpic error : ', error, document.pictureInPictureElement)
-                        });
-                    }, 1000);
+            if (document.pictureInPictureElement
+                && (!document.pictureInPictureElement.src
+                    || document.pictureInPictureElement.src != $('video').attr('src'))) {
+                // console.log("picInpic : video address changed ", $('video').attr('src'))
+                // 在画中画里
+                // console.log("picInpic : pictureInPictureElement ", document.pictureInPictureElement)
+                
+                // setTimeout(() => {
 
-                    // setTimeout(() => {
-                    //     console.log("picInpic : setTimeout")
-                    //     document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
-                    //         // 视频无法进入画中画模式
-                    //         console.log('picInpic error : ', error, document.pictureInPictureElement)
-                    //     });
-                    // }, 6000);
-
-                    document.getElementsByTagName('video')[0].addEventListener("loadeddata", () => {
-                        console.log("picInpic : loadeddata")
-                        // document.exitPictureInPicture()
-                        document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
-                            // 视频无法进入画中画模式
-                            console.log('picInpic error : ', error, document.pictureInPictureElement)
-                        });
-                    })
-
-
-                    // $('video').on("timeupdate", () => {
-                    //     if (document.pictureInPictureElement 
-                    //         && document.pictureInPictureElement.src != document.getElementsByTagName('video')[0].src) {
-                    //         document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
-                    //             // 视频无法进入画中画模式
-                    //             console.log('picInpic error : ', error, document.pictureInPictureElement)
-                    //         });
-                    //     }
-                    // })
-
+                if ($('video').length > 0 && $('video').get(0).currentTime > 1) {
+                    console.log("picInpic : pictureInPictureElement ")
+                    document.exitPictureInPicture()
+                    $('video').get(0).requestPictureInPicture().catch(error => {
+                        // 视频无法进入画中画模式
+                        console.log('picInpic error : ', error, document.pictureInPictureElement)
+                    });
                 }
+
+                // }, 1000);
+            }
+            // setTimeout(() => {
+            //     console.log("picInpic : setTimeout")
+            //     document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
+            //         // 视频无法进入画中画模式
+            //         console.log('picInpic error : ', error, document.pictureInPictureElement)
+            //     });
+            // }, 6000);
+            document.getElementsByTagName('video')[0].removeEventListener("loadeddata", loadmetaRespon)
+            document.getElementsByTagName('video')[0].addEventListener("loadeddata", loadmetaRespon)
+
+
+            // $('video').on("timeupdate", () => {
+            //     if (document.pictureInPictureElement 
+            //         && document.pictureInPictureElement.src != document.getElementsByTagName('video')[0].src) {
+            //         document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
+            //             // 视频无法进入画中画模式
+            //             console.log('picInpic error : ', error, document.pictureInPictureElement)
+            //         });
+            //     }
+            // })
+
+
             // }
         }
 
