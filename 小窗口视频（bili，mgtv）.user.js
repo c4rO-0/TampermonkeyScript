@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         小窗口视频（bili，mgtv）
-// @version      0.3
+// @version      0.5
 // @license      MPL-2.0
 // @namespace    
 // @description  小窗口视频（bili，mgtv）。网页右下角会出现一个小按钮，点击之后视频会通过小窗口播放。基于chrome浏览器的画中画（Picture in Picture）。
@@ -27,14 +27,28 @@
             && (!document.pictureInPictureElement.src
                 || document.pictureInPictureElement.src != $('video').attr('src'))) {
 
-            // if (timeID) {
-            //     clearTimeout(timeID)
-            // }
+            if (timeID) {
+                clearTimeout(timeID)
+            }
             console.log("picInpic : loadedmetadata")
             // document.exitPictureInPicture()
             document.getElementsByTagName('video')[0].requestPictureInPicture().catch(error => {
                 // 视频无法进入画中画模式
                 console.log('picInpic error : ', error, document.pictureInPictureElement)
+                // loadedmetadata有的时候触发的太快....等5秒的timeout影响观感
+                timeID = setTimeout(() => {
+
+                    if (document.pictureInPictureElement
+                        && (!document.pictureInPictureElement.src
+                            || document.pictureInPictureElement.src != $('video').attr('src'))) {
+                        // 首次尝试进入画中画
+                        console.log("picInpic : setTimeout : pictureInPictureElement ")
+                        // document.exitPictureInPicture()
+                        $('video').get(0).requestPictureInPicture()
+                        // document.getElementsByTagName('video')[0].removeEventListener("loadedmetadata", loadmetaRespon(timeID))
+                    }
+
+                }, 2000);                
             });
             // document.getElementsByTagName('video')[0].removeEventListener("loadeddata", loadmetaRespon(timeID))
         }
@@ -62,6 +76,7 @@
                     // 在画中画里
                     // console.log("picInpic : pictureInPictureElement ", document.pictureInPictureElement)
 
+                    // 防止loadedmetadata没有被触发
                     timeID = setTimeout(() => {
 
                         if (document.pictureInPictureElement
@@ -71,7 +86,7 @@
                             console.log("picInpic : setTimeout : pictureInPictureElement ")
                             // document.exitPictureInPicture()
                             $('video').get(0).requestPictureInPicture()
-                            document.getElementsByTagName('video')[0].removeEventListener("loadedmetadata", loadmetaRespon(timeID))
+                            // document.getElementsByTagName('video')[0].removeEventListener("loadedmetadata", loadmetaRespon(timeID))
                         }
 
                     }, 5000);
