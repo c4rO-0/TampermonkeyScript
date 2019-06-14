@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         bilibili 自动播放
-// @namespace    http://tampermonkey.net/
-// @version      0.2
+// @namespace    www.papercomment.tech
+// @version      0.2.1
 // @description  最开始的三个开关autoPlay表示点进视频2秒后自动开始播放，backspacePlay表示点进视频后可用空格键控制播放暂停，listPlay表示视频结束后跳过5秒等待直接下一part
-// @author       You
+// @author       c4r
 // @match        https://www.bilibili.com/bangumi/*
 // @match        https://www.bilibili.com/video/*
 // @match        https://www.bilibili.com/watchlater/*
 // @grant        none
+// @license      MPL-2.0
 // ==/UserScript==
 
 (function() {
@@ -47,11 +48,14 @@
     let observer = new MutationObserver(playNow)
     let traceAnchor, anchor
     function timer(){
-        //console.warn('UI', 'tik tok')
+        // console.warn('UI', 'tik tok')
         if(anchor = document.getElementById('bofqi')){
             clearInterval(traceAnchor)
             //console.warn('UI', anchor)
             observer.observe(anchor, {childList:true, subtree:true})
+            if(autoPlay){
+                setTimeout(clickPlayer, 2000);
+            }
         }
     }
     if(listPlay){
