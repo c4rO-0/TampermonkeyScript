@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         小窗口视频（bili，mgtv）
-// @version      0.5
+// @version      0.6
 // @license      MPL-2.0
 // @namespace    
 // @description  小窗口视频（bili，mgtv）。网页右下角会出现一个小按钮，点击之后视频会通过小窗口播放。基于chrome浏览器的画中画（Picture in Picture）。
