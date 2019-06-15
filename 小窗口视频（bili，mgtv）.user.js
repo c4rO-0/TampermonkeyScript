@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         小窗口视频（bili，mgtv）
-// @version      0.7
+// @name         小窗口视频（bili，mgtv，youtube）
+// @version      0.7.1
 // @license      MPL-2.0
 // @namespace    
 // @description  小窗口视频（bili，mgtv）。网页右下角会出现一个小按钮，点击之后视频会通过小窗口播放。基于chrome浏览器的画中画（Picture in Picture）。
@@ -51,8 +51,8 @@
                     if (document.pictureInPictureElement
                         && (!document.pictureInPictureElement.src
                             || document.pictureInPictureElement.src != $('video').attr('src'))) {
-                        // 首次尝试进入画中画
-                        console.log("picInpic : setTimeout : pictureInPictureElement ")
+                        // 最后一次尝试进入画中画
+                        console.log("picInpic : setTimeout : pictureInPictureElement ：LAST")
                         // document.exitPictureInPicture()
                         $('video').get(0).requestPictureInPicture()
                         // document.getElementsByTagName('video')[0].removeEventListener("loadedmetadata", loadmetaRespon(timeID))
@@ -103,7 +103,7 @@
                 }
 
                 // document.getElementsByTagName('video')[0].removeEventListener("loadeddata", loadmetaRespon(timeID))
-                document.getElementsByTagName('video')[0].addEventListener("loadedmetadata", loadmetaRespon(timeID), { once: true })
+                document.getElementsByTagName('video')[0].addEventListener("canplay", loadmetaRespon(timeID), { once: true })
 
 
                 // $('video').on("timeupdate", () => {
