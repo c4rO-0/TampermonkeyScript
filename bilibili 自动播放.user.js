@@ -20,7 +20,7 @@
     let listPlay = true
 
     function clickPlayer(){
-        console.log('bauto : click')
+        // console.log('bauto : click')
         document.getElementsByTagName('video')[0].click();
     }
     if(backspacePlay){
@@ -52,7 +52,7 @@
         // console.warn('UI', 'tik tok')
         if(anchor = document.getElementById('bofqi')){
             clearInterval(traceAnchor)
-            console.warn('UI', anchor)
+            // console.warn('UI', anchor)
             observer.observe(anchor, {childList:true, subtree:true})
             if(autoPlay){
                 setTimeout(clickPlayer, 2000);
