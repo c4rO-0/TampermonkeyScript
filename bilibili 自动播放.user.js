@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 自动播放
 // @namespace    www.papercomment.tech
-// @version      0.2.1
+// @version      0.3
 // @description  最开始的三个开关autoPlay表示点进视频2秒后自动开始播放，backspacePlay表示点进视频后可用空格键控制播放暂停，listPlay表示视频结束后跳过5秒等待直接下一part
 // @author       c4r
 // @match        https://www.bilibili.com/bangumi/*
@@ -20,6 +20,7 @@
     let listPlay = true
 
     function clickPlayer(){
+        console.log('bauto : click')
         document.getElementsByTagName('video')[0].click();
     }
     if(backspacePlay){
@@ -31,9 +32,9 @@
             e.currentTarget.removeEventListener(e.type, handler);
         });
     }
-    if(autoPlay){
-        setTimeout(clickPlayer, 2000);
-    }
+    // if(autoPlay){
+    //     setTimeout(clickPlayer, 2000);
+    // }
     function playNow(list, obs){
         //console.log('UI', list)
         list.forEach((mutation, index)=>{
@@ -51,7 +52,7 @@
         // console.warn('UI', 'tik tok')
         if(anchor = document.getElementById('bofqi')){
             clearInterval(traceAnchor)
-            //console.warn('UI', anchor)
+            console.warn('UI', anchor)
             observer.observe(anchor, {childList:true, subtree:true})
             if(autoPlay){
                 setTimeout(clickPlayer, 2000);
