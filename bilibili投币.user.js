@@ -364,6 +364,18 @@
 
     }
 
+
+    /**
+     * debug
+     */
+
+    let eventList = [
+        {"id":'12345',
+        "type":"toLink",
+        "start":10,
+        "end":20,
+        "html":"<div bcoin_insert_id='12345' start=10 end=20 type='toLink'></div>"}
+    ]
     /**
      * 检测进度条
      */
@@ -375,12 +387,14 @@
 
         $('video').on("timeupdate", () => {
 
+
             let timePoint1_s = 3. / 4. * $('video').get(0).duration
             let timePoint1_e = 3. / 4. * $('video').get(0).duration + 3
+            let currentTime = $('video').get(0).currentTime 
             // console.log("video time : ", $('video').get(0).currentTime)
 
-            if ($('video').get(0).currentTime > timePoint1_s
-                && $('video').get(0).currentTime < timePoint1_e) {
+            if (currentTime > timePoint1_s
+                && currentTime < timePoint1_e) {
                 // 闪烁
 
                 if (logoShowStatus.indexOf(strStartRemind) == -1) {
@@ -395,7 +409,7 @@
                     $("#coin-gen").addClass('surprise fade')
                 }
 
-            } else if ($('video').get(0).currentTime > timePoint1_e) {
+            } else if (currentTime > timePoint1_e) {
 
                 if (logoShowStatus.indexOf(strStartRemind) != -1) {
                     delete logoShowStatus[logoShowStatus.indexOf(strStartRemind)]
@@ -421,6 +435,51 @@
             if (islogoForeShow()) {
                 logoShow()
             }
+
+
+            // 神秘代码
+            // ====================================
+            /**
+             * 神秘代码格式说明
+             * 插入事件 :
+             * - 点击跳转进度
+             * - 点击跳转链接
+             * 插入元素 :
+             * html代码快
+             * event : 
+             * {
+             * id : 
+             * type: 
+             *      "toLink"
+             *      "toTime"
+             * html:
+             *      "<div bcoin_insert_id='' > < ..> ...</div>"
+             * start:
+             *      int 
+             * end:
+             *      int
+             * }
+             */
+            
+            eventList.forEach(element => {
+                if(currentTime >= element.start ){
+                    if(currentTime < element.end){
+                        if(!$('div[bcoin_insert_id="'+element.id+'"]').length){
+                            console.log('bcoin : add : event')
+                            $('.bilibili-player-video-wrap').append(element.html)
+                        }
+                    }else if(currentTime >= element.end && currentTime <= element.end+1){
+                        // 去掉效果
+                        console.log('bcoin : remove : event')
+                        $('.bilibili-player-video-wrap').remove('div[bcoin_insert_id="'+element.id+'"]')
+                    }
+                }
+                
+            });
+            
+
+
+            // ====================================
         });
     }
 
