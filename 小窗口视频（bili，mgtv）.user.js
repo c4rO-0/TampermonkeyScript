@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         小窗口视频（bili，mgtv，youtube）
-// @version      0.8
+// @version      0.9.0
 // @license      MPL-2.0
 // @namespace    
 // @description  小窗口视频（bili，mgtv）。网页右下角会出现一个小按钮，点击之后视频会通过小窗口播放。基于chrome浏览器的画中画（Picture in Picture）。
@@ -10,8 +10,10 @@
 // @match        https://www.bilibili.com/bangumi/*
 // @match        https://live.bilibili.com/*
 // @match        https://www.mgtv.com/b/*
+// @match        https://www.mgtv.com/l/*
 // @match        https://www.bilibili.com/watchlater/*
-// @match        https://www.youtube.com/watch*
+// @match        https://www.youtube.com/*
+// @run-at       context-menu
 // @grant        GM_addStyle
 // ==/UserScript==
 
