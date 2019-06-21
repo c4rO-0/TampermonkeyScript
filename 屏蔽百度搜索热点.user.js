@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         屏蔽百度搜索热点
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  百度作为业界毒瘤，其搜索热点大多是低俗内容。该脚本会屏蔽这些内容，彰显格调，品味。
 // @author       c4r
 // @match        *://www.baidu.com/s?*
 // @grant        GM_addStyle
+// @run-at       document-start
 // ==/UserScript==
 
 (function() {
