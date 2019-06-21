@@ -374,7 +374,9 @@
         "type":"toLink",
         "start":10,
         "end":20,
-        "html":"<div bcoin_insert_id='12345' start=10 end=20 type='toLink'></div>"}
+        "html":"<div bcoin_insert_id='12345' start=10 end=20 type='toLink' \
+        style='position: absolute;top: 0px;left: 0px;cursor: pointer;z-index: 100'>\
+        <a href='https://www.bilibili.com'>B站</a></div>"}
     ]
     /**
      * 检测进度条
@@ -468,10 +470,10 @@
                             console.log('bcoin : add : event')
                             $('.bilibili-player-video-wrap').append(element.html)
                         }
-                    }else if(currentTime >= element.end && currentTime <= element.end+1){
+                    }else if(currentTime >= element.end && currentTime <= element.end+1 && $('div[bcoin_insert_id="'+element.id+'"]').length > 0){
                         // 去掉效果
                         console.log('bcoin : remove : event')
-                        $('.bilibili-player-video-wrap').remove('div[bcoin_insert_id="'+element.id+'"]')
+                        $('div[bcoin_insert_id="'+element.id+'"]').remove()
                     }
                 }
                 
