@@ -15,6 +15,50 @@
 (function () {
     'use strict';
 
+    //==================================================================================
+    let strEvent = '\
+{                                      \
+"type" : "toLink",                         \
+"start" : "10.0"   ,                       \
+"end" : "20.0",                            \
+"top" : "0.1"  ,                           \
+"left" : "0.1"  ,                          \
+"target" : "https://www.bilibili.com"      \
+}\
+{                                      \
+    "type" : "toTime",                         \
+    "start" : "25.0"   ,                       \
+    "end" : "35.0",                            \
+    "top" : "0.1"  ,                           \
+    "left" : "0.1"  ,                          \
+    "target" : "0"      \
+    }'
+
+    console.log('------------strEvent----------')
+    console.log(strEvent)
+
+    let strEventBase64 = btoa(strEvent)
+
+    let strExample='\
+#====================================#\n\
+#           mysterious code          #\n\
+#------------------------------------#\n'
++ '(bcoin:'+ strEventBase64 + ')' +
+'\n# -----------------------------------#\n'
+    console.log('----strEvent in description----')
+    console.log(strExample)
+
+
+
+    /**
+     * debug
+     */
+
+    let eventList = new Array()
+
+    //==================================================================================
+
+
     /**
      *  玩法：修改第二层div.c4r的类，可改的类名包括（.initial .success .error .processing .surprise .hide .fade），其中.inital和.success需要保证有且仅有一个存在。
      */
@@ -305,6 +349,41 @@
 
 
 
+    /**
+     * 读取神秘代码
+     */
+    function readEvent(){
+        
+        // 从网页读
+        let strDescription = strExample
+        
+        // 判断是否有event
+
+        if(strDescription.includes('(bcoin:')){
+            let strEventAllBase64 = strDescription.substring(
+                strDescription.indexOf('(bcoin:')+('(bcoin:').length,
+                strDescription.indexOf(')',strDescription.indexOf('(bcoin:')+('(bcoin:').length)
+            )
+            // console.log('bcoin : strEventAll : ', strEventAllBase64)
+            let strEventAll = atob(strEventAllBase64)
+            // console.log('bcoin : strEventAll : ', strEventAll)
+            eventList = []
+            strEventAll.split('}').forEach((strSingleEvent) =>{
+                if($.trim(strSingleEvent).substr(0,1) == '{'){
+                    // console.log('bcoin : strSingleEvent : ', strSingleEvent+ '}')
+                    eventList.push(JSON.parse(strSingleEvent + '}'))
+                }
+                
+            })
+            console.log('bcoin : eventList : ', eventList)
+
+        }else{
+            eventList = []
+        }
+
+    }
+
+
     // ===========================================================================================
     // 功能函数
     // -------------------------------------------------------------------------------------------
@@ -365,19 +444,6 @@
     }
 
 
-    /**
-     * debug
-     */
-
-    let eventList = [
-        {"id":'12345',
-        "type":"toLink",
-        "start":10,
-        "end":20,
-        "html":"<div bcoin_insert_id='12345' start=10 end=20 type='toLink' \
-        style='position: absolute;top: 0px;left: 0px;cursor: pointer;z-index: 100'>\
-        <a href='https://www.bilibili.com'>B站</a></div>"}
-    ]
     /**
      * 检测进度条
      */
@@ -532,6 +598,8 @@
         console.log("take-coin : add button")
         $('#c4r-takecoin').remove()
 
+        
+
         logoShowStatus = []
         if (isOldVersion() || isWatchList() || isBangumiOld()) {
             console.log("oldversion")
@@ -543,6 +611,7 @@
                         if ($('.bilibili-player-video-wrap').length > 0 && $('#coin-gen').length == 0) {
                             // $('#c4r-takecoin').remove()
                             $('.bilibili-player-video-wrap').append(genButton())
+                            readEvent()
                             observer.disconnect()
                             console.log('disconnect coin observe')
                         }
@@ -559,12 +628,14 @@
             } else {
                 $('#c4r-takecoin').remove()
                 $('.bilibili-player-video-wrap').append(genButton())
+                readEvent()
             }
 
         } else if (isNewVersion()) {
             console.log("new version")
             $('#c4r-takecoin').remove()
             $('#bilibiliPlayer').append(genButton())
+            readEvent()
             if (!$('.coin').hasClass('on')) {
                 observerNewVersionCoin.observe($('.coin').get(0),
                     {
@@ -577,6 +648,7 @@
             console.log("Bangumi New version")
             $('#c4r-takecoin').remove()
             $('#bilibiliPlayer').append(genButton())
+            readEvent()
             if ($('.coin-info span').text().trim() == '--') {
                 observerBangumiNewCoin.observe($('.coin-info').get(0),
                     {
