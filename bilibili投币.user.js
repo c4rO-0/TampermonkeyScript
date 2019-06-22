@@ -21,23 +21,25 @@
 "type" : "toLink",                         \
 "start" : "10.0"   ,                       \
 "end" : "20.0",                            \
-"top" : "0.1"  ,                           \
-"left" : "0.1"  ,                          \
-"target" : "https://www.bilibili.com"      \
+"top" : "0.5"  ,                           \
+"left" : "0.5"  ,                          \
+"target" : "https://www.bilibili.com",      \
+"content" : "B站" \
 }\
 {                                      \
     "type" : "toTime",                         \
     "start" : "25.0"   ,                       \
     "end" : "35.0",                            \
-    "top" : "0.1"  ,                           \
-    "left" : "0.1"  ,                          \
-    "target" : "0"      \
+    "top" : "0.5"  ,                           \
+    "left" : "0.5"  ,                          \
+    "target" : "0",      \
+    "content" : "从头开始" \
     }'
 
     console.log('------------strEvent----------')
     console.log(strEvent)
 
-    let strEventBase64 = btoa(strEvent)
+    let strEventBase64 = btoa(encodeURIComponent(strEvent))
 
     let strExample = '\
 #====================================#\n\
@@ -256,6 +258,18 @@
         return false;
     }
 
+    function genEventHTML(event){
+        return '\
+        <div bcoin_insert_id="'+ event.id
+        +'" style="position: absolute;top: '
+        + event.top*100 +'%;left: '+ event.left*100 +'%;cursor: pointer;z-index: 100;background: #00ff00">\
+        <button bcoin_insert start="'+event.start
+        +'" end="'+ event.end +'" type="'
+        + event.type +'" target="'
+        + event.target  +'">\
+        '+event.content+'</button></div>'
+    }
+
     /**
      * 插入投币按钮的html代码
      * 包含 :
@@ -375,7 +389,7 @@
                 strDescription.indexOf(')', strDescription.indexOf('(bcoin:') + ('(bcoin:').length)
             )
             // console.log('bcoin : strEventAll : ', strEventAllBase64)
-            let strEventAll = atob(strEventAllBase64)
+            let strEventAll = decodeURIComponent(atob(strEventAllBase64))
             // console.log('bcoin : strEventAll : ', strEventAll)
             eventList = []
             strEventAll.split('}').forEach((strSingleEvent) => {
@@ -387,6 +401,7 @@
                     event.top = parseFloat(event.top)
                     event.left = parseFloat(event.left)
                     event.id = UniqueStr()
+                    event.html = genEventHTML(event)
 
                     eventList.push(event)
                 }
@@ -558,6 +573,8 @@
                         console.log('bcoin : remove : event')
                         $('div[bcoin_insert_id="' + element.id + '"]').remove()
                     }
+                }else if($('div[bcoin_insert_id="' + element.id + '"]').length > 0){
+                    $('div[bcoin_insert_id="' + element.id + '"]').remove()
                 }
 
             });
@@ -1017,6 +1034,21 @@
                 // console.log('take-coin :', 'Hide')
                 autoLogoHide()
             }, 1500);
+        }
+    })
+
+    $(document).on('click','button[bcoin_insert]', function (event) {
+        console.log('bcoin : insert click')
+        if($(this).attr("type") ){
+            if($(this).attr("type") == 'toLink'){
+                $('video').get(0).pause()
+                window.open($(this).attr("target"), '_blank');
+                
+            }else if($(this).attr("type") == 'toTime'){
+                $('video').get(0).currentTime= parseFloat($(this).attr("target"))
+                $(this).closest('div[bcoin_insert_id]').remove()
+            }
+
         }
     })
 
