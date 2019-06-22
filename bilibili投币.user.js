@@ -39,12 +39,12 @@
 
     let strEventBase64 = btoa(strEvent)
 
-    let strExample='\
+    let strExample = '\
 #====================================#\n\
 #           mysterious code          #\n\
 #------------------------------------#\n'
-+ '(bcoin:'+ strEventBase64 + ')' +
-'\n# -----------------------------------#\n'
+        + '(bcoin:' + strEventBase64 + ')' +
+        '\n# -----------------------------------#\n'
     console.log('----strEvent in description----')
     console.log(strExample)
 
@@ -160,6 +160,16 @@
     // ===========================================================================================
     // 没有改动类函数...
     // -------------------------------------------------------------------------------------------
+
+    /**
+     * 返回一个以时间作为种子的唯一字符串.
+     * 目前被用在消息传递的时候创建一个独一无二的channel
+     * @returns {String} UniqueStr 
+     */
+    function UniqueStr() {
+
+        return (Date.now() + Math.random()).toString()
+    }
 
     /**
      * 是否为老版本一般视频
@@ -352,32 +362,39 @@
     /**
      * 读取神秘代码
      */
-    function readEvent(){
-        
+    function readEvent() {
+
         // 从网页读
         let strDescription = strExample
-        
+
         // 判断是否有event
 
-        if(strDescription.includes('(bcoin:')){
+        if (strDescription.includes('(bcoin:')) {
             let strEventAllBase64 = strDescription.substring(
-                strDescription.indexOf('(bcoin:')+('(bcoin:').length,
-                strDescription.indexOf(')',strDescription.indexOf('(bcoin:')+('(bcoin:').length)
+                strDescription.indexOf('(bcoin:') + ('(bcoin:').length,
+                strDescription.indexOf(')', strDescription.indexOf('(bcoin:') + ('(bcoin:').length)
             )
             // console.log('bcoin : strEventAll : ', strEventAllBase64)
             let strEventAll = atob(strEventAllBase64)
             // console.log('bcoin : strEventAll : ', strEventAll)
             eventList = []
-            strEventAll.split('}').forEach((strSingleEvent) =>{
-                if($.trim(strSingleEvent).substr(0,1) == '{'){
+            strEventAll.split('}').forEach((strSingleEvent) => {
+                if ($.trim(strSingleEvent).substr(0, 1) == '{') {
                     // console.log('bcoin : strSingleEvent : ', strSingleEvent+ '}')
-                    eventList.push(JSON.parse(strSingleEvent + '}'))
+                    let event = JSON.parse(strSingleEvent + '}')
+                    event.start = parseFloat(event.start)
+                    event.end = parseFloat(event.end)
+                    event.top = parseFloat(event.top)
+                    event.left = parseFloat(event.left)
+                    event.id = UniqueStr()
+
+                    eventList.push(event)
                 }
-                
+
             })
             console.log('bcoin : eventList : ', eventList)
 
-        }else{
+        } else {
             eventList = []
         }
 
@@ -458,7 +475,7 @@
 
             let timePoint1_s = 3. / 4. * $('video').get(0).duration
             let timePoint1_e = 3. / 4. * $('video').get(0).duration + 3
-            let currentTime = $('video').get(0).currentTime 
+            let currentTime = $('video').get(0).currentTime
             // console.log("video time : ", $('video').get(0).currentTime)
 
             if (currentTime > timePoint1_s
@@ -528,23 +545,23 @@
              *      int
              * }
              */
-            
+
             eventList.forEach(element => {
-                if(currentTime >= element.start ){
-                    if(currentTime < element.end){
-                        if(!$('div[bcoin_insert_id="'+element.id+'"]').length){
+                if (currentTime >= element.start) {
+                    if (currentTime < element.end) {
+                        if (!$('div[bcoin_insert_id="' + element.id + '"]').length) {
                             console.log('bcoin : add : event')
                             $('.bilibili-player-video-wrap').append(element.html)
                         }
-                    }else if(currentTime >= element.end && currentTime <= element.end+1 && $('div[bcoin_insert_id="'+element.id+'"]').length > 0){
+                    } else if (currentTime >= element.end && currentTime <= element.end + 1 && $('div[bcoin_insert_id="' + element.id + '"]').length > 0) {
                         // 去掉效果
                         console.log('bcoin : remove : event')
-                        $('div[bcoin_insert_id="'+element.id+'"]').remove()
+                        $('div[bcoin_insert_id="' + element.id + '"]').remove()
                     }
                 }
-                
+
             });
-            
+
 
 
             // ====================================
@@ -598,7 +615,7 @@
         console.log("take-coin : add button")
         $('#c4r-takecoin').remove()
 
-        
+
 
         logoShowStatus = []
         if (isOldVersion() || isWatchList() || isBangumiOld()) {
@@ -929,11 +946,11 @@
         // console.log("click : ", event)
         if ($(event.target).closest('#coin-gen').length > 0) {
 
-            
 
-            
-            if (isNewVersion() &&  
-            ($('span.like.on').length == 0 || (!isCoinTaken()) || $('span.collect.on').length == 0) ) {
+
+
+            if (isNewVersion() &&
+                ($('span.like.on').length == 0 || (!isCoinTaken()) || $('span.collect.on').length == 0)) {
 
                 console.log("take-coin : 一键三联")
                 clickTimeout.clear()
