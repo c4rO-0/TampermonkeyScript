@@ -33,7 +33,7 @@
     "top" : "0.5"  ,                           \
     "left" : "0.5"  ,                          \
     "target" : "0",      \
-    "content" : "从头开始" \
+    "content" : "从头开始"\
     }'
 
     console.log('------------strEvent----------')
@@ -562,7 +562,7 @@
              */
 
             eventList.forEach(element => {
-                if (currentTime >= element.start) {
+                if (currentTime >= element.start && currentTime <= element.end + 1) {
                     if (currentTime < element.end) {
                         if (!$('div[bcoin_insert_id="' + element.id + '"]').length) {
                             console.log('bcoin : add : event')
