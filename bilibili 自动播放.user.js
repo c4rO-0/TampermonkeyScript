@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 自动播放
 // @namespace    www.papercomment.tech
-// @version      0.8
+// @version      0.9
 // @description  共有4个功能。自动播放，键盘控制，跳过5秒，滚动居中。可由开头的4个变量控制功能的开关
 //               autoPlay        表示点进视频2秒后自动开始播放，
 //               keyboardControl 表示点进视频后可用键盘控制视频（空格，↑，↓，←，→），
@@ -54,40 +54,54 @@
 
     let previousURL = ''
     let refreshCounter = 0
-    let traceAnchor, bofqiAnchor, tracePlayer, bilibiliPlayerAnchor
+    let bofqiAnchor, bilibiliPlayerAnchor
+
+    function runOnce(){
+        if(listPlay){
+            observePlayNow.observe(bofqiAnchor, {childList:true, subtree:true})
+        }
+        //console.warn('will it auto paly?', !refreshCounter)
+        if(autoPlay&&!refreshCounter){
+            setTimeout(playPause, 2000);
+            refreshCounter++
+        }
+        if(center){
+            //console.warn('scrolling...', !refreshCounter)
+            bofqiAnchor.scrollIntoView({behavior: 'smooth', block: 'center'})
+        }
+    }
+
+    function runContinuously(){
+        if(keyboardControl){
+            observePlayer.observe(bilibiliPlayerAnchor, {childList: true, subtree: true})
+        }
+    }
+
+    function runOnceTimeoutCallback(){
+        if(bofqiAnchor = document.getElementById('bofqi')){
+            runOnce()
+        }else{
+            //console.warn('bili自动播放', 'setTimeout runOnce')
+            setTimeout(runOnceTimeoutCallback, 200)
+        }
+    }
+
+    function runContTimeoutCallback(){
+        if(bilibiliPlayerAnchor = document.getElementById('bilibiliPlayer')){
+            runContinuously()
+        }else{
+            //console.warn('bili自动播放', 'setTimeout runContinuously')
+            setTimeout(runContTimeoutCallback, 200)
+        }
+    }
 
     let observeHead = new MutationObserver((list, obs)=>{
         if(previousURL != window.location.href){
             //console.warn('URL has changed:', 'from: ' + previousURL + ' to: ' + window.location.href)
             previousURL = window.location.href
 
-            traceAnchor = setInterval(()=>{
-                // console.warn('UI', 'tik tok')
-                if(bofqiAnchor = document.getElementById('bofqi')){
-                    clearInterval(traceAnchor)
-                    // console.warn('UI', anchor)
-                    if(listPlay){
-                        observePlayNow.observe(bofqiAnchor, {childList:true, subtree:true})
-                    }
-                    //console.warn('will it auto paly?', !refreshCounter)
-                    if(autoPlay&&!refreshCounter){
-                        setTimeout(playPause, 2000);
-                        refreshCounter++
-                    }
-                    if(center){
-                        bofqiAnchor.scrollIntoView({behavior: 'smooth', block: 'center'})
-                    }
-                }
-            }, 200)
-
-            tracePlayer = setInterval(()=>{
-                if(bilibiliPlayerAnchor = document.getElementById('bilibiliPlayer')){
-                    clearInterval(tracePlayer)
-                    if(keyboardControl){
-                        observePlayer.observe(bilibiliPlayerAnchor, {childList: true, subtree: true})
-                    }
-                }
-            }, 200)
+            runOnceTimeoutCallback()
+            runContTimeoutCallback()
         }
     })
 
