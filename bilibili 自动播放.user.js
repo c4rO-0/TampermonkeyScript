@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 自动播放
 // @namespace    www.papercomment.tech
-// @version      0.9
+// @version      0.10
 // @description  共有4个功能。自动播放，键盘控制，跳过5秒，滚动居中。可由开头的4个变量控制功能的开关
 //               autoPlay        表示点进视频2秒后自动开始播放，
 //               keyboardControl 表示点进视频后可用键盘控制视频（空格，↑，↓，←，→），
@@ -27,11 +27,13 @@
     function playPause(){
         //console.warn('UI', 'Play & Pause')
         let target = document.getElementsByTagName('video')[0]
-        if (target.paused){
+        if (target.paused && target.readyState===4){
             target.play()
-        }
-        else{
-            target.pause()
+        }else if(target.paused){
+            target.addEventListener('canplay', function() {
+                //console.warn('walker:','your net speed is low')
+                target.play();
+            })
         }
     }
 
@@ -48,12 +50,21 @@
     })
 
     let observePlayer = new MutationObserver((list, obs)=>{
-        document.getElementById('bilibiliPlayer').querySelector('div.bilibili-player-video-wrap').click()
-        obs.disconnect()
+        //console.warn('walker:', list)
+        let node
+        for(node of list){
+            //console.warn('waler', node)
+            //'div.bilibili-player-video' for old version while 'div.bilibili-player-video-wrap' for new version
+            if(node.target.matches('div.bilibili-player-video-wrap')||node.target.matches('div.bilibili-player-video')){
+                document.getElementById('bilibiliPlayer').querySelector('div.bilibili-player-video-wrap').click()
+                obs.disconnect()
+                break
+            }
+        }
     })
 
     let previousURL = ''
-    let refreshCounter = 0
+    let refreshCounter = 0 //obsoleted
     let bofqiAnchor, bilibiliPlayerAnchor
 
     function runOnce(){
@@ -61,7 +72,8 @@
             observePlayNow.observe(bofqiAnchor, {childList:true, subtree:true})
         }
         //console.warn('will it auto paly?', !refreshCounter)
-        if(autoPlay&&!refreshCounter){
+        if(autoPlay){
+        //if(autoPlay&&!refreshCounter){
             setTimeout(playPause, 2000);
             refreshCounter++
         }
@@ -97,7 +109,7 @@
 
     let observeHead = new MutationObserver((list, obs)=>{
         if(previousURL != window.location.href){
-            //console.warn('URL has changed:', 'from: ' + previousURL + ' to: ' + window.location.href)
+            //console.warn('walker: URL has changed', 'from: ' + previousURL + ' to: ' + window.location.href)
             previousURL = window.location.href
 
             runOnceTimeoutCallback()
