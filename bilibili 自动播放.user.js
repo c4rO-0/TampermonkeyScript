@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 自动播放
 // @namespace    www.papercomment.tech
-// @version      1.0
+// @version      1.1
 // @description  共有4个功能。自动播放，键盘控制，跳过5秒，滚动居中。可由开头的4个变量控制功能的开关
 //               autoPlay        表示点进视频1秒后自动开始播放，
 //               keyboardControl 表示点进视频后可用键盘控制视频（空格，↑，↓，←，→），
@@ -29,15 +29,20 @@
     let previousURL = ''
     let videoAnchor
 
+    function playListener(e){
+        //console.warn('canplay')
+        //console.warn(e.target)
+        setTimeout(()=>{e.target.play()}, 1000)
+        e.target.removeEventListener(e.type, playListener)
+    }
+
     function play(target){
         //console.warn('Play', target.readyState)
         if(target.readyState > 2){
             setTimeout(()=>{target.play()}, 1000)
+        }else{
+            target.addEventListener('canplay', playListener)
         }
-        target.addEventListener('canplay', function() {
-            //console.warn('canplay')
-            setTimeout(()=>{target.play()}, 1000)
-        })
     }
 
     let observePlayNow = new MutationObserver((list, obs)=>{
