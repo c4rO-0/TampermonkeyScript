@@ -117,6 +117,26 @@
         })
     }
 
+    // 加载并显示集数
+    function showEpisodeList(){
+        // 如果在总集列表页面
+        if($("#content h1.page-title").length > 0 ){
+
+            $("#content h1.page-title").append('<section> <ul id="list-ep"></ul> </section>')
+            // 准备加载集数
+            $($("h2.entry-title").get().reverse()).each((index, element) =>{
+
+                let url = $(element).find('a').attr('href')
+
+                $("#list-ep").append("<li \
+                style='display: inline-block; \
+                border: solid 2px rgba(51,51,51,.75);'><a href='"+url+"'>"+(index+1)+"</a></li>")
+
+            })
+
+        }
+    }
+
     $(document).ready(function () {
 
         if ($('footer span.cat-links').length > 0) {
@@ -135,9 +155,12 @@
 
             });
 
+
         }
 
         showPlaylist()
+
+        showEpisodeList()
 
         $(document).on('click', 'a[unsubscribed]', (event) => {
             // 
