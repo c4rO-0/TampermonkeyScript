@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         anime1.me收藏番剧
 // @namespace    http://tampermonkey.net/
-// @version      0.3
+// @version      0.4
 // @license      MPL-2.0
 // @description  添加番剧收藏功, 快速跳转到收藏的番剧.
 // @author       c4r
@@ -24,6 +24,9 @@
 }
 .episode > a{
     display: block;
+}
+.read {
+    background:#cecece;
 }
     `)
 
@@ -134,13 +137,15 @@
 
             $('<section> <ul id="list-ep"></ul> </section>').insertAfter("#content h1.page-title")
             // 准备加载集数
-            $($("article").get().reverse()).each((index, element) =>{
+            $("article").each((index, element) =>{
 
-                let url = $(element).find('a').attr('href')
+                let url = $(element).find('h2.entry-title a').attr('href')
                 let id = element.id
+                let epStr = $(element).find('h2.entry-title a').text().trim()
+
 
                 $("#list-ep").append("<li \
-                class=episode><a href='#"+id+"'>"+(index+1)+"</a></li>")
+                class=episode><a href='#"+id+"'>"+epStr.slice(epStr.indexOf('[')+1,-1)+"</a></li>")
 
             })
 
@@ -185,7 +190,6 @@
             // location.reload()
             $(event.target).closest('li').remove()
         })
-
     })
 
 
