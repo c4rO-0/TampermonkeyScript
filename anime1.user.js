@@ -6,16 +6,26 @@
 // @description  添加番剧收藏功, 快速跳转到收藏的番剧.
 // @author       c4r
 // @match        *://anime1.me/*
-// @grant        none
+// @grant        GM_addStyle
 // @require      https://code.jquery.com/jquery-latest.js
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    /**
-     * titel :.... url :.....\r\n
-     */
+    GM_addStyle(`
+.episode {
+    margin-left: 5px;
+    margin-bottom: 5px;
+    min-width: 30px;
+    text-align: center;
+    display: inline-block;
+    border: solid 2px rgba(51,51,51,.75);
+}
+.episode > a{
+    display: block;
+}
+    `)
 
     /**
      * 
@@ -122,15 +132,14 @@
         // 如果在总集列表页面
         if($("#content h1.page-title").length > 0 ){
 
-            $("#content h1.page-title").append('<section> <ul id="list-ep"></ul> </section>')
+            $('<section> <ul id="list-ep"></ul> </section>').insertAfter("#content h1.page-title")
             // 准备加载集数
             $($("h2.entry-title").get().reverse()).each((index, element) =>{
 
                 let url = $(element).find('a').attr('href')
 
                 $("#list-ep").append("<li \
-                style='display: inline-block; \
-                border: solid 2px rgba(51,51,51,.75);'><a href='"+url+"'>"+(index+1)+"</a></li>")
+                class=episode><a href='"+url+"'>"+(index+1)+"</a></li>")
 
             })
 
