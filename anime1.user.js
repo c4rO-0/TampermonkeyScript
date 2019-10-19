@@ -134,12 +134,13 @@
 
             $('<section> <ul id="list-ep"></ul> </section>').insertAfter("#content h1.page-title")
             // 准备加载集数
-            $($("h2.entry-title").get().reverse()).each((index, element) =>{
+            $($("article").get().reverse()).each((index, element) =>{
 
                 let url = $(element).find('a').attr('href')
+                let id = element.id
 
                 $("#list-ep").append("<li \
-                class=episode><a href='"+url+"'>"+(index+1)+"</a></li>")
+                class=episode><a href='#"+id+"'>"+(index+1)+"</a></li>")
 
             })
 
