@@ -28,6 +28,18 @@
 .read {
     background:#cecece;
 }
+.pages {
+    height: 50px;
+    overflow:auto;
+}
+.page {
+    margin-bottom: 5px;
+    min-width: 30px;
+    text-align: center;
+    display: inline-block;
+    border: solid 2px rgba(51,51,51,.75);
+    background:#8BC34A;
+}
     `)
 
     /**
@@ -128,6 +140,8 @@
                 item.url + '> ' + item.title + '</a>\
             </li>')
         })
+
+
     }
 
     // 加载并显示集数
@@ -135,19 +149,77 @@
         // 如果在总集列表页面
         if($("#content h1.page-title").length > 0 ){
 
-            $('<section> <ul id="list-ep"></ul> </section>').insertAfter("#content h1.page-title")
-            // 准备加载集数
-            $("article").each((index, element) =>{
+            let existPre = false
+            let existNext = false
+            let cPage = 1
+            if($('div.nav-previous').length > 0){
+                // 发现上一页
+                existPre = true
+            }
+            if($('div.nav-next').length>0 ){
+                // 发现下一页
+                existNext = true
+            }
 
-                let url = $(element).find('h2.entry-title a').attr('href')
-                let id = element.id
-                let epStr = $(element).find('h2.entry-title a').text().trim()
+            if(!existPre && !existNext){
+                // 一共只有一页
+                cPage = 1
+            }else if(existPre && !existNext){
+                // 存在上一页, 当前为第一页
+                cPage = 1
+            }else{
+                // 存在上一页, 存在下一页
+                let urlNext =   $('div.nav-next a').attr('href')
+                cPage = parseInt(urlNext.slice(urlNext.lastIndexOf('/')+1))+1
+            }
+
+            let maxItemsInPage = 14
+
+            // 预测总共页数
+            let epFStr = $("article:eq(0)").find('h2.entry-title a').text().trim()
+            let numEpF = parseInt(epFStr.slice(epFStr.indexOf('[')+1,-1))
+
+            $('<section id="list-page" class="pages"> </section>').insertAfter("#content h1.page-title")
+
+            let totalPage = cPage + Math.ceil(numEpF/maxItemsInPage)-1
+
+            for (let page = totalPage; page > 0; page--) { 
+                $("#list-page").append('<ul id="list-ep-'+page+'"></ul>')
+                if(page == cPage){
+                    $('#list-ep-'+page).append("<li \
+                    class=page>\
+                    <a href='"+$('footer span.cat-links:eq(0) > a').attr('href')+"/page/" + page +"'>P"+page+"</a></li>")
+
+                
+                    // 准备加载集数
+                    $("article").each((index, element) =>{
+
+                        let url = $(element).find('h2.entry-title a').attr('href')
+                        let id = element.id
+                        let epStr = $(element).find('h2.entry-title a').text().trim()
 
 
-                $("#list-ep").append("<li \
-                class=episode><a href='#"+id+"'>"+epStr.slice(epStr.indexOf('[')+1,-1)+"</a></li>")
+                        $('#list-ep-'+page).append("<li \
+                        class=episode><a href='#"+id+"'>"+epStr.slice(epStr.indexOf('[')+1,-1)+"</a></li>")
 
-            })
+                    })
+                }else{
+                    
+                    let cnumEpF = numEpF + (cPage - page) * maxItemsInPage
+                    let cnumEpL = numEpF + (cPage - page-1) * maxItemsInPage +1
+                    if(cnumEpL <= 0){
+                        cnumEpL = 1
+                    }
+
+                    $('#list-ep-'+page).append("<li \
+                    class=page>\
+                    <a href='"+$('footer span.cat-links:eq(0) > a').attr('href')+"/page/" + page +"'>P"+page+"[" 
+                    + cnumEpF + "-"
+                    + cnumEpL + "]</a></li>")
+
+                }
+            }
+
 
         }
     }
