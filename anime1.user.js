@@ -258,7 +258,11 @@
 
         showPlaylist()
 
-        showEpisodeList()
+        // 判断是否为搜索页
+        if($("h1.page-title > span").length ==0){
+            showEpisodeList()
+        }
+        
 
         $(document).on('click', 'a[unsubscribed]', (event) => {
             // 
