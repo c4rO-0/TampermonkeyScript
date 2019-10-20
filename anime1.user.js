@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         anime1.me收藏番剧
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @license      MPL-2.0
 // @description  添加番剧收藏功, 快速跳转到收藏的番剧.
 // @author       c4r
@@ -22,6 +22,10 @@
     display: inline-block;
     border: solid 2px rgba(51,51,51,.75);
 }
+.Fepisodes {
+    overflow-x:auto;
+    overflow-y:auto;
+}
 .Fepisode > a{
     display: block;
 }
@@ -29,16 +33,23 @@
     background:#cecece;
 }
 .Fpages {
-    height: 50px;
-    overflow:auto;
+    overflow-x:auto;
+    overflow-y:hidden;
 }
 .Fpage {
+    margin-left: 5px;
     margin-bottom: 5px;
     min-width: 30px;
     text-align: center;
     display: inline-block;
     border: solid 2px rgba(51,51,51,.75);
     background:#8BC34A;
+}
+.Factive{
+    background:#009688;
+}
+.Fpage > a:hover {
+    color:blue;
 }
     `)
 
@@ -178,47 +189,47 @@
             // 预测总共页数
             let epFStr = $("article:eq(0)").find('h2.entry-title a').text().trim()
             let numEpF = parseInt(epFStr.slice(epFStr.indexOf('[')+1,-1))
-
-            $('<section id="list-page" class="Fpages"> </section>').insertAfter("#content h1.page-title")
-
             let totalPage = cPage + Math.ceil(numEpF/maxItemsInPage)-1
 
-            for (let page = totalPage; page > 0; page--) { 
-                $("#list-page").append('<ul id="list-ep-'+page+'"></ul>')
+            $('<section id="list-page" class="Fpages"><ul>Pages :  </ul></section>').insertAfter("#content h1.page-title")
+            
+            let totalWidth = 45
+            for (let page = 1 ; page <= totalPage; page++) { 
+
+                let cnumEpF = numEpF + (cPage - page) * maxItemsInPage
+                let cnumEpL = numEpF + (cPage - page-1) * maxItemsInPage +1
+                if(cnumEpL <= 0){
+                    cnumEpL = 1
+                }
+
+                $("#list-page > ul").append('<li id="page-'+page+'" \
+                class=Fpage>\
+                    <a href="'+$("footer span.cat-links:eq(0) > a").attr('href')+'/page/' + page +'">P'+page+' : '
+                    + cnumEpF + '-'
+                    + cnumEpL + '</a></li>')
+
+                totalWidth += $('#page-'+page).width()+10
+
                 if(page == cPage){
-                    $('#list-ep-'+page).append("<li \
-                    class=Fpage>\
-                    <a href='"+$('footer span.cat-links:eq(0) > a').attr('href')+"/page/" + page +"'>P"+page+"</a></li>")
-
-                
-                    // 准备加载集数
-                    $("article").each((index, element) =>{
-
-                        let url = $(element).find('h2.entry-title a').attr('href')
-                        let id = element.id
-                        let epStr = $(element).find('h2.entry-title a').text().trim()
-
-
-                        $('#list-ep-'+page).append("<li \
-                        class=Fepisode><a href='#"+id+"'>"+epStr.slice(epStr.indexOf('[')+1,-1)+"</a></li>")
-
-                    })
-                }else{
-                    
-                    let cnumEpF = numEpF + (cPage - page) * maxItemsInPage
-                    let cnumEpL = numEpF + (cPage - page-1) * maxItemsInPage +1
-                    if(cnumEpL <= 0){
-                        cnumEpL = 1
-                    }
-
-                    $('#list-ep-'+page).append("<li \
-                    class=Fpage>\
-                    <a href='"+$('footer span.cat-links:eq(0) > a').attr('href')+"/page/" + page +"'>P"+page+"[" 
-                    + cnumEpF + "-"
-                    + cnumEpL + "]</a></li>")
-
+                    $('#page-'+page).addClass("Factive")
                 }
             }
+
+            $("#list-page > ul").width(totalWidth)
+
+            $('<section id="list-ep" class="Fepisodes">Episodes : </section>').insertAfter("#list-page")
+            
+
+            $("article").each((index, element) =>{
+
+                let url = $(element).find('h2.entry-title a').attr('href')
+                let id = element.id
+                let epStr = $(element).find('h2.entry-title a').text().trim()
+
+                $('#list-ep').append("<li \
+                class=Fepisode><a href='#"+id+"'>"+epStr.slice(epStr.indexOf('[')+1,-1)+"</a></li>")
+
+            })
 
 
         }
