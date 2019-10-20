@@ -14,7 +14,7 @@
     'use strict';
 
     GM_addStyle(`
-.episode {
+.Fepisode {
     margin-left: 5px;
     margin-bottom: 5px;
     min-width: 30px;
@@ -22,17 +22,17 @@
     display: inline-block;
     border: solid 2px rgba(51,51,51,.75);
 }
-.episode > a{
+.Fepisode > a{
     display: block;
 }
-.read {
+.Fread {
     background:#cecece;
 }
-.pages {
+.Fpages {
     height: 50px;
     overflow:auto;
 }
-.page {
+.Fpage {
     margin-bottom: 5px;
     min-width: 30px;
     text-align: center;
@@ -179,7 +179,7 @@
             let epFStr = $("article:eq(0)").find('h2.entry-title a').text().trim()
             let numEpF = parseInt(epFStr.slice(epFStr.indexOf('[')+1,-1))
 
-            $('<section id="list-page" class="pages"> </section>').insertAfter("#content h1.page-title")
+            $('<section id="list-page" class="Fpages"> </section>').insertAfter("#content h1.page-title")
 
             let totalPage = cPage + Math.ceil(numEpF/maxItemsInPage)-1
 
@@ -187,7 +187,7 @@
                 $("#list-page").append('<ul id="list-ep-'+page+'"></ul>')
                 if(page == cPage){
                     $('#list-ep-'+page).append("<li \
-                    class=page>\
+                    class=Fpage>\
                     <a href='"+$('footer span.cat-links:eq(0) > a').attr('href')+"/page/" + page +"'>P"+page+"</a></li>")
 
                 
@@ -200,7 +200,7 @@
 
 
                         $('#list-ep-'+page).append("<li \
-                        class=episode><a href='#"+id+"'>"+epStr.slice(epStr.indexOf('[')+1,-1)+"</a></li>")
+                        class=Fepisode><a href='#"+id+"'>"+epStr.slice(epStr.indexOf('[')+1,-1)+"</a></li>")
 
                     })
                 }else{
@@ -212,7 +212,7 @@
                     }
 
                     $('#list-ep-'+page).append("<li \
-                    class=page>\
+                    class=Fpage>\
                     <a href='"+$('footer span.cat-links:eq(0) > a').attr('href')+"/page/" + page +"'>P"+page+"[" 
                     + cnumEpF + "-"
                     + cnumEpL + "]</a></li>")
@@ -262,6 +262,8 @@
             // location.reload()
             $(event.target).closest('li').remove()
         })
+
+        
     })
 
 
