@@ -20,48 +20,53 @@
     'use strict';
 
     GM_addStyle(`
-		#c4r-oxgs73w7rh {
-			/* background-color: aqua; */
-			transform-origin: 100% 100%;
-			transition: transform 0.3s ease;
-			height: 36px;
-			width: 36px;
-			position: fixed;
-			overflow: hidden;
-			bottom: -5px;
-			right: -5px;
-			cursor: pointer;
-			z-index: 999
-		}
-		#c4r-oxgs73w7rh>div {
-			height: 36px;
-			width: 36px;
-			border-radius: 18px 18px 0px 18px;
-			position: relative;
-			bottom: 0px;
-			right: 0px;
-			background-color: #cacaca;
-			overflow: hidden;
-		}
-		#c4r-oxgs73w7rh svg {
-			position: relative;
-			transition: transform 0.3s ease;
-			height: 100px;
-			width: 100px;
-			top: -32px;
-			left: -32px;
-		}
-		#c4r-oxgs73w7rh.surprise:hover {
-			transform-origin: 100% 100%;
-			transform: scale(4.5);
-		}
-		#c4r-oxgs73w7rh.surprise:hover svg {
-			transform: scale(0.4);
-		}
-		#c4r-oxgs73w7rh:hover {
-			transform-origin: 100% 100%;
-			transform: scale(3);
-		}
+        #c4r-oxgs73w7rh {
+            /* background-color: aqua; */
+            height: 162px;
+            width: 36px;
+            position: fixed;
+            /* overflow: hidden; */
+            bottom: -5px;
+            right: -5px;
+            cursor: pointer;
+            z-index: 999
+        }
+
+        #c4r-oxgs73w7rh>div {
+            transform-origin: 100% 100%;
+            transition: transform 0.5s ease;
+            height: 36px;
+            width: 36px;
+            border-radius: 18px 18px 0px 18px;
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            background-color: #cacaca;
+            overflow: hidden;
+        }
+
+        #c4r-oxgs73w7rh svg {
+            position: relative;
+            transition: transform 0.5s ease;
+            height: 100px;
+            width: 100px;
+            top: -32px;
+            left: -32px;
+        }
+
+        #c4r-oxgs73w7rh.surprise:hover>div {
+            transform-origin: 100% 100%;
+            transform: scale(4.5);
+        }
+
+        #c4r-oxgs73w7rh.surprise:hover svg {
+            transform: scale(0.4);
+        }
+
+        #c4r-oxgs73w7rh:hover>div {
+            transform-origin: 100% 100%;
+            transform: scale(3);
+        }
     `)
     let videoUrl = undefined;
     let timeID = 0
