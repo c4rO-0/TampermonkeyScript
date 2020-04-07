@@ -15,6 +15,52 @@
 (function () {
     'use strict';
 
+    //==================================================================================
+    let strEvent = '\
+{                                      \
+"type" : "toLink",                         \
+"start" : "10.0"   ,                       \
+"end" : "20.0",                            \
+"top" : "0.5"  ,                           \
+"left" : "0.5"  ,                          \
+"target" : "https://www.bilibili.com",      \
+"content" : "B站" \
+}\
+{                                      \
+    "type" : "toTime",                         \
+    "start" : "25.0"   ,                       \
+    "end" : "35.0",                            \
+    "top" : "0.5"  ,                           \
+    "left" : "0.5"  ,                          \
+    "target" : "0",      \
+    "content" : "从头开始"\
+    }'
+
+    console.log('------------strEvent----------')
+    console.log(strEvent)
+
+    let strEventBase64 = btoa(encodeURIComponent(strEvent))
+
+    let strExample = '\
+#====================================#\n\
+#           mysterious code          #\n\
+#------------------------------------#\n'
+        + '(bcoin:' + strEventBase64 + ')' +
+        '\n# -----------------------------------#\n'
+    console.log('----strEvent in description----')
+    console.log(strExample)
+
+
+
+    /**
+     * debug
+     */
+
+    let eventList = new Array()
+
+    //==================================================================================
+
+
     /**
      *  玩法：修改第二层div.c4r的类，可改的类名包括（.initial .success .error .processing .surprise .hide .fade），其中.inital和.success需要保证有且仅有一个存在。
      */
@@ -118,6 +164,16 @@
     // -------------------------------------------------------------------------------------------
 
     /**
+     * 返回一个以时间作为种子的唯一字符串.
+     * 目前被用在消息传递的时候创建一个独一无二的channel
+     * @returns {String} UniqueStr 
+     */
+    function UniqueStr() {
+
+        return (Date.now() + Math.random()).toString()
+    }
+
+    /**
      * 是否为老版本一般视频
      */
     function isOldVersion() {
@@ -200,6 +256,18 @@
             return true;
         }
         return false;
+    }
+
+    function genEventHTML(event){
+        return '\
+        <div bcoin_insert_id="'+ event.id
+        +'" style="position: absolute;top: '
+        + event.top*100 +'%;left: '+ event.left*100 +'%;cursor: pointer;z-index: 100;background: #00ff00">\
+        <button bcoin_insert start="'+event.start
+        +'" end="'+ event.end +'" type="'
+        + event.type +'" target="'
+        + event.target  +'">\
+        '+event.content+'</button></div>'
     }
 
     /**
@@ -305,6 +373,49 @@
 
 
 
+    /**
+     * 读取神秘代码
+     */
+    function readEvent() {
+
+        // 从网页读
+        let strDescription = strExample
+
+        // 判断是否有event
+
+        if (strDescription.includes('(bcoin:')) {
+            let strEventAllBase64 = strDescription.substring(
+                strDescription.indexOf('(bcoin:') + ('(bcoin:').length,
+                strDescription.indexOf(')', strDescription.indexOf('(bcoin:') + ('(bcoin:').length)
+            )
+            // console.log('bcoin : strEventAll : ', strEventAllBase64)
+            let strEventAll = decodeURIComponent(atob(strEventAllBase64))
+            // console.log('bcoin : strEventAll : ', strEventAll)
+            eventList = []
+            strEventAll.split('}').forEach((strSingleEvent) => {
+                if ($.trim(strSingleEvent).substr(0, 1) == '{') {
+                    // console.log('bcoin : strSingleEvent : ', strSingleEvent+ '}')
+                    let event = JSON.parse(strSingleEvent + '}')
+                    event.start = parseFloat(event.start)
+                    event.end = parseFloat(event.end)
+                    event.top = parseFloat(event.top)
+                    event.left = parseFloat(event.left)
+                    event.id = UniqueStr()
+                    event.html = genEventHTML(event)
+
+                    eventList.push(event)
+                }
+
+            })
+            console.log('bcoin : eventList : ', eventList)
+
+        } else {
+            eventList = []
+        }
+
+    }
+
+
     // ===========================================================================================
     // 功能函数
     // -------------------------------------------------------------------------------------------
@@ -364,6 +475,7 @@
 
     }
 
+
     /**
      * 检测进度条
      */
@@ -375,12 +487,14 @@
 
         $('video').on("timeupdate", () => {
 
+
             let timePoint1_s = 3. / 4. * $('video').get(0).duration
             let timePoint1_e = 3. / 4. * $('video').get(0).duration + 3
+            let currentTime = $('video').get(0).currentTime
             // console.log("video time : ", $('video').get(0).currentTime)
 
-            if ($('video').get(0).currentTime > timePoint1_s
-                && $('video').get(0).currentTime < timePoint1_e) {
+            if (currentTime > timePoint1_s
+                && currentTime < timePoint1_e) {
                 // 闪烁
 
                 if (logoShowStatus.indexOf(strStartRemind) == -1) {
@@ -395,7 +509,7 @@
                     $("#coin-gen").addClass('surprise fade')
                 }
 
-            } else if ($('video').get(0).currentTime > timePoint1_e) {
+            } else if (currentTime > timePoint1_e) {
 
                 if (logoShowStatus.indexOf(strStartRemind) != -1) {
                     delete logoShowStatus[logoShowStatus.indexOf(strStartRemind)]
@@ -421,6 +535,53 @@
             if (islogoForeShow()) {
                 logoShow()
             }
+
+
+            // 神秘代码
+            // ====================================
+            /**
+             * 神秘代码格式说明
+             * 插入事件 :
+             * - 点击跳转进度
+             * - 点击跳转链接
+             * 插入元素 :
+             * html代码快
+             * event : 
+             * {
+             * id : 
+             * type: 
+             *      "toLink"
+             *      "toTime"
+             * html:
+             *      "<div bcoin_insert_id='' > < ..> ...</div>"
+             * start:
+             *      int 
+             * end:
+             *      int
+             * }
+             */
+
+            eventList.forEach(element => {
+                if (currentTime >= element.start && currentTime <= element.end + 1) {
+                    if (currentTime < element.end) {
+                        if (!$('div[bcoin_insert_id="' + element.id + '"]').length) {
+                            console.log('bcoin : add : event')
+                            $('.bilibili-player-video-wrap').append(element.html)
+                        }
+                    } else if (currentTime >= element.end && currentTime <= element.end + 1 && $('div[bcoin_insert_id="' + element.id + '"]').length > 0) {
+                        // 去掉效果
+                        console.log('bcoin : remove : event')
+                        $('div[bcoin_insert_id="' + element.id + '"]').remove()
+                    }
+                }else if($('div[bcoin_insert_id="' + element.id + '"]').length > 0){
+                    $('div[bcoin_insert_id="' + element.id + '"]').remove()
+                }
+
+            });
+
+
+
+            // ====================================
         });
     }
 
@@ -471,6 +632,8 @@
         console.log("take-coin : add button")
         $('#c4r-takecoin').remove()
 
+
+
         logoShowStatus = []
         if (isOldVersion() || isWatchList() || isBangumiOld()) {
             console.log("oldversion")
@@ -482,6 +645,7 @@
                         if ($('.bilibili-player-video-wrap').length > 0 && $('#coin-gen').length == 0) {
                             // $('#c4r-takecoin').remove()
                             $('.bilibili-player-video-wrap').append(genButton())
+                            readEvent()
                             observer.disconnect()
                             console.log('disconnect coin observe')
                         }
@@ -498,12 +662,14 @@
             } else {
                 $('#c4r-takecoin').remove()
                 $('.bilibili-player-video-wrap').append(genButton())
+                readEvent()
             }
 
         } else if (isNewVersion()) {
             console.log("new version")
             $('#c4r-takecoin').remove()
             $('#bilibiliPlayer').append(genButton())
+            readEvent()
             if (!$('.coin').hasClass('on')) {
                 observerNewVersionCoin.observe($('.coin').get(0),
                     {
@@ -516,6 +682,7 @@
             console.log("Bangumi New version")
             $('#c4r-takecoin').remove()
             $('#bilibiliPlayer').append(genButton())
+            readEvent()
             if ($('.coin-info span').text().trim() == '--') {
                 observerBangumiNewCoin.observe($('.coin-info').get(0),
                     {
@@ -796,11 +963,11 @@
         // console.log("click : ", event)
         if ($(event.target).closest('#coin-gen').length > 0) {
 
-            
 
-            
-            if (isNewVersion() &&  
-            ($('span.like.on').length == 0 || (!isCoinTaken()) || $('span.collect.on').length == 0) ) {
+
+
+            if (isNewVersion() &&
+                ($('span.like.on').length == 0 || (!isCoinTaken()) || $('span.collect.on').length == 0)) {
 
                 console.log("take-coin : 一键三联")
                 clickTimeout.clear()
@@ -867,6 +1034,21 @@
                 // console.log('take-coin :', 'Hide')
                 autoLogoHide()
             }, 1500);
+        }
+    })
+
+    $(document).on('click','button[bcoin_insert]', function (event) {
+        console.log('bcoin : insert click')
+        if($(this).attr("type") ){
+            if($(this).attr("type") == 'toLink'){
+                $('video').get(0).pause()
+                window.open($(this).attr("target"), '_blank');
+                
+            }else if($(this).attr("type") == 'toTime'){
+                $('video').get(0).currentTime= parseFloat($(this).attr("target"))
+                $(this).closest('div[bcoin_insert_id]').remove()
+            }
+
         }
     })
 
