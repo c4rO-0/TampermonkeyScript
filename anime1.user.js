@@ -1,21 +1,57 @@
 // ==UserScript==
 // @name         anime1.me收藏番剧
 // @namespace    http://tampermonkey.net/
-// @version      0.3
+// @version      0.5
 // @license      MPL-2.0
 // @description  添加番剧收藏功, 快速跳转到收藏的番剧.
 // @author       c4r
 // @match        *://anime1.me/*
-// @grant        none
+// @grant        GM_addStyle
 // @require      https://code.jquery.com/jquery-latest.js
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    /**
-     * titel :.... url :.....\r\n
-     */
+    GM_addStyle(`
+.Fepisode {
+    margin-left: 5px;
+    margin-bottom: 5px;
+    min-width: 30px;
+    text-align: center;
+    display: inline-block;
+    border: solid 2px rgba(51,51,51,.75);
+}
+.Fepisodes {
+    overflow-x:auto;
+    overflow-y:auto;
+}
+.Fepisode > a{
+    display: block;
+}
+.Fread {
+    background:#cecece;
+}
+.Fpages {
+    overflow-x:auto;
+    overflow-y:hidden;
+}
+.Fpage {
+    margin-left: 5px;
+    margin-bottom: 5px;
+    min-width: 30px;
+    text-align: center;
+    display: inline-block;
+    border: solid 2px rgba(51,51,51,.75);
+    background:#8BC34A;
+}
+.Factive{
+    background:#009688;
+}
+.Fpage > a:hover {
+    color:blue;
+}
+    `)
 
     /**
      * 
@@ -115,6 +151,88 @@
                 item.url + '> ' + item.title + '</a>\
             </li>')
         })
+
+
+    }
+
+    // 加载并显示集数
+    function showEpisodeList(){
+        // 如果在总集列表页面
+        if($("#content h1.page-title").length > 0 ){
+
+            let existPre = false
+            let existNext = false
+            let cPage = 1
+            if($('div.nav-previous').length > 0){
+                // 发现上一页
+                existPre = true
+            }
+            if($('div.nav-next').length>0 ){
+                // 发现下一页
+                existNext = true
+            }
+
+            if(!existPre && !existNext){
+                // 一共只有一页
+                cPage = 1
+            }else if(existPre && !existNext){
+                // 存在上一页, 当前为第一页
+                cPage = 1
+            }else{
+                // 存在上一页, 存在下一页
+                let urlNext =   $('div.nav-next a').attr('href')
+                cPage = parseInt(urlNext.slice(urlNext.lastIndexOf('/')+1))+1
+            }
+
+            let maxItemsInPage = 14
+
+            // 预测总共页数
+            let epFStr = $("article:eq(0)").find('h2.entry-title a').text().trim()
+            let numEpF = parseInt(epFStr.slice(epFStr.indexOf('[')+1,-1))
+            let totalPage = cPage + Math.ceil(numEpF/maxItemsInPage)-1
+
+            $('<section id="list-page" class="Fpages"><ul>Pages :  </ul></section>').insertAfter("#content h1.page-title")
+            
+            let totalWidth = 45
+            for (let page = 1 ; page <= totalPage; page++) { 
+
+                let cnumEpF = numEpF + (cPage - page) * maxItemsInPage
+                let cnumEpL = numEpF + (cPage - page-1) * maxItemsInPage +1
+                if(cnumEpL <= 0){
+                    cnumEpL = 1
+                }
+
+                $("#list-page > ul").append('<li id="page-'+page+'" \
+                class=Fpage>\
+                    <a href="'+$("footer span.cat-links:eq(0) > a").attr('href')+'/page/' + page +'">P'+page+' : '
+                    + cnumEpF + '-'
+                    + cnumEpL + '</a></li>')
+
+                totalWidth += $('#page-'+page).width()+10
+
+                if(page == cPage){
+                    $('#page-'+page).addClass("Factive")
+                }
+            }
+
+            $("#list-page > ul").width(totalWidth)
+
+            $('<section id="list-ep" class="Fepisodes">Episodes : </section>').insertAfter("#list-page")
+            
+
+            $("article").each((index, element) =>{
+
+                let url = $(element).find('h2.entry-title a').attr('href')
+                let id = element.id
+                let epStr = $(element).find('h2.entry-title a').text().trim()
+
+                $('#list-ep').append("<li \
+                class=Fepisode><a href='#"+id+"'>"+epStr.slice(epStr.indexOf('[')+1,-1)+"</a></li>")
+
+            })
+
+
+        }
     }
 
     $(document).ready(function () {
@@ -135,9 +253,16 @@
 
             });
 
+
         }
 
         showPlaylist()
+
+        // 判断是否为搜索页
+        if($("h1.page-title > span").length ==0){
+            showEpisodeList()
+        }
+        
 
         $(document).on('click', 'a[unsubscribed]', (event) => {
             // 
@@ -153,6 +278,7 @@
             $(event.target).closest('li').remove()
         })
 
+        
     })
 
 
