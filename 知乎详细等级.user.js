@@ -8,34 +8,58 @@
 // @match        https://www.zhihu.com/creator
 // @grant        none
 // @require      https://code.jquery.com/jquery-latest.js
-// // @require      https://cdn.jsdelivr.net/npm/chart.js@2.8.0
+// @require      https://cdn.jsdelivr.net/npm/chart.js@2.9.3
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    // function dataToLabel(data){
-    //     let timeSort = Object.keys(data).sort()
+    function dataToChartData(data) {
+        // console.log('zhihu : ', data)
+        let timeSort = Object.keys(data).sort()
+        let minTime = timeSort[0]
+        let maxTime = (timeSort[timeSort.length - 1])
 
-    //     let label = []
+        let minY = 1000000
+        let maxY = -1
 
-    //     for (time in timeSort) {
-    //         let date = new DataCue(time)
-    //         label.push(date.)
+        let timeStep = 60 * 60 * 24 * 7
 
-    //     }
-    // }
+        let xyArray = []
+
+        for (let time of timeSort) {
+            if (data[time] <= minY) {
+                minY = data[time]
+            }
+
+            if (data[time] >= maxY) {
+                maxY = data[time]
+            }
+            // xyArray.push({ x: Math.round((time - minTime) / timeStep), y: (data[time]) })
+
+            xyArray.push({ x: (new Date(parseInt(time))), y: (data[time]) })
+        }
+
+        return {
+            'xyArray': xyArray,
+            'minX': 0,
+            'maxX': Math.round((maxTime - minTime) / timeStep),
+            'minY': minY,
+            'maxY': maxY
+
+        }
+    }
 
     $(document).ready(() => {
         let storageName = 'C4rZhihuLevel'
 
         // debug
-        // let debugData = {
-        //     1586449108624: 3.20,
-        //     1586449107624: 3.10,
-        //     1586449109624: 3.24
-        // }
-        // localStorage.setItem(storageName, JSON.stringify(debugData))
+        let debugData = {
+            1580511600000: 3.00,
+            1577833200000: 2.10,
+            1585692000000: 3.24
+        }
+        localStorage.setItem(storageName, JSON.stringify(debugData))
 
 
         let strLevelPercent = $('.CreatorHomeLevelBar-progress').attr('style').slice(("width:").length, -2).trim();
@@ -83,10 +107,10 @@
                 // $('.CreatorHomeLevelInfo-levelTitleHint').before(' (上次更新 : '+ lastLevel + ' ' +  (new Date()).toLocaleDateString()+  ')')
             }
 
-            
+
         } else {
             // initial log file 
-            
+
             data[cDate.getTime()] = cLevel
 
             localStorage.setItem(storageName, JSON.stringify(data))
@@ -94,27 +118,60 @@
 
 
 
-        // $('<canvas id="myChart"></canvas>').insertAfter('.CreatorHomeLevelInfo')
+        $('<canvas id="myChart"></canvas>').insertAfter('.CreatorHomeLevelInfo')
+        var ctx = document.getElementById("myChart");
 
-        // var ctx = document.getElementById('myChart').getContext('2d');
-        // var chart = new Chart(ctx, {
-        //     // The type of chart we want to create
-        //     type: 'line',
-        
-        //     // The data for our dataset
-        //     data: {
-        //         labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-        //         datasets: [{
-        //             label: 'My First dataset',
-        //             backgroundColor: 'rgb(255, 99, 132)',
-        //             borderColor: 'rgb(255, 99, 132)',
-        //             data: [0, 10, 5, 2, 20, 30, 45]
-        //         }]
-        //     },
-        
-        //     // Configuration options go here
-        //     options: {}
-        // });
+
+        let chartData = dataToChartData(data)
+        console.log('c4r zhihu level chartData :', chartData)
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            
+            data: {
+                datasets: [{
+                    label: 'Points',
+                    labels: ["January", "February", "March", "April", "May", "June", "July"],
+                    data: chartData['xyArray'],
+                    backgroundColor: 'rgba(123, 83, 252, 0.8)',
+                    borderColor: 'rgba(33, 232, 234, 1)',
+                    borderWidth: 1,
+                    fill: false,
+                    showLine: false,
+                }],
+            },
+            options: {
+                // title: {
+                //   display: false,
+                //   text: 'Chart.js - Fixed X and Y Axis',
+                // },
+                scales: {
+                    // xAxes: [{
+                    //     type: 'linear',
+                    //     position: 'bottom',
+                    //     ticks: {
+                    //         min: chartData['minX'],
+                    //         max: chartData['maxX'],
+                    //         stepSize: 1,
+                    //         fixedStepSize: 1,
+                    //     }
+                    // }],
+                    // xAxes: [{
+                    //     type: 'time',
+                    //     time: {
+                    //         unit: 'month'
+                    //     }
+                    // }],
+                      yAxes: [{
+                        ticks: {
+                          min: 0,
+                          max: 10,
+                          stepSize: 1,
+                          fixedStepSize: 1,
+                        }
+                      }]
+                }
+            }
+        });
     })
 
 
