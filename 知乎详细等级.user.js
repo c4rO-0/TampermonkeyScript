@@ -1,13 +1,14 @@
 // ==UserScript==
-// @name         zhihu level details
+// @name         知乎详细等级
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  show the percentage of the creator level
-// @author       You
+// @license      MPL-2.0
+// @description  精确显示知乎等级(精确到小数点后两位)
+// @author       C4r
 // @match        https://www.zhihu.com/creator
 // @grant        none
 // @require      https://code.jquery.com/jquery-latest.js
-// @require      https://cdn.jsdelivr.net/npm/chart.js@2.8.0
+// // @require      https://cdn.jsdelivr.net/npm/chart.js@2.8.0
 // ==/UserScript==
 
 (function () {
