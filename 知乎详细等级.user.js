@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         知乎详细等级
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @license      MPL-2.0
 // @description  精确显示知乎等级(精确到小数点后两位)
 // @author       C4r
 // @match        https://www.zhihu.com/creator
 // @grant        none
 // @require      https://code.jquery.com/jquery-latest.js
+// @require      https://momentjs.com/downloads/moment.min.js
 // @require      https://cdn.jsdelivr.net/npm/chart.js@2.9.3
 // ==/UserScript==
 
@@ -124,51 +125,35 @@
 
         let chartData = dataToChartData(data)
         console.log('c4r zhihu level chartData :', chartData)
+
         var myChart = new Chart(ctx, {
             type: 'line',
-            
             data: {
                 datasets: [{
                     label: 'Points',
-                    labels: ["January", "February", "March", "April", "May", "June", "July"],
                     data: chartData['xyArray'],
                     backgroundColor: 'rgba(123, 83, 252, 0.8)',
                     borderColor: 'rgba(33, 232, 234, 1)',
                     borderWidth: 1,
                     fill: false,
-                    showLine: false,
+                    showLine: true,
                 }],
             },
             options: {
-                // title: {
-                //   display: false,
-                //   text: 'Chart.js - Fixed X and Y Axis',
-                // },
+                title: {
+                  display: true,
+                  text: '等级历史',
+                },
+                legend: {
+                    display: false
+                },
                 scales: {
-                    // xAxes: [{
-                    //     type: 'linear',
-                    //     position: 'bottom',
-                    //     ticks: {
-                    //         min: chartData['minX'],
-                    //         max: chartData['maxX'],
-                    //         stepSize: 1,
-                    //         fixedStepSize: 1,
-                    //     }
-                    // }],
-                    // xAxes: [{
-                    //     type: 'time',
-                    //     time: {
-                    //         unit: 'month'
-                    //     }
-                    // }],
-                      yAxes: [{
-                        ticks: {
-                          min: 0,
-                          max: 10,
-                          stepSize: 1,
-                          fixedStepSize: 1,
+                    xAxes: [{
+                        type: 'time',
+                        time: {
+                            unit: 'week'
                         }
-                      }]
+                    }]
                 }
             }
         });
