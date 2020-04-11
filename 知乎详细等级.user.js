@@ -1,58 +1,105 @@
 // ==UserScript==
 // @name         知乎详细等级
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.4
 // @license      MPL-2.0
 // @description  精确显示知乎等级(精确到小数点后两位)
 // @author       C4r
-// @match        https://www.zhihu.com/creator
+// @match        https://www.zhihu.com/*
 // @grant        none
-// @require      https://code.jquery.com/jquery-latest.js
-// // @require      https://cdn.jsdelivr.net/npm/chart.js@2.8.0
+// @require      https://cdn.jsdelivr.net/npm/jquery@3.5.0/dist/jquery.min.js
+// @require      https://cdn.jsdelivr.net/npm/moment@2.24.0/min/moment.min.js
+// @require      https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    // function dataToLabel(data){
-    //     let timeSort = Object.keys(data).sort()
+    let storageName = 'C4rZhihuLevel'
 
-    //     let label = []
-
-    //     for (time in timeSort) {
-    //         let date = new DataCue(time)
-    //         label.push(date.)
-
-    //     }
-    // }
-
-    $(document).ready(() => {
-        let storageName = 'C4rZhihuLevel'
-
-        // debug
-        // let debugData = {
-        //     1586449108624: 3.20,
-        //     1586449107624: 3.10,
-        //     1586449109624: 3.24
-        // }
-        // localStorage.setItem(storageName, JSON.stringify(debugData))
+    function httpGetAsync(theUrl, callback) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function () {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                callback(xmlHttp.responseText);
+        }
+        xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+        xmlHttp.send(null);
+    }
 
 
-        let strLevelPercent = $('.CreatorHomeLevelBar-progress').attr('style').slice(("width:").length, -2).trim();
-        // let str = $('.CreatorHomeLevelInfo-levelTitle').text()
-        $('.CreatorHomeLevelInfo-levelTitleHint').before('.' + strLevelPercent)
+    function dataToChartData(data) {
+        // console.log('zhihu : ', data)
+        let timeSort = Object.keys(data).sort()
 
-        console.log('zhihu level')
-        let strLevel = $('img.CreatorHomeLevelInfo-LevelImage').attr('alt').split(' ')[1] + '.' + strLevelPercent
-        let cLevel = parseFloat(strLevel)
-        console.log('zhihu level current  ', cLevel)
+        let xyArray = []
+
+        for (let time of timeSort) {
+            // xyArray.push({ x: Math.round((time - minTime) / timeStep), y: (data[time]) })
+
+            xyArray.push({ x: (new Date(parseInt(time))), y: (data[time]) })
+        }
+
+        return {
+            'xyArray': xyArray
+        }
+    }
 
 
-        // -------------
-        // cal log file
-        // ------------
+    function getLevelRequest() {
+        return new Promise((resolve, reject) => {
+
+            httpGetAsync('https://www.zhihu.com/creator/account/growth-level', (responseText) => {
+
+                console.log('get response')
+                // console.log(responseText)
+                let levelInfoStartIndex = responseText.indexOf('"account":{"growthLevel"')
+
+                if (levelInfoStartIndex >= 0) {
+                    let levelInfoEndIndex = responseText.indexOf('}}', levelInfoStartIndex) + 2
+
+                    let levelInfoStr = '{' + responseText.slice(levelInfoStartIndex, levelInfoEndIndex) + '}'
+
+                    let levelInfo = JSON.parse(levelInfoStr)
+
+                    let cLevel = parseFloat(levelInfo.account.growthLevel.level + '.' + levelInfo.account.growthLevel.ratio)
+
+                    resolve(cLevel)
+                } else {
+                    console.error('zhihu level detail not gotten')
+                    reject('zhihu level detail not gotten')
+                }
+
+            })
+        })
+    }
+
+    /**
+     * return level by reading page
+     */
+    function getLevelHTML() {
+
+        if ($('.CreatorHomeLevelInfo-levelTitle').length == 0) {
+            return undefined
+        } else {
+            let strLevelPercent = $('.CreatorHomeLevelBar-progress').attr('style').slice(("width:").length, -2).trim();
+            // let str = $('.CreatorHomeLevelInfo-levelTitle').text()
+            $('.CreatorHomeLevelInfo-levelTitleHint').before('.' + strLevelPercent)
+
+            // console.log('zhihu level')
+            let strLevel = $('img.CreatorHomeLevelInfo-LevelImage').attr('alt').split(' ')[1] + '.' + strLevelPercent
+
+            let cLevel = parseFloat(strLevel)
+
+            return cLevel
+        }
+
+    }
+
+    function updateData(cLevel) {
+
         let dataStr = localStorage.getItem(storageName)
-        console.log('zhihu level dataStr  ', dataStr)
+        // console.log('zhihu level dataStr  ', dataStr)
         let cDate = new Date()
 
         let data = {}
@@ -83,39 +130,189 @@
                 // $('.CreatorHomeLevelInfo-levelTitleHint').before(' (上次更新 : '+ lastLevel + ' ' +  (new Date()).toLocaleDateString()+  ')')
             }
 
-            
+
         } else {
             // initial log file 
-            
+
             data[cDate.getTime()] = cLevel
 
             localStorage.setItem(storageName, JSON.stringify(data))
         }
 
+        return data
+    }
 
 
-        // $('<canvas id="myChart"></canvas>').insertAfter('.CreatorHomeLevelInfo')
+    function getData() {
+        let dataStr = localStorage.getItem(storageName)
 
-        // var ctx = document.getElementById('myChart').getContext('2d');
-        // var chart = new Chart(ctx, {
-        //     // The type of chart we want to create
-        //     type: 'line',
-        
-        //     // The data for our dataset
-        //     data: {
-        //         labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-        //         datasets: [{
-        //             label: 'My First dataset',
-        //             backgroundColor: 'rgb(255, 99, 132)',
-        //             borderColor: 'rgb(255, 99, 132)',
-        //             data: [0, 10, 5, 2, 20, 30, 45]
-        //         }]
-        //     },
-        
-        //     // Configuration options go here
-        //     options: {}
-        // });
-    })
+        let data = {}
+        if (dataStr !== null && dataStr !== undefined && dataStr.trim() !== '') {
+            data = JSON.parse(dataStr)
+        }
 
+        return data
+    }
+
+
+    function isLevelDetailShown() {
+        return $('.CreatorHomeLevelInfo-levelTitle[levelDetail]').length > 0
+    }
+
+    function addLevelDetailTag() {
+        // add tag
+        $('.CreatorHomeLevelInfo-levelTitle').attr('levelDetail', '')
+    }
+
+    /**
+     * 画图
+     * @param {*} ctx element in Page
+     * @param {*} data data 
+     * @returns myChart
+     */
+    function plotLevelDetail(ctx, data) {
+
+        let chartData = dataToChartData(data)
+        // console.log('c4r zhihu level chartData :', chartData)
+
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Points',
+                    data: chartData['xyArray'],
+                    backgroundColor: 'rgba(123, 83, 252, 0.8)',
+                    borderColor: 'rgba(33, 232, 234, 1)',
+                    borderWidth: 1,
+                    fill: false,
+                    showLine: true,
+                }],
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: '等级历史',
+                },
+                legend: {
+                    display: false
+                },
+                scales: {
+                    xAxes: [{
+                        type: 'time',
+                        time: {
+                            unit: 'week',
+                            displayFormats: {
+                                week: 'YY.M.D'
+                            }
+                        }
+
+                    }]
+                }
+            }
+        });
+
+        return myChart
+    }
+
+    function isUrlCreator() {
+        return window.location.href.includes('www.zhihu.com/creator')
+    }
+
+    function isCreatorHomePage() {
+        return !($('.CreatorHomeLevelInfo-levelTitle').length == 0)
+    }
+
+    function isUrlHome() {
+        let href = window.location.href
+        if (href == 'https://www.zhihu.com/'
+            || href == 'https://www.zhihu.com/question/waiting'
+            || href == 'https://www.zhihu.com/explore'
+            || href == 'https://www.zhihu.com/follow'
+            || href == 'https://www.zhihu.com/hot') {
+
+            return true
+        } else {
+            return false
+        }
+
+    }
+
+    function showLevel() {
+
+        if (isLevelDetailShown() || !isCreatorHomePage()) {
+            return
+        }
+
+        let cLevel = getLevelHTML()
+        if (cLevel == undefined) return
+
+        addLevelDetailTag()
+
+        let data = updateData(cLevel)
+
+        $('<canvas id="levelDetailChart"></canvas>').insertAfter('.CreatorHomeLevelInfo')
+        let ctx = document.getElementById("levelDetailChart");
+
+        plotLevelDetail(ctx, data)
+
+    }
+
+
+    function callbackLevel() {
+        // console.log('found Level bar')
+        showLevel()
+    }
+
+
+
+    // ===============================================
+    if (isUrlCreator) {
+        showLevel()
+        $(document).ready(() => {
+
+            let observerLevel = new MutationObserver(callbackLevel)
+
+            observerLevel.observe($('body').get(0),
+                {
+                    subtree: true, childList: true, characterData: false, attributes: true,
+                    attributeFilter: ['.CreatorHomeLevelInfo-levelTitle:not([levelDetail]'],
+                    attributeOldValue: false, characterDataOldValue: false
+                })
+
+            // debug
+            // let debugData = {
+            //     1580511600000: 3.00,
+            //     1577833200000: 2.10,
+            //     1585692000000: 3.24
+            // }
+            // localStorage.setItem(storageName, JSON.stringify(debugData))
+
+            showLevel()
+        })
+    }
+
+    if (isUrlHome()) {
+
+        // console.log('is Home page')
+
+        getLevelRequest().then((cLevel) => {
+
+            let data = updateData(cLevel)
+            // console.log('cLevel : ', cLevel)
+            $(document).ready(() => {
+
+                if ($('.CreatorEntrance-indexPageTitle span').length > 0) {
+                    $('.CreatorEntrance-indexPageTitle span').text('Lv ' + cLevel)
+
+                    $('<canvas id="levelDetailChart"></canvas>').insertAfter('.ProfileSideCreator-analytics')
+                    let ctx = document.getElementById("levelDetailChart");
+
+                    plotLevelDetail(ctx, data)
+                }
+
+
+            })
+        })
+    }
 
 })();
