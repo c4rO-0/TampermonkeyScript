@@ -21,36 +21,17 @@
     function dataToChartData(data) {
         // console.log('zhihu : ', data)
         let timeSort = Object.keys(data).sort()
-        let minTime = timeSort[0]
-        let maxTime = (timeSort[timeSort.length - 1])
-
-        let minY = 1000000
-        let maxY = -1
-
-        let timeStep = 60 * 60 * 24 * 7
 
         let xyArray = []
 
         for (let time of timeSort) {
-            if (data[time] <= minY) {
-                minY = data[time]
-            }
-
-            if (data[time] >= maxY) {
-                maxY = data[time]
-            }
             // xyArray.push({ x: Math.round((time - minTime) / timeStep), y: (data[time]) })
 
             xyArray.push({ x: (new Date(parseInt(time))), y: (data[time]) })
         }
 
         return {
-            'xyArray': xyArray,
-            'minX': 0,
-            'maxX': Math.round((maxTime - minTime) / timeStep),
-            'minY': minY,
-            'maxY': maxY
-
+            'xyArray': xyArray
         }
     }
 
