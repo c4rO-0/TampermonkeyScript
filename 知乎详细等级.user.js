@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         知乎详细等级
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @license      MPL-2.0
 // @description  精确显示知乎等级(精确到小数点后两位)
 // @author       C4r
-// @match        https://www.zhihu.com/creator
+// @match        https://www.zhihu.com/creator*
 // @grant        none
 // @require      https://code.jquery.com/jquery-latest.js
 // @require      https://momentjs.com/downloads/moment.min.js
@@ -14,6 +14,9 @@
 
 (function () {
     'use strict';
+
+    let storageName = 'C4rZhihuLevel'
+
 
     function dataToChartData(data) {
         // console.log('zhihu : ', data)
@@ -51,33 +54,30 @@
         }
     }
 
-    $(document).ready(() => {
-        let storageName = 'C4rZhihuLevel'
+    function showLevel(){
 
-        // debug
-        let debugData = {
-            1580511600000: 3.00,
-            1577833200000: 2.10,
-            1585692000000: 3.24
+        if($('.CreatorHomeLevelInfo-levelTitle[levelDetail]').length > 0 || $('.CreatorHomeLevelInfo-levelTitle').length == 0){
+            return
         }
-        localStorage.setItem(storageName, JSON.stringify(debugData))
-
 
         let strLevelPercent = $('.CreatorHomeLevelBar-progress').attr('style').slice(("width:").length, -2).trim();
         // let str = $('.CreatorHomeLevelInfo-levelTitle').text()
         $('.CreatorHomeLevelInfo-levelTitleHint').before('.' + strLevelPercent)
 
-        console.log('zhihu level')
+        // console.log('zhihu level')
         let strLevel = $('img.CreatorHomeLevelInfo-LevelImage').attr('alt').split(' ')[1] + '.' + strLevelPercent
-        let cLevel = parseFloat(strLevel)
-        console.log('zhihu level current  ', cLevel)
 
+        let cLevel = parseFloat(strLevel)
+        // console.log('zhihu level current  ', cLevel)
+
+        // add tag
+        $('.CreatorHomeLevelInfo-levelTitle').attr('levelDetail', '')
 
         // -------------
         // cal log file
         // ------------
         let dataStr = localStorage.getItem(storageName)
-        console.log('zhihu level dataStr  ', dataStr)
+        // console.log('zhihu level dataStr  ', dataStr)
         let cDate = new Date()
 
         let data = {}
@@ -119,12 +119,12 @@
 
 
 
-        $('<canvas id="myChart"></canvas>').insertAfter('.CreatorHomeLevelInfo')
-        var ctx = document.getElementById("myChart");
+        $('<canvas id="levelDetailChart"></canvas>').insertAfter('.CreatorHomeLevelInfo')
+        var ctx = document.getElementById("levelDetailChart");
 
 
         let chartData = dataToChartData(data)
-        console.log('c4r zhihu level chartData :', chartData)
+        // console.log('c4r zhihu level chartData :', chartData)
 
         var myChart = new Chart(ctx, {
             type: 'line',
@@ -151,12 +151,48 @@
                     xAxes: [{
                         type: 'time',
                         time: {
-                            unit: 'week'
+                            unit: 'week',
+                            displayFormats: {
+                                week: 'YY.M.D'
+                            }
                         }
+
                     }]
                 }
             }
         });
+
+
+    }
+
+
+    function callbackLevel(){
+        // console.log('found Level bar')
+        showLevel()
+    }
+
+    showLevel()
+    
+    $(document).ready(() => {
+
+        let observerLevel = new MutationObserver(callbackLevel)
+
+        observerLevel.observe($('body').get(0),
+        {
+            subtree: true, childList: true, characterData: false, attributes: true, 
+            attributeFilter :['.CreatorHomeLevelInfo-levelTitle:not([levelDetail]'],
+            attributeOldValue: false, characterDataOldValue: false
+        })
+
+        // debug
+        // let debugData = {
+        //     1580511600000: 3.00,
+        //     1577833200000: 2.10,
+        //     1585692000000: 3.24
+        // }
+        // localStorage.setItem(storageName, JSON.stringify(debugData))
+
+        showLevel()
     })
 
 
