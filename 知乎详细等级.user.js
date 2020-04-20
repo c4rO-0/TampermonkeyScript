@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎详细等级
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.4.2
 // @license      MPL-2.0
 // @description  精确显示知乎等级(精确到小数点后两位)
 // @author       C4r
@@ -115,6 +115,7 @@
             if (lastLevel == cLevel) {
                 // level not changed
                 // console.log('c4r zhihu level not change ', lastLevel, ' ', cLevel)
+                data[cDate.getTime()] = cLevel
             } else if (lastLevel > cLevel) {
                 // level drop
                 // console.error('c4r zhihu level drop from ', lastLevel, ' to ', cLevel)
@@ -263,8 +264,6 @@
         showLevel()
     }
 
-
-
     // ===============================================
     if (isUrlCreator) {
         showLevel()
@@ -301,14 +300,41 @@
             // console.log('cLevel : ', cLevel)
             $(document).ready(() => {
 
-                if ($('.CreatorEntrance-indexPageTitle span').length > 0) {
-                    $('.CreatorEntrance-indexPageTitle span').text('Lv ' + cLevel)
+                if($('.CreatorEntrance').length > 0){
+                    if ($('.CreatorEntrance-indexPageTitle span').length > 0) {
+                        $('.CreatorEntrance-indexPageTitle span').text('Lv ' + cLevel)
+    
+                        $('<canvas id="levelDetailChart"></canvas>').insertAfter('.ProfileSideCreator-analytics')
+                        let ctx = document.getElementById("levelDetailChart");
+    
+                        plotLevelDetail(ctx, data)
+                    }
+                }else{
+                    console.log('zhihuLevel : not found Entrance, add MutationObserver')
+                    let observerEntrance = new MutationObserver((mutationList, observer)=>{
 
-                    $('<canvas id="levelDetailChart"></canvas>').insertAfter('.ProfileSideCreator-analytics')
-                    let ctx = document.getElementById("levelDetailChart");
+                        if($('.CreatorEntrance').length > 0){
+                            console.log('zhihuLevel : Entrance appears, disconnect MutationObserver')
+                            if ($('.CreatorEntrance-indexPageTitle span').length > 0) {
+                                $('.CreatorEntrance-indexPageTitle span').text('Lv ' + cLevel)
+            
+                                $('<canvas id="levelDetailChart"></canvas>').insertAfter('.ProfileSideCreator-analytics')
+                                let ctx = document.getElementById("levelDetailChart");
+            
+                                plotLevelDetail(ctx, data)
+                            }
+                            observer.disconnect()
+                        }
+                    })
 
-                    plotLevelDetail(ctx, data)
+                    observerEntrance.observe($('body').get(0),
+                        {
+                            subtree: true, childList: true, characterData: false, attributes: true,
+                            attributeFilter: ['.CreatorEntrance'],
+                            attributeOldValue: false, characterDataOldValue: false
+                        })
                 }
+                
 
 
             })
