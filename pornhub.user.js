@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      0.5.0
+// @version      1.1.1
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
-// @author       c4r
-// @match        https://www.pornhub.com/view_video.php?viewkey=*
-// @match        https://www.pornhubpremium.com/view_video.php?viewkey=*
+// @author       c4r, foolool
+// @match        https://*.pornhub.com/view_video.php?viewkey=*
+// @match        https://*.pornhubpremium.com/view_video.php?viewkey=*
 // @match        www.pornhubselect.com/*
 // @require      https://code.jquery.com/jquery-latest.js
 // @grant        none
@@ -15,7 +15,20 @@
 (function () {
     'use strict';
 
+    /**
+     * Custom : the shortcut
+     * you can specific your code via : https://keycode.info/ 
+     * default : 
+     * - next : n(78), >(190)
+     * - previous : b(66), 188(<)
+     * - antic clockwise rotate : h(72), [(219) 
+     * - clockwise rotate : j(74) , ](219)
+     */
 
+    let array_next_key = [78, 190]
+    let array_pre_key = [66, 188]
+    let array_anticlock = [72, 219 ]
+    let array_clock = [74,221 ]
 
     /*--- waitForKeyElements():  A utility function, for Greasemonkey scripts,
         that detects and handles AJAXed content.
@@ -130,25 +143,40 @@
         return angle;
     }
 
-    function merge(left, right) { //合并两个子数组
+    /**
+     * merge two sorted array 
+     * @param {*} left 
+     * @param {*} right 
+     */
+    function merge(left, right) { 
         var result = [];
         while (left.length && right.length) {
-            var item = left[0] >= right[0] ? left.shift() : right.shift();//注意:判断的条件是小于或等于,如果只是小于,那么排序将不稳定.
+            var item = left[0] >= right[0] ? left.shift() : right.shift();
             result.push(item);
         }
         return result.concat(left.length ? left : right);
     }
 
-    function mergeSort(array) {  //采用自上而下的递归方法
+    /**
+     * merge sort method
+     * @param {*} array 
+     */
+    function mergeSort(array) {  
         var length = array.length;
         if (length < 2) {
             return array;
         }
         var m = (length >> 1),
             left = array.slice(0, m),
-            right = array.slice(m); //拆分为两个子数组
-        return merge(mergeSort(left), mergeSort(right));//子数组继续递归拆分,然后再合并
+            right = array.slice(m); // split into two sub-array
+        return merge(mergeSort(left), mergeSort(right)); // recurrence
     }
+
+    /**
+     * easiest Mean Average method
+     * @param {array} array_y y value with spread with equal interval
+     * @returns array with same length of array_y
+     */
     function filter_av(array_y) {
         let av_n = Math.floor(array_y.length / 100.);
         if (av_n < 5) {
@@ -174,13 +202,15 @@
         return array_r;
     }
 
+    /**
+     * find the maximum peak in array_y
+     * @param {*} array_y 
+     */
     function find_peak(array_y) {
 
         let array_sort = array_y;
         mergeSort(array_sort);
         let average = array_sort[Math.floor(array_sort.length * 0.7)];
-        // average = 0;
-        console.log("av : " + average);
 
         let peek = new Array();
         if (array_y[1] < array_y[0] && array_y[0] > average) {
@@ -201,35 +231,30 @@
             peek.push(array_y.length - 1);
         }
 
-        // console.log(peek)
-        // console.log("============")
-        // console.log(array_y.length/40)
-        // console.log("============")
-        // 去除多余
+        // remove excess
         let peek_del = new Array();
         for (let i = 0; i < peek.length; i++) {
             let toSave = true
             for (let j = 0; j < peek.length; j++) {
-                // 红点间距最短为视频时长40等分, 在前后40等分中取最高的
+                // The shortest red dot spacing is 40 equal parts for the video duration, the highest in the 40 sec.
                 if (toSave && i != j && Math.abs(peek[j] - peek[i]) < array_y.length / 40 && array_y[peek[i]] <= array_y[peek[j]]) {
-
-
                     toSave = false
-                    // console.log('del-----')
-                    // console.log(i,peek[i],array_y[peek[i]])
-                    // console.log(j,peek[j],array_y[peek[j]])
                 }
             }
             if (toSave) {
                 peek_del.push(peek[i])
-                // console.log('save-----')
-                // console.log(i,peek[i],array_y[peek[i]])
+
             }
         }
 
         return peek_del;
     }
 
+    /**
+     * attach the marker to the progress bar in the page
+     * @param {array} array_y 
+     * @param {float} duration 
+     */
     function mark(array_y, duration) {
 
         let objBar = $("div.mhp1138_progressOverflow");
@@ -251,16 +276,26 @@
         });
     }
 
+    /**
+     * if video is found in page, this function will be called.
+     * this functions contains :
+     * - get all the view data
+     * - analyse the progress bar
+     * - get the highpoint 
+     * - add marker to page
+     */
     function actionVideo() {
+
+        /**<============Get view data============>
+         * the raw view data will be stored in `array_point` as a two dimensional matrix
+         * array_point : [[x1,y2],[x2,y2],..]
+         * x : 0 to 1000
+         * y : 0 - 100
+         */
         let str_point = $("polygon").attr("points");
         let str_array_point = str_point.split(" ");
-
-        // console.log(str_array_point.length);
-        // console.log(str_array_point[str_array_point.length-1]);
-
-        // 得到数组
-        let len_video = parseFloat(str_array_point[str_array_point.length - 2].split(",")[0]);
-        console.log("video :" + len_video);
+        let len_point = parseFloat(str_array_point[str_array_point.length - 2].split(",")[0]);
+        //console.log("video :" + len_point);
         let array_point = new Array();
         for (i = 0; i < str_array_point.length - 1; i++) {
             let point = str_array_point[i].split(",");
@@ -270,20 +305,23 @@
             array_point.push([x, y]);
         }
 
-
+        /**<============interpolation============>
+         * interpolate the raw data at every second, and store in
+         * array_x : second. range : 0 to the duration (closest even integer)
+         * array_y : interpolated data from array_point. range : 0-100
+         */
         let nodevideo = $("video").get(0);
-        let len_array = Math.floor(nodevideo.duration);
+        let len_point_sec = Math.floor(nodevideo.duration);
 
-        console.log("debug : len_array : ", len_array)
-        if (len_array % 2 == 0) {
-            len_array = len_array + 1;
+        if (len_point_sec % 2 == 0) {
+            len_point_sec = len_point_sec + 1;
         }
-        let array_eq_point = new Array(len_array);
-        let dis = len_video / (len_array - 1);
+
+        let dis = len_point / (len_point_sec - 1);
 
         let array_y = new Array();
         let array_x = new Array();
-        for (i = 0; i < len_array; i++) {
+        for (i = 0; i < len_point_sec; i++) {
             let x = dis * (i);
             let y = 0.;
             let xInRange = false;
@@ -295,38 +333,27 @@
             }
             array_y.push(y);
             array_x.push(x);
-            // console.log(i, x,y, (array_point[i]) )
         }
 
-        let array_filter_y = filter_av(array_y);
+        // <============smooth y data============>
+        let array_smooth_y = filter_av(array_y);
 
-        // console.log("====");
-        // console.log(array_filter_y);
-        // console.log("====");
+        // <============Get the peak corresponding index============>
+        let array_peek_index = find_peak(array_smooth_y);
 
-        // <============得到峰值对应的index============>
-        let array_peek_index = find_peak(array_filter_y);
-
-        console.log("时长 : " + nodevideo.duration);
-
-        // 得到对应的时间
+        //  <============get the corresponding time============>
         for (let i = 0; i < array_peek_index.length; i++) {
-            array_peek_index[i] = array_peek_index[i] * dis / len_video * nodevideo.duration;
+            array_peek_index[i] = array_peek_index[i] * dis / len_point * nodevideo.duration;
         }
 
-        // console.log("peak : " + array_peek_index.length);
 
-        // 做标记
+        // <============add markers on the process bar============>
         mark(array_peek_index, nodevideo.duration);
 
-        // console.log(array_peek_index);
-        // 当前播放进度
-        // console.log(nodevideo.currentTime);
-
-
+        // <============listen keyboard============>
         $(document).keydown(function (event) {
 
-            if (event.keyCode == 190) { // 前进
+            if ( array_next_key.includes(event.keyCode)) { // next point (N)
 
                 for (let i = 0; i < array_peek_index.length; i++) {
 
@@ -336,7 +363,7 @@
                     }
                 }
 
-            } else if (event.keyCode == 188) { // 后退
+            } else if (array_pre_key.includes(event.keyCode)) { // previous point (B)
 
                 for (let i = array_peek_index.length - 1; i > 0; i--) {
 
@@ -372,63 +399,61 @@
                     }
                 }
 
-            } else if (event.keyCode >= 48 && event.keyCode <= 57) { // 数字键
+            } else if (event.keyCode >= 48 && event.keyCode <= 57) { // number key
 
-                console.log("press ", (event.keyCode - 48))
+                // console.log("press ", (event.keyCode - 48))
                 nodevideo.currentTime = (event.keyCode - 48) * nodevideo.duration / 10.
 
-            } else if (event.keyCode == 219) { // 旋转 t 逆时针
-                // console.log("press [")
+            } else if (event.keyCode >= 96 && event.keyCode <= 105) { // numpad number key
+
+                // console.log("press ", (event.keyCode - 96))
+                nodevideo.currentTime = (event.keyCode - 96) * nodevideo.duration / 10.
+
+            } else if (array_anticlock.includes(event.keyCode)) { // Rotate anticlockwise (H)
+                // console.log("press H")
                 var angle = getRotationDegrees($(nodevideo)) - 90;
-                $(nodevideo).css("transform","rotate("+ angle +"deg)")
-                
-            } else if (event.keyCode == 221) { // 旋转 U 顺时针
+                console.log(angle);
+                if (Math.abs(angle) === 90 || angle === 270) {
+                    $(nodevideo).css("transform","rotate("+ angle +"deg)" + " scale(calc(16/9))")
+                }
+                else {
+                    $(nodevideo).css("transform","rotate("+ angle +"deg)" + " scale(1)")
+                }
+                event.stopImmediatePropagation();
+
+            } else if (array_clock.includes(event.keyCode)) { // Rotate clockwise (J)
+                // console.log("press J")
                 var angle = getRotationDegrees($(nodevideo)) + 90;
-                $(nodevideo).css("transform","rotate("+ angle +"deg)")
+                console.log(angle);
+                if (Math.abs(angle) === 90 || angle === 270) {
+                    $(nodevideo).css("transform","rotate("+ angle +"deg)" + " scale(calc(16/9))")
+                }
+                else {
+                    $(nodevideo).css("transform","rotate("+ angle +"deg)" + " scale(1)")
+                }
+                event.stopImmediatePropagation();
             }
 
         });
     }
 
+
+    // <============Start Here============>
     $(document).ready(function () {
         console.log("ready!");
 
-
-        // 准备等分数组
-        // if(array_point.length %2 == 0){
-        //     let len_array = array_point.length+1;
-        // }else{
-        //     let len_array = array_point.length;
-        // }
-
-
-        // console.log("check video : " , $("video").get(0))
-
+        // waiting video appeared
         waitForKeyElements("video", function () {
             if (isNaN($("video").get(0).duration)) {
-                console.log("wait load")
+                //console.log("wait load")
                 $("video").on('loadedmetadata', function () {
                     actionVideo()
                 })
             } else {
-                console.log("load directly")
+                //console.log("load directly")
                 actionVideo()
             }
         }, false)
-
-
-        // 要添加的广告代码
-        waitForKeyElements("div#player", function () {
-            $("div#player").closest(".video-wrapper").append(
-                "<a href=\"https://www.seedboxco.net/?affiliate=727\" target=\"_blank\">\
-<img src=\"https://www.seedboxco.net/img/banners/SBC.gif\" width=\"100%\">\
-</a>"
-            )
-        });
-
-
-
-
 
     });
 
