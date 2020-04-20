@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.1.1
+// @version      1.1.2
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r, foolool
@@ -27,8 +27,8 @@
 
     let array_next_key = [78, 190]
     let array_pre_key = [66, 188]
-    let array_anticlock = [72, 219 ]
-    let array_clock = [74,221 ]
+    let array_anticlock = [72, 219]
+    let array_clock = [74, 221]
 
     /*--- waitForKeyElements():  A utility function, for Greasemonkey scripts,
         that detects and handles AJAXed content.
@@ -148,7 +148,7 @@
      * @param {*} left 
      * @param {*} right 
      */
-    function merge(left, right) { 
+    function merge(left, right) {
         var result = [];
         while (left.length && right.length) {
             var item = left[0] >= right[0] ? left.shift() : right.shift();
@@ -161,7 +161,7 @@
      * merge sort method
      * @param {*} array 
      */
-    function mergeSort(array) {  
+    function mergeSort(array) {
         var length = array.length;
         if (length < 2) {
             return array;
@@ -276,6 +276,16 @@
         });
     }
 
+    function isMarked() {
+        return $('[data-tag="HighTime"]').length > 0
+    }
+
+    function loadedPolygon() {
+
+        return $("polygon").length > 0 && $("polygon").attr("points").split(" ").length > 0
+    }
+
+
     /**
      * if video is found in page, this function will be called.
      * this functions contains :
@@ -285,6 +295,14 @@
      * - add marker to page
      */
     function actionVideo() {
+
+        if (isMarked()) {
+            return
+        }
+
+        if (!loadedPolygon()) {
+            return
+        }
 
         /**<============Get view data============>
          * the raw view data will be stored in `array_point` as a two dimensional matrix
@@ -349,11 +367,13 @@
 
         // <============add markers on the process bar============>
         mark(array_peek_index, nodevideo.duration);
+        console.log('your hands are free now !!!')
+        // console.log('peek index : ', array_peek_index)
 
         // <============listen keyboard============>
         $(document).keydown(function (event) {
 
-            if ( array_next_key.includes(event.keyCode)) { // next point (N)
+            if (array_next_key.includes(event.keyCode)) { // next point (N)
 
                 for (let i = 0; i < array_peek_index.length; i++) {
 
@@ -363,61 +383,70 @@
                     }
                 }
 
+                event.stopImmediatePropagation();
+
             } else if (array_pre_key.includes(event.keyCode)) { // previous point (B)
 
+                let setDuration
+                let currentTime = nodevideo.currentTime
                 for (let i = array_peek_index.length - 1; i > 0; i--) {
-
-                    if (array_peek_index[i] < nodevideo.currentTime) {
+                    // console.log('i : ', i ,array_peek_index[i] , currentTime )
+                    if (array_peek_index[i] < currentTime) {
 
                         if (i == 0) {
 
-                            if ((nodevideo.currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
-                                nodevideo.currentTime = 0;
+                            if ((currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
+                                setDuration = 0;
                                 break;
                             } else {
-                                nodevideo.currentTime = array_peek_index[i];
+                                setDuration = array_peek_index[i];
                                 break;
                             }
 
                         } else if (i == array_peek_index.length - 1) {
-                            if ((nodevideo.currentTime - array_peek_index[i]) < (nodevideo.duration - array_peek_index[i]) / 3.) {
-                                nodevideo.currentTime = array_peek_index[i - 1];
+                            if ((currentTime - array_peek_index[i]) < (nodevideo.duration - array_peek_index[i]) / 3.) {
+                                setDuration = array_peek_index[i - 1];
                                 break;
                             } else {
-                                nodevideo.currentTime = array_peek_index[i];
+                                setDuration = array_peek_index[i];
                                 break;
                             }
                         } else {
-                            if ((nodevideo.currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
-                                nodevideo.currentTime = array_peek_index[i - 1];
+                            if ((currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
+                                setDuration = array_peek_index[i - 1];
                                 break;
                             } else {
-                                nodevideo.currentTime = array_peek_index[i];
+                                setDuration = array_peek_index[i];
                                 break;
                             }
                         }
                     }
                 }
+                // console.log('set duration : ', setDuration)
+                nodevideo.currentTime = setDuration
+                event.stopImmediatePropagation();
 
             } else if (event.keyCode >= 48 && event.keyCode <= 57) { // number key
 
                 // console.log("press ", (event.keyCode - 48))
                 nodevideo.currentTime = (event.keyCode - 48) * nodevideo.duration / 10.
+                event.stopImmediatePropagation();
 
             } else if (event.keyCode >= 96 && event.keyCode <= 105) { // numpad number key
 
                 // console.log("press ", (event.keyCode - 96))
                 nodevideo.currentTime = (event.keyCode - 96) * nodevideo.duration / 10.
+                event.stopImmediatePropagation();
 
             } else if (array_anticlock.includes(event.keyCode)) { // Rotate anticlockwise (H)
                 // console.log("press H")
                 var angle = getRotationDegrees($(nodevideo)) - 90;
                 console.log(angle);
                 if (Math.abs(angle) === 90 || angle === 270) {
-                    $(nodevideo).css("transform","rotate("+ angle +"deg)" + " scale(calc(16/9))")
+                    $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(16/9))")
                 }
                 else {
-                    $(nodevideo).css("transform","rotate("+ angle +"deg)" + " scale(1)")
+                    $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
                 }
                 event.stopImmediatePropagation();
 
@@ -426,10 +455,10 @@
                 var angle = getRotationDegrees($(nodevideo)) + 90;
                 console.log(angle);
                 if (Math.abs(angle) === 90 || angle === 270) {
-                    $(nodevideo).css("transform","rotate("+ angle +"deg)" + " scale(calc(16/9))")
+                    $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(16/9))")
                 }
                 else {
-                    $(nodevideo).css("transform","rotate("+ angle +"deg)" + " scale(1)")
+                    $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
                 }
                 event.stopImmediatePropagation();
             }
@@ -440,10 +469,11 @@
 
     // <============Start Here============>
     $(document).ready(function () {
-        console.log("ready!");
+        console.log("loading your hand assistant...");
 
         // waiting video appeared
         waitForKeyElements("video", function () {
+
             if (isNaN($("video").get(0).duration)) {
                 //console.log("wait load")
                 $("video").on('loadedmetadata', function () {
@@ -453,6 +483,7 @@
                 //console.log("load directly")
                 actionVideo()
             }
+
         }, false)
 
     });
