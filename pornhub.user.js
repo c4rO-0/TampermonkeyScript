@@ -25,10 +25,19 @@
      * - clockwise rotate : j(74) , ](219)
      */
 
-    let array_next_key = [78, 190]
-    let array_pre_key = [66, 188]
-    let array_anticlock = [72, 219]
-    let array_clock = [74, 221]
+    let default_array_next_key = [78, 190]
+    let default_array_pre_key = [66, 188]
+    let default_array_anticlock = [72, 219]
+    let default_array_clock = [74, 221]
+
+
+    /**
+     * program values
+     */
+    let array_next_key = []
+    let array_pre_key = []
+    let array_anticlock = []
+    let array_clock = []
 
     /*--- waitForKeyElements():  A utility function, for Greasemonkey scripts,
         that detects and handles AJAXed content.
@@ -123,6 +132,267 @@
             }
         }
         waitForKeyElements.controlObj = controlObj;
+    }
+
+    function activeTab() {
+
+        $('.tab-menu-item.tooltipTrig').removeClass('active')
+        $('.tab-menu-item[data-tab="free-your-hand"]').addClass('active')
+        $('.video-action-tab').removeClass('active')
+        $('.video-action-tab.free-your-hand').addClass('active')
+
+    }
+
+    function shortcutItemHTML(name, label, keyShortcut) {
+
+        let v = '<div class="video-info-row">\
+        <span '+ name + '>\
+            <a>'+ label + ' </a> \
+            <input free-your-hand name="'+ name + '" type="text" size="1" maxlength="1" placeholder="' + keyShortcut + '"></input>\
+        </span>'
+
+        return v
+
+    }
+
+    function onListen() {
+
+        $(document).on('click', '#id-free-your-hand-tab-menu', () => {
+            activeTab()
+        })
+
+        $(document).on('keydown', 'input[free-your-hand]', (event) => {
+
+            let e = document.activeElement
+
+            if ($(e).is('input[free-your-hand]')) {
+
+                var key = event.keyCode;
+                // fresh input
+                // only code is saved here. value is set by keypress.
+                e.code = key
+            }
+
+        })
+
+        $(document).on('keypress', 'input[free-your-hand]', (event) => {
+
+            let e = document.activeElement
+
+            if ($(e).is('input[free-your-hand]')) {
+
+                var key = event.keyCode;
+
+                let value = String.fromCharCode(key)
+                console.log('keypress', e.name, event.which, key)
+
+                // fresh input
+                // only value is saved here. value is set by keydown.
+                e.value = value
+
+            }
+
+        })
+
+        $(document).on('click', '#id-free-your-hand-shortcut-save', () => {
+            // save settings , and reload
+
+            let data = getLocalData()
+            if (data === undefined) {
+                data = defaultData()
+            }
+
+            $('input[free-your-hand]').each((index, element) => {
+                data.shortcut[element.name] = {
+                    label: element.value, code: element.code
+                }
+            })
+            saveLocalData(data)
+
+            $('#id-free-your-hand-shortcut-save').text('done!')
+            setTimeout(() => {
+                $('#id-free-your-hand-shortcut-save').text('save shortcut')
+            }, 300);
+
+            setShortcutArrayFromLocalStorage()
+
+            $('video').focus()
+
+        })
+
+        $(document).on('click', '#id-free-your-hand-shortcut-reset', () => {
+
+            $('input[free-your-hand]').each((index, element) => {
+                element.placeholder= ''
+                element.value = ''
+                element.code = ''
+            })
+
+
+            let data = getLocalData()
+            if (data === undefined) {
+                data = defaultData()
+            }
+
+            data["shortcut"] = {
+                next: {},
+                previous: {},
+                clockwise: {},
+                anticlockwise: {}
+            }
+
+            saveLocalData(data)
+
+            $('#id-free-your-hand-shortcut-reset').text('done!')
+            setTimeout(() => {
+                $('#id-free-your-hand-shortcut-reset').text('reset shortcut')
+            }, 300);
+
+            setShortcutArrayFromLocalStorage()
+
+            $('video').focus()
+        })
+
+    }
+
+    function defaultData() {
+        return {
+            shortcut: {
+                next: {},
+                previous: {},
+                clockwise: {},
+                anticlockwise: {}
+            }
+        }
+    }
+
+    function saveLocalData(data) {
+        localStorage.setItem('free-your-hand', JSON.stringify(data))
+    }
+
+    function getLocalData() {
+        let rawData = localStorage.getItem('free-your-hand')
+
+        if (rawData == undefined || rawData == '') {
+            return undefined
+        } else {
+            return JSON.parse(rawData)
+        }
+    }
+
+    function setShortcutArrayFromLocalStorage() {
+        let data = getLocalData()
+        // console.log(data.shortcut.next.code)
+        if (data && data.shortcut.next["code"]) {
+            array_next_key = [data.shortcut.next.code]
+        } else {
+            array_next_key = default_array_next_key
+        }
+
+        if (data && data.shortcut.previous["code"]) {
+            array_pre_key = [data.shortcut.previous.code]
+        } else {
+            array_pre_key = default_array_pre_key
+        }
+
+        if (data && data.shortcut.clockwise["code"]) {
+            array_clock = [data.shortcut.clockwise.code]
+        } else {
+            array_clock = default_array_clock
+        }
+
+        if (data && data.shortcut.anticlockwise["code"]) {
+            array_anticlock = [data.shortcut.anticlockwise.code]
+        } else {
+            array_anticlock = default_array_anticlock
+        }
+
+    }
+
+    function insertMenu() {
+
+        if ($('.free-your-hand').length > 0) {
+            return
+        }
+
+        let menuHTML =
+            '<div class="tab-menu-wrapper-cell free-your-hand">\
+    <div id="id-free-your-hand-tab-menu" class="tab-menu-item" data-tab="free-your-hand" onclick="" data-title="free-your-hand">\
+        <i class="main-sprite-dark-2"></i>\
+        <span>Hand</span>\
+    </div>\
+</div>'
+        let contentHTML =
+            '<div class="video-action-tab free-your-hand">\
+    <div class="title">Free your hand</div>\
+    <div class="reset"></div>\
+    <div class="float-left">\
+        <div id="id-free-your-hand-shortcut">\
+            <button id="id-free-your-hand-shortcut-save" >save shortcut</button>\
+            <button id="id-free-your-hand-shortcut-reset" >reset shortcut</button>\
+        </div>\
+    </div>\
+    <div class="float-right">\
+        <div id="id-free-your-hand-support">\
+        </div>\
+    </div>\
+    <div class="reset"></div>\
+</div>'
+
+        // // turn off click listener
+        // offListen()
+        // delete free-your-hand element
+
+        $('.free-your-hand').remove()
+
+        // append free-your-hand element to tab-menu
+        $('.tab-menu-wrapper-row').append(menuHTML)
+
+        // append free-your-hand element to content
+        $('.video-actions-container > .video-actions-tabs').append(contentHTML)
+
+        // read local storage
+        let fyhStorage = getLocalData()
+        let strN = '', strP = '', strC = '', strAC = ''
+        if (fyhStorage) {
+            if (fyhStorage.shortcut.next.label) {
+                strN = fyhStorage.shortcut.next.label
+            }
+            if (fyhStorage.shortcut.previous.label) {
+                strP = fyhStorage.shortcut.previous.label
+            }
+            if (fyhStorage.shortcut.clockwise.label) {
+                strC = fyhStorage.shortcut.clockwise.label
+            }
+            if (fyhStorage.shortcut.anticlockwise.label) {
+                strAC = fyhStorage.shortcut.anticlockwise.label
+            }
+
+        }
+
+        // add specific shortcut : next
+        $('#id-free-your-hand-shortcut').append(
+            shortcutItemHTML('next', 'Next high-point', strN)
+        )
+
+        // add specific shortcut : previous
+        $('#id-free-your-hand-shortcut').append(
+            shortcutItemHTML('previous', 'Previous high-point', strP)
+        )
+
+        // add specific shortcut : clockwise
+        $('#id-free-your-hand-shortcut').append(
+            shortcutItemHTML('clockwise', 'Next high-point', strC)
+        )
+
+        // add specific shortcut : anticlockwise
+        $('#id-free-your-hand-shortcut').append(
+            shortcutItemHTML('anticlockwise', 'Next high-point', strAC)
+        )
+
+        // // add click listener
+        // onListen()
+
     }
 
     // Returns rotation in degrees when obtaining transform-styles using javascript
@@ -373,6 +643,12 @@
         // <============listen keyboard============>
         $(document).keydown(function (event) {
 
+            if ($(document.activeElement).is('input[free-your-hand]')) {
+                return
+            }
+
+            console.log('press:', event.keyCode)
+
             if (array_next_key.includes(event.keyCode)) { // next point (N)
 
                 for (let i = 0; i < array_peek_index.length; i++) {
@@ -469,7 +745,12 @@
 
     // <============Start Here============>
     $(document).ready(function () {
+
         console.log("loading your hand assistant...");
+
+        setShortcutArrayFromLocalStorage()
+
+        onListen()
 
         // waiting video appeared
         waitForKeyElements("video", function () {
@@ -478,10 +759,12 @@
                 //console.log("wait load")
                 $("video").on('loadedmetadata', function () {
                     actionVideo()
+                    insertMenu()
                 })
             } else {
                 //console.log("load directly")
                 actionVideo()
+                insertMenu()
             }
 
         }, false)
