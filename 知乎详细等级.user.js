@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎详细等级
 // @namespace    http://tampermonkey.net/
-// @version      0.4.3
+// @version      0.4.4
 // @license      MPL-2.0
 // @description  精确显示知乎等级(精确到小数点后两位)
 // @author       C4r
@@ -246,10 +246,12 @@
             return
         }
 
-        let cLevel = getLevelHTML()
+        let cLevel = getLevelRequest()
         if (cLevel == undefined) return
 
         addLevelDetailTag()
+
+        // console.log('debug : level : ', cLevel)
 
         let data = updateData(cLevel)
 
