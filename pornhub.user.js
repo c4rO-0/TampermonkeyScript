@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.1.2
+// @version      1.2.0
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r, foolool
@@ -598,7 +598,7 @@
          * array_x : second. range : 0 to the duration (closest even integer)
          * array_y : interpolated data from array_point. range : 0-100
          */
-        let nodevideo = $("video").get(0);
+        let nodevideo = $("video[src]").get(0);
         let len_point_sec = Math.floor(nodevideo.duration);
 
         if (len_point_sec % 2 == 0) {
