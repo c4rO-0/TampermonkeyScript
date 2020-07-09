@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎详细等级
 // @namespace    http://tampermonkey.net/
-// @version      0.4.2
+// @version      0.4.3
 // @license      MPL-2.0
 // @description  精确显示知乎等级(精确到小数点后两位)
 // @author       C4r
@@ -119,7 +119,9 @@
             } else if (lastLevel > cLevel) {
                 // level drop
                 // console.error('c4r zhihu level drop from ', lastLevel, ' to ', cLevel)
+                data[cDate.getTime()] = cLevel
 
+                localStorage.setItem(storageName, JSON.stringify(data))
             } else {
                 // level rise
                 // console.log('c4r zhihu level rise from ', lastLevel, ' to ', cLevel)
