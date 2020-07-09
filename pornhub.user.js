@@ -759,12 +759,12 @@
                 //console.log("wait load")
                 $("video").on('loadedmetadata', function () {
                     actionVideo()
-                    insertMenu()
+                    // insertMenu()
                 })
             } else {
                 //console.log("load directly")
                 actionVideo()
-                insertMenu()
+                // insertMenu()
             }
 
         }, false)
