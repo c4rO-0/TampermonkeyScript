@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎详细等级
 // @namespace    http://tampermonkey.net/
-// @version      0.4.4
+// @version      0.4.6
 // @license      MPL-2.0
 // @description  精确显示知乎等级(精确到小数点后两位)
 // @author       C4r
@@ -56,13 +56,19 @@
                 let levelInfoStartIndex = responseText.indexOf('"account":{"growthLevel"')
 
                 if (levelInfoStartIndex >= 0) {
+
+
                     let levelInfoEndIndex = responseText.indexOf('}}', levelInfoStartIndex) + 2
 
                     let levelInfoStr = '{' + responseText.slice(levelInfoStartIndex, levelInfoEndIndex) + '}'
 
+
                     let levelInfo = JSON.parse(levelInfoStr)
 
-                    let cLevel = parseFloat(levelInfo.account.growthLevel.level + '.' + levelInfo.account.growthLevel.ratio)
+                    let strLevelPercent = String(parseFloat(levelInfo.account.growthLevel.ratio)/100.)
+                    strLevelPercent = strLevelPercent.slice(strLevelPercent.indexOf('.')+1)
+
+                    let cLevel = parseFloat(levelInfo.account.growthLevel.level + '.' + strLevelPercent)
 
                     resolve(cLevel)
                 } else {
@@ -82,16 +88,33 @@
         if ($('.CreatorHomeLevelInfo-levelTitle').length == 0) {
             return undefined
         } else {
-            let strLevelPercent = $('.CreatorHomeLevelBar-progress').attr('style').slice(("width:").length, -2).trim();
-            // let str = $('.CreatorHomeLevelInfo-levelTitle').text()
-            $('.CreatorHomeLevelInfo-levelTitleHint').before('.' + strLevelPercent)
+            if(($('.CreatorHomeLevelBar-progress').attr('style')).includes('calc' )){
+                let strRaw = $('.CreatorHomeLevelBar-progress').attr('style').slice(("width:").length).trim()
 
-            // console.log('zhihu level')
-            let strLevel = $('img.CreatorHomeLevelInfo-LevelImage').attr('alt').split(' ')[1] + '.' + strLevelPercent
+                let strLevelPercent = String(parseFloat(strRaw.slice(strRaw.indexOf('(')+1,strRaw.indexOf('%') ).trim())/100.)
+                strLevelPercent = strLevelPercent.slice(strLevelPercent.indexOf('.')+1)
+                // let str = $('.CreatorHomeLevelInfo-levelTitle').text()
+                $('.CreatorHomeLevelInfo-levelTitleHint').before('.' + strLevelPercent)
+    
+                // console.log('zhihu level')
+                let strLevel = $('img.CreatorHomeLevelInfo-LevelImage').attr('alt').split(' ')[1] + '.' + strLevelPercent
+    
+                let cLevel = parseFloat(strLevel)
+    
+                return cLevel
+            }else{
+                let strLevelPercent = $('.CreatorHomeLevelBar-progress').attr('style').slice(("width:").length, -2).trim();
+                // let str = $('.CreatorHomeLevelInfo-levelTitle').text()
+                $('.CreatorHomeLevelInfo-levelTitleHint').before('.' + strLevelPercent)
+    
+                // console.log('zhihu level')
+                let strLevel = $('img.CreatorHomeLevelInfo-LevelImage').attr('alt').split(' ')[1] + '.' + strLevelPercent
+    
+                let cLevel = parseFloat(strLevel)
+    
+                return cLevel
+            }
 
-            let cLevel = parseFloat(strLevel)
-
-            return cLevel
         }
 
     }
@@ -246,12 +269,10 @@
             return
         }
 
-        let cLevel = getLevelRequest()
+        let cLevel = getLevelHTML()
         if (cLevel == undefined) return
 
         addLevelDetailTag()
-
-        // console.log('debug : level : ', cLevel)
 
         let data = updateData(cLevel)
 
