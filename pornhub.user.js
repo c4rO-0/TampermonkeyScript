@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.2.0
+// @version      1.3.0
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r, foolool
@@ -546,6 +546,16 @@
         });
     }
 
+    function getMarkPosition(duration) {
+
+        let array_peek_index = []
+        $('.mhp1138_actionTag').each((index, element)=>{
+            array_peek_index.push($(element).attr('style').split('%')[0].slice(('left:').length).trim()/100.*duration)
+        })
+
+        return array_peek_index
+    }
+
     function isMarked() {
         return $('[data-tag="HighTime"]').length > 0
     }
@@ -598,7 +608,7 @@
          * array_x : second. range : 0 to the duration (closest even integer)
          * array_y : interpolated data from array_point. range : 0-100
          */
-        let nodevideo = $("video[src]").get(0);
+        let nodevideo = $("video:has(source[src])").get(0);
         let len_point_sec = Math.floor(nodevideo.duration);
 
         if (len_point_sec % 2 == 0) {
@@ -640,106 +650,6 @@
         console.log('your hands are free now !!!')
         // console.log('peek index : ', array_peek_index)
 
-        // <============listen keyboard============>
-        $(document).keydown(function (event) {
-
-            if ($(document.activeElement).is('input[free-your-hand]')) {
-                return
-            }
-
-            console.log('press:', event.keyCode)
-
-            if (array_next_key.includes(event.keyCode)) { // next point (N)
-
-                for (let i = 0; i < array_peek_index.length; i++) {
-
-                    if (array_peek_index[i] > nodevideo.currentTime) {
-                        nodevideo.currentTime = array_peek_index[i];
-                        break;
-                    }
-                }
-
-                event.stopImmediatePropagation();
-
-            } else if (array_pre_key.includes(event.keyCode)) { // previous point (B)
-
-                let setDuration
-                let currentTime = nodevideo.currentTime
-                for (let i = array_peek_index.length - 1; i > 0; i--) {
-                    // console.log('i : ', i ,array_peek_index[i] , currentTime )
-                    if (array_peek_index[i] < currentTime) {
-
-                        if (i == 0) {
-
-                            if ((currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
-                                setDuration = 0;
-                                break;
-                            } else {
-                                setDuration = array_peek_index[i];
-                                break;
-                            }
-
-                        } else if (i == array_peek_index.length - 1) {
-                            if ((currentTime - array_peek_index[i]) < (nodevideo.duration - array_peek_index[i]) / 3.) {
-                                setDuration = array_peek_index[i - 1];
-                                break;
-                            } else {
-                                setDuration = array_peek_index[i];
-                                break;
-                            }
-                        } else {
-                            if ((currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
-                                setDuration = array_peek_index[i - 1];
-                                break;
-                            } else {
-                                setDuration = array_peek_index[i];
-                                break;
-                            }
-                        }
-                    }
-                }
-                // console.log('set duration : ', setDuration)
-                nodevideo.currentTime = setDuration
-                event.stopImmediatePropagation();
-
-            } else if (event.keyCode >= 48 && event.keyCode <= 57) { // number key
-
-                // console.log("press ", (event.keyCode - 48))
-                nodevideo.currentTime = (event.keyCode - 48) * nodevideo.duration / 10.
-                event.stopImmediatePropagation();
-
-            } else if (event.keyCode >= 96 && event.keyCode <= 105) { // numpad number key
-
-                // console.log("press ", (event.keyCode - 96))
-                nodevideo.currentTime = (event.keyCode - 96) * nodevideo.duration / 10.
-                event.stopImmediatePropagation();
-
-            } else if (array_anticlock.includes(event.keyCode)) { // Rotate anticlockwise (H)
-                // console.log("press H")
-                var angle = getRotationDegrees($(nodevideo)) - 90;
-                console.log(angle);
-                if (Math.abs(angle) === 90 || angle === 270) {
-                    $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(16/9))")
-                }
-                else {
-                    $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
-                }
-                event.stopImmediatePropagation();
-
-            } else if (array_clock.includes(event.keyCode)) { // Rotate clockwise (J)
-                // console.log("press J")
-                var angle = getRotationDegrees($(nodevideo)) + 90;
-                console.log(angle);
-                if (Math.abs(angle) === 90 || angle === 270) {
-                    $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(16/9))")
-                }
-                else {
-                    $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
-                }
-                event.stopImmediatePropagation();
-            }
-
-        });
     }
 
 
@@ -753,16 +663,20 @@
         onListen()
 
         // waiting video appeared
-        waitForKeyElements("video", function () {
+        waitForKeyElements("video:has(source[src])", function () {
 
-            if (isNaN($("video").get(0).duration)) {
-                //console.log("wait load")
-                $("video").on('loadedmetadata', function () {
+            if (isNaN($("video:has(source[src])").get(0).duration)) {
+                // console.log("wait load")
+                // console.log($("video:has(source[src])"))
+                // console.log($("video:has(source[src])").get(0).duration)
+                $("video:has(source[src])").on('loadedmetadata', function () {
                     actionVideo()
                     // insertMenu()
                 })
             } else {
-                //console.log("load directly")
+                // console.log("load directly")
+                // console.log($("video:has(source[src])").get(0))
+                // console.log($("video:has(source[src])").get(0).duration)
                 actionVideo()
                 // insertMenu()
             }
@@ -770,5 +684,113 @@
         }, false)
 
     });
+
+
+
+    // <============listen keyboard============>
+    $(document).keydown(function (event) {
+
+        if ($(document.activeElement).is('input[free-your-hand]')) {
+            return
+        }
+
+        // console.log('press:', event.keyCode)
+
+        let nodevideo = $("video:has(source[src])").get(0);
+        // console.log(array_peek_index)
+
+        let array_peek_index = getMarkPosition(nodevideo.duration)
+
+        if (array_next_key.includes(event.keyCode)) { // next point (N)
+
+            for (let i = 0; i < array_peek_index.length; i++) {
+
+                if (array_peek_index[i] > nodevideo.currentTime) {
+                    nodevideo.currentTime = array_peek_index[i];
+                    break;
+                }
+            }
+
+            event.stopImmediatePropagation();
+
+        } else if (array_pre_key.includes(event.keyCode)) { // previous point (B)
+
+            let setDuration
+            let currentTime = nodevideo.currentTime
+            for (let i = array_peek_index.length - 1; i > 0; i--) {
+                // console.log('i : ', i ,array_peek_index[i] , currentTime )
+                if (array_peek_index[i] < currentTime) {
+
+                    if (i == 0) {
+
+                        if ((currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
+                            setDuration = 0;
+                            break;
+                        } else {
+                            setDuration = array_peek_index[i];
+                            break;
+                        }
+
+                    } else if (i == array_peek_index.length - 1) {
+                        if ((currentTime - array_peek_index[i]) < (nodevideo.duration - array_peek_index[i]) / 3.) {
+                            setDuration = array_peek_index[i - 1];
+                            break;
+                        } else {
+                            setDuration = array_peek_index[i];
+                            break;
+                        }
+                    } else {
+                        if ((currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
+                            setDuration = array_peek_index[i - 1];
+                            break;
+                        } else {
+                            setDuration = array_peek_index[i];
+                            break;
+                        }
+                    }
+                }
+            }
+            // console.log('set duration : ', setDuration)
+            nodevideo.currentTime = setDuration
+            event.stopImmediatePropagation();
+
+        } else if (event.keyCode >= 48 && event.keyCode <= 57) { // number key
+
+            // console.log("press ", (event.keyCode - 48))
+            nodevideo.currentTime = (event.keyCode - 48) * nodevideo.duration / 10.
+            event.stopImmediatePropagation();
+
+        } else if (event.keyCode >= 96 && event.keyCode <= 105) { // numpad number key
+
+            // console.log("press ", (event.keyCode - 96))
+            nodevideo.currentTime = (event.keyCode - 96) * nodevideo.duration / 10.
+            event.stopImmediatePropagation();
+
+        } else if (array_anticlock.includes(event.keyCode)) { // Rotate anticlockwise (H)
+            // console.log("press H")
+            var angle = getRotationDegrees($(nodevideo)) - 90;
+            // console.log(angle);
+            if (Math.abs(angle) === 90 || angle === 270) {
+                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(16/9))")
+            }
+            else {
+                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
+            }
+            event.stopImmediatePropagation();
+
+        } else if (array_clock.includes(event.keyCode)) { // Rotate clockwise (J)
+            // console.log("press J")
+            var angle = getRotationDegrees($(nodevideo)) + 90;
+            // console.log(angle);
+            if (Math.abs(angle) === 90 || angle === 270) {
+                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(16/9))")
+            }
+            else {
+                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
+            }
+            event.stopImmediatePropagation();
+        }
+
+    });    
 
 })();
