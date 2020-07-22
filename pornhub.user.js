@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.3.0
+// @version      1.3.1
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r, foolool
@@ -700,6 +700,7 @@
         // console.log(array_peek_index)
 
         let array_peek_index = getMarkPosition(nodevideo.duration)
+        // console.log(array_peek_index)
 
         if (array_next_key.includes(event.keyCode)) { // next point (N)
 
@@ -715,10 +716,10 @@
 
         } else if (array_pre_key.includes(event.keyCode)) { // previous point (B)
 
-            let setDuration
+            let setDuration = null
             let currentTime = nodevideo.currentTime
-            for (let i = array_peek_index.length - 1; i > 0; i--) {
-                // console.log('i : ', i ,array_peek_index[i] , currentTime )
+            for (let i = array_peek_index.length - 1; i >= 0; i--) {
+                // console.log('i : ', i ,array_peek_index[i] , currentTime, array_peek_index[i] < currentTime )
                 if (array_peek_index[i] < currentTime) {
 
                     if (i == 0) {
@@ -751,7 +752,10 @@
                 }
             }
             // console.log('set duration : ', setDuration)
-            nodevideo.currentTime = setDuration
+            if(setDuration){
+                nodevideo.currentTime = setDuration
+            }
+            
             event.stopImmediatePropagation();
 
         } else if (event.keyCode >= 48 && event.keyCode <= 57) { // number key
