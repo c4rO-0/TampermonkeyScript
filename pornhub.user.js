@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.3.1
+// @version      1.4.0
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time.
 // @author       c4r, foolool
@@ -546,14 +546,27 @@
         });
     }
 
-    function getMarkPosition(duration) {
+    function getMarkPosition(duration, only_white = false) {
 
         let array_peek_index = []
-        $('.mhp1138_actionTag').each((index, element)=>{
-            array_peek_index.push($(element).attr('style').split('%')[0].slice(('left:').length).trim()/100.*duration)
-        })
+
+        if(only_white){
+            $('.mhp1138_actionTag[data-tag!="HighTime"]').each((index, element)=>{
+                array_peek_index.push($(element).attr('style').split('%')[0].slice(('left:').length).trim()/100.*duration)
+            })          
+        }else{
+            $('.mhp1138_actionTag').each((index, element)=>{
+                array_peek_index.push($(element).attr('style').split('%')[0].slice(('left:').length).trim()/100.*duration)
+            })
+        }
+
+        if(array_peek_index.length > 1){
+            return (mergeSort(array_peek_index)).reverse()
+        }
 
         return array_peek_index
+
+        
     }
 
     function isMarked() {
@@ -644,6 +657,17 @@
             array_peek_index[i] = array_peek_index[i] * dis / len_point * nodevideo.duration;
         }
 
+        // <============get "jump to" points, white points set by author ============>
+        let array_white_peek_index = getMarkPosition(nodevideo.duration, true)
+        // console.log("array_white_peek_index", array_white_peek_index)
+
+        // <============delete peeks, which cover the white one (less than 40 sec) ============>
+        array_white_peek_index.forEach(position_white => {
+            array_peek_index = array_peek_index.filter((peek)=>{
+                return Math.abs(peek - position_white) > 40
+            })
+        });
+        
 
         // <============add markers on the process bar============>
         mark(array_peek_index, nodevideo.duration);
