@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.4.0
+// @version      1.4.1
 // @license      MPL-2.0
-// @description  easily fast forward video to the high time.
+// @description  easily fast forward video to the high time, and rotate video.
 // @author       c4r, foolool
 // @match        https://*.pornhub.com/view_video.php?viewkey=*
 // @match        https://*.pornhubpremium.com/view_video.php?viewkey=*
