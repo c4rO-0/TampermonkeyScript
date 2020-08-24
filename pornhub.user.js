@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.4.1
+// @version      1.5.0
 // @license      MPL-2.0
 // @description  easily fast forward video to the high time, and rotate video.
 // @author       c4r, foolool
@@ -23,12 +23,19 @@
      * - previous : b(66), 188(<)
      * - antic clockwise rotate : h(72), [(219) 
      * - clockwise rotate : j(74) , ](219)
+     * - speed up : i(73)
+     * - speed down : u(85)
+     * - available max speed x8
      */
 
     let default_array_next_key = [78, 190]
     let default_array_pre_key = [66, 188]
     let default_array_anticlock = [72, 219]
     let default_array_clock = [74, 221]
+    let default_array_speed_up = [73]
+    let default_array_speed_down = [85]
+
+    let maxSpeed = 8 
 
 
     /**
@@ -38,6 +45,8 @@
     let array_pre_key = []
     let array_anticlock = []
     let array_clock = []
+    let array_speed_up = []
+    let array_speed_down = []
 
     /*--- waitForKeyElements():  A utility function, for Greasemonkey scripts,
         that detects and handles AJAXed content.
@@ -134,6 +143,13 @@
         waitForKeyElements.controlObj = controlObj;
     }
 
+    function showMSG(msg, duration) {
+        $('.mhp1138_ccContainer').text(msg)
+        setTimeout(() => {
+            $('.mhp1138_ccContainer').text('')
+        }, duration);
+    }
+
     function activeTab() {
 
         $('.tab-menu-item.tooltipTrig').removeClass('active')
@@ -223,7 +239,7 @@
         $(document).on('click', '#id-free-your-hand-shortcut-reset', () => {
 
             $('input[free-your-hand]').each((index, element) => {
-                element.placeholder= ''
+                element.placeholder = ''
                 element.value = ''
                 element.code = ''
             })
@@ -238,7 +254,9 @@
                 next: {},
                 previous: {},
                 clockwise: {},
-                anticlockwise: {}
+                anticlockwise: {},
+                speedup: {},
+                speeddn: {}
             }
 
             saveLocalData(data)
@@ -261,7 +279,9 @@
                 next: {},
                 previous: {},
                 clockwise: {},
-                anticlockwise: {}
+                anticlockwise: {},
+                speedup: {},
+                speeddn: {}
             }
         }
     }
@@ -306,6 +326,18 @@
         } else {
             array_anticlock = default_array_anticlock
         }
+
+        // if (data && data.shortcut.speedup["code"]) {
+        //     array_speed_up = [data.shortcut.speedup.code]
+        // } else {
+            array_speed_up = default_array_speed_up
+        // }
+
+        // if (data && data.shortcut.speeddn["code"]) {
+        //     array_speed_down = [data.shortcut.speeddn.code]
+        // } else {
+            array_speed_down = default_array_speed_down
+        // }
 
     }
 
@@ -367,6 +399,13 @@
             if (fyhStorage.shortcut.anticlockwise.label) {
                 strAC = fyhStorage.shortcut.anticlockwise.label
             }
+            // if (fyhStorage.shortcut.speedup.label) {
+            //     strAC = fyhStorage.shortcut.speedup.label
+            // }
+            // if (fyhStorage.shortcut.speeddn.label) {
+            //     strAC = fyhStorage.shortcut.speeddn.label
+            // }
+
 
         }
 
@@ -389,6 +428,16 @@
         $('#id-free-your-hand-shortcut').append(
             shortcutItemHTML('anticlockwise', 'Next high-point', strAC)
         )
+
+        // // add specific shortcut : speed up
+        // $('#id-free-your-hand-shortcut').append(
+        //     shortcutItemHTML('speedup', 'Next high-point', strAC)
+        // )
+
+        // // add specific shortcut : speed down
+        // $('#id-free-your-hand-shortcut').append(
+        //     shortcutItemHTML('speeddown', 'Next high-point', strAC)
+        // )
 
         // // add click listener
         // onListen()
@@ -550,23 +599,23 @@
 
         let array_peek_index = []
 
-        if(only_white){
-            $('.mhp1138_actionTag[data-tag!="HighTime"]').each((index, element)=>{
-                array_peek_index.push($(element).attr('style').split('%')[0].slice(('left:').length).trim()/100.*duration)
-            })          
-        }else{
-            $('.mhp1138_actionTag').each((index, element)=>{
-                array_peek_index.push($(element).attr('style').split('%')[0].slice(('left:').length).trim()/100.*duration)
+        if (only_white) {
+            $('.mhp1138_actionTag[data-tag!="HighTime"]').each((index, element) => {
+                array_peek_index.push($(element).attr('style').split('%')[0].slice(('left:').length).trim() / 100. * duration)
+            })
+        } else {
+            $('.mhp1138_actionTag').each((index, element) => {
+                array_peek_index.push($(element).attr('style').split('%')[0].slice(('left:').length).trim() / 100. * duration)
             })
         }
 
-        if(array_peek_index.length > 1){
+        if (array_peek_index.length > 1) {
             return (mergeSort(array_peek_index)).reverse()
         }
 
         return array_peek_index
 
-        
+
     }
 
     function isMarked() {
@@ -663,15 +712,16 @@
 
         // <============delete peeks, which cover the white one (less than 40 sec) ============>
         array_white_peek_index.forEach(position_white => {
-            array_peek_index = array_peek_index.filter((peek)=>{
+            array_peek_index = array_peek_index.filter((peek) => {
                 return Math.abs(peek - position_white) > 40
             })
         });
-        
+
 
         // <============add markers on the process bar============>
         mark(array_peek_index, nodevideo.duration);
         console.log('your hands are free now !!!')
+        showMSG('your hands are free now !!!', 2000)
         // console.log('peek index : ', array_peek_index)
 
     }
@@ -776,10 +826,10 @@
                 }
             }
             // console.log('set duration : ', setDuration)
-            if(setDuration){
+            if (setDuration) {
                 nodevideo.currentTime = setDuration
             }
-            
+
             event.stopImmediatePropagation();
 
         } else if (event.keyCode >= 48 && event.keyCode <= 57) { // number key
@@ -804,6 +854,7 @@
             else {
                 $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
             }
+            showMSG('Rotate '+angle, 2000)
             event.stopImmediatePropagation();
 
         } else if (array_clock.includes(event.keyCode)) { // Rotate clockwise (J)
@@ -816,9 +867,53 @@
             else {
                 $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
             }
+            
+            
+            showMSG('Rotate '+angle, 2000)
+            event.stopImmediatePropagation();
+        } else if (array_speed_up.includes(event.keyCode)) { // Speed up (A)
+            // console.log("press A")
+            // 1.0 is normal speed.
+            // 0.5 is half speed.
+            // 2.0 is double speed.
+            // -1.0 is backwards, normal speed.
+            // -0.5 is backwards, half speed.
+            var cSpeed = $(nodevideo).get(0).playbackRate
+            // console.log(cSpeed);
+            $(nodevideo).get(0).playbackRate = cSpeed * 2.
+            if(cSpeed * 2. > maxSpeed){
+                $(nodevideo).get(0).playbackRate = maxSpeed
+            }else{
+                $(nodevideo).get(0).playbackRate = cSpeed *2.
+            }
+
+            showMSG('Speed x'+$(nodevideo).get(0).playbackRate, 2000)
+
+            // console.log($(nodevideo).get(0).playbackRate)
+
+            event.stopImmediatePropagation();
+        } else if (array_speed_down.includes(event.keyCode)) { // Speed down (s)
+            // console.log("press S")
+            // 1.0 is normal speed.
+            // 0.5 is half speed.
+            // 2.0 is double speed.
+            // -1.0 is backwards, normal speed.
+            // -0.5 is backwards, half speed.
+            var cSpeed = $(nodevideo).get(0).playbackRate
+            // console.log(cSpeed);
+            if(cSpeed / 2. < 0.5){
+                $(nodevideo).get(0).playbackRate = 0.5  
+            }else{
+                $(nodevideo).get(0).playbackRate = cSpeed / 2.
+            }
+
+            showMSG('Speed x'+$(nodevideo).get(0).playbackRate, 2000)
+
+            // console.log($(nodevideo).get(0).playbackRate)
+
             event.stopImmediatePropagation();
         }
 
-    });    
+    });
 
 })();
