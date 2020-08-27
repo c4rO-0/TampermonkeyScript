@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.5.0
+// @version      1.5.1
 // @license      MPL-2.0
-// @description  easily fast forward video to the high time, and rotate video.
+// @description  easily fast forward video, rotate video, and set playback speed of the video.
 // @author       c4r, foolool
 // @match        https://*.pornhub.com/view_video.php?viewkey=*
 // @match        https://*.pornhubpremium.com/view_video.php?viewkey=*
@@ -25,7 +25,7 @@
      * - clockwise rotate : j(74) , ](219)
      * - speed up : i(73)
      * - speed down : u(85)
-     * - available max speed x8
+     * - speed list : 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0
      */
 
     let default_array_next_key = [78, 190]
@@ -34,8 +34,7 @@
     let default_array_clock = [74, 221]
     let default_array_speed_up = [73]
     let default_array_speed_down = [85]
-
-    let maxSpeed = 8 
+    let default_array_speed_list = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0] 
 
 
     /**
@@ -47,6 +46,7 @@
     let array_clock = []
     let array_speed_up = []
     let array_speed_down = []
+    let array_speed_list = []
 
     /*--- waitForKeyElements():  A utility function, for Greasemonkey scripts,
         that detects and handles AJAXed content.
@@ -338,6 +338,8 @@
         // } else {
             array_speed_down = default_array_speed_down
         // }
+
+        array_speed_list = default_array_speed_list
 
     }
 
@@ -872,19 +874,15 @@
             showMSG('Rotate '+angle, 2000)
             event.stopImmediatePropagation();
         } else if (array_speed_up.includes(event.keyCode)) { // Speed up (A)
-            // console.log("press A")
-            // 1.0 is normal speed.
-            // 0.5 is half speed.
-            // 2.0 is double speed.
-            // -1.0 is backwards, normal speed.
-            // -0.5 is backwards, half speed.
+
             var cSpeed = $(nodevideo).get(0).playbackRate
-            // console.log(cSpeed);
-            $(nodevideo).get(0).playbackRate = cSpeed * 2.
-            if(cSpeed * 2. > maxSpeed){
-                $(nodevideo).get(0).playbackRate = maxSpeed
+
+            let array_larger = array_speed_list.filter((el)=>{ return el > cSpeed })
+            
+            if(array_larger.length == 0){
+                $(nodevideo).get(0).playbackRate = Math.max.apply(Math,array_speed_list); 
             }else{
-                $(nodevideo).get(0).playbackRate = cSpeed *2.
+                $(nodevideo).get(0).playbackRate = Math.min.apply(Math,array_larger); 
             }
 
             showMSG('Speed x'+$(nodevideo).get(0).playbackRate, 2000)
@@ -893,18 +891,15 @@
 
             event.stopImmediatePropagation();
         } else if (array_speed_down.includes(event.keyCode)) { // Speed down (s)
-            // console.log("press S")
-            // 1.0 is normal speed.
-            // 0.5 is half speed.
-            // 2.0 is double speed.
-            // -1.0 is backwards, normal speed.
-            // -0.5 is backwards, half speed.
+
             var cSpeed = $(nodevideo).get(0).playbackRate
-            // console.log(cSpeed);
-            if(cSpeed / 2. < 0.5){
-                $(nodevideo).get(0).playbackRate = 0.5  
+
+            let array_smaller = array_speed_list.filter((el)=>{ return el < cSpeed })
+            
+            if(array_smaller.length == 0){
+                $(nodevideo).get(0).playbackRate = Math.min.apply(Math,array_speed_list); 
             }else{
-                $(nodevideo).get(0).playbackRate = cSpeed / 2.
+                $(nodevideo).get(0).playbackRate = Math.max.apply(Math,array_smaller); 
             }
 
             showMSG('Speed x'+$(nodevideo).get(0).playbackRate, 2000)
