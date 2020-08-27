@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.5.1
+// @version      1.5.2
 // @license      MPL-2.0
 // @description  easily fast forward video, rotate video, and set playback speed of the video.
 // @author       c4r, foolool
@@ -35,6 +35,8 @@
     let default_array_speed_up = [73]
     let default_array_speed_down = [85]
     let default_array_speed_list = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0] 
+
+    let sensitive = 0.8
 
 
     /**
@@ -531,7 +533,7 @@
 
         let array_sort = array_y;
         mergeSort(array_sort);
-        let average = array_sort[Math.floor(array_sort.length * 0.7)];
+        let average = array_sort[ Math.max(0, Math.min(Math.floor(array_sort.length * sensitive), array_sort.length - 1)) ];
 
         let peek = new Array();
         if (array_y[1] < array_y[0] && array_y[0] > average) {
