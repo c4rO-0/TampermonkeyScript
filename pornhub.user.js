@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.5.2
+// @version      1.5.3
 // @license      MPL-2.0
 // @description  easily fast forward video, rotate video, and set playback speed of the video.
 // @author       c4r, foolool
@@ -852,12 +852,18 @@
             // console.log("press H")
             var angle = getRotationDegrees($(nodevideo)) - 90;
             // console.log(angle);
-            if (Math.abs(angle) === 90 || angle === 270) {
-                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(16/9))")
+            if (Math.abs(angle) === 90 || Math.abs(angle) === 270) {
+                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(" 
+                + (nodevideo.videoHeight > nodevideo.videoWidth 
+                ? nodevideo.videoWidth/nodevideo.videoHeight 
+                : nodevideo.videoHeight/nodevideo.videoWidth )
+                + "))")
+                
             }
             else {
                 $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
             }
+
             showMSG('Rotate '+angle, 2000)
             event.stopImmediatePropagation();
 
@@ -865,13 +871,16 @@
             // console.log("press J")
             var angle = getRotationDegrees($(nodevideo)) + 90;
             // console.log(angle);
-            if (Math.abs(angle) === 90 || angle === 270) {
-                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(16/9))")
+            if (Math.abs(angle) === 90 || Math.abs(angle) === 270) {
+                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(" 
+                + (nodevideo.videoHeight > nodevideo.videoWidth 
+                ? nodevideo.videoWidth/nodevideo.videoHeight 
+                : nodevideo.videoHeight/nodevideo.videoWidth )
+                + "))")
             }
             else {
                 $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
             }
-            
             
             showMSG('Rotate '+angle, 2000)
             event.stopImmediatePropagation();
