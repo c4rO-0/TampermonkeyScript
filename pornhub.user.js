@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.5.3
+// @version      1.5.4
 // @license      MPL-2.0
 // @description  easily fast forward video, rotate video, and set playback speed of the video.
 // @author       c4r, foolool
@@ -9,6 +9,8 @@
 // @match        https://*.pornhubpremium.com/view_video.php?viewkey=*
 // @match        www.pornhubselect.com/*
 // @require      https://code.jquery.com/jquery-latest.js
+// @require      https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js
+// @resource      https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css
 // @grant        none
 // ==/UserScript==
 
@@ -161,17 +163,38 @@
 
     }
 
-    function shortcutItemHTML(name, label, keyShortcut) {
+    function shortcutItemHTML(name, label) {
 
         let v = '<div class="video-info-row">\
         <span '+ name + '>\
-            <a>'+ label + ' </a> \
-            <input free-your-hand name="'+ name + '" type="text" size="1" maxlength="1" placeholder="' + keyShortcut + '"></input>\
-        </span>'
+            <button free-your-hand name="'+ name + '" style="width:100%">'+ label +'</button>\
+        </span>\
+        </div>'
 
         return v
+    }
+
+    function shortcutKeyStrHTML(name, label, strKey){
+        return '<div class="video-info-row">\
+        <span '+ name + '>\
+        <a free-your-hand name="'+ name + '">\
+            '+strKey+'\
+        </a>\
+        <input free-your-hand name="'+ name + '" type="text" size="1" maxlength="1" placeholder="' + strKey + '" style="display:none"></input>\
+        </span></div>'
 
     }
+
+    function insertKeyHTML(numPlace, name, label, strKey){
+        $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList:eq('+numPlace+')').append(
+            shortcutItemHTML(name, label)
+        )
+        $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList:eq('+(numPlace+1)+')').append(
+            shortcutKeyStrHTML(name, label, strKey)
+        )
+        // $('input[free-your-hand][name="'+ name + '"]').hide()
+    }
+
 
     function onListen() {
 
@@ -206,11 +229,41 @@
 
                 // fresh input
                 // only value is saved here. value is set by keydown.
-                e.value = value
+                // e.value = value
+
+                let name = e.name
+                $('#id-free-your-hand-shortcut a[name="'+ name +'"]').text(value)
+                $('#id-free-your-hand-shortcut input[name="'+ name +'"]').attr('placeholder', value)
+
+                $('#id-free-your-hand-shortcut a[name="'+ name +'"]').show()
+                $('#id-free-your-hand-shortcut input[name="'+ name +'"]').hide()
 
             }
 
         })
+
+        $(document).on('click', '#id-free-your-hand-shortcut a[free-your-hand]', (event) => {
+
+            let name = $(event.target).attr('name')
+            // console.log('click set shortcut: ', name)
+            $('#id-free-your-hand-shortcut a[name="'+ name +'"]').hide()
+            $('#id-free-your-hand-shortcut input[name="'+ name +'"]').show()
+            $('#id-free-your-hand-shortcut input[name="'+ name +'"]').focus()
+
+            $('#id-free-your-hand-shortcut input[name="'+ name +'"]').focusout(()=>{
+                $('#id-free-your-hand-shortcut a[name="'+ name +'"]').show()
+                $('#id-free-your-hand-shortcut input[name="'+ name +'"]').hide()
+            })
+        })
+        
+
+        $(document).on('click', '#id-free-your-hand-shortcut button[free-your-hand]', (event) => {
+
+            let name = $(event.target).attr('name')
+            console.log('click button: ', name)
+
+        })
+
 
         $(document).on('click', '#id-free-your-hand-shortcut-save', () => {
             // save settings , and reload
@@ -375,6 +428,16 @@
     <div class="reset"></div>\
 </div>'
 
+
+    let tableHTML = 
+'<div class="display-grid col-4 gap-row-none sortBy seconds">\
+<ul class="actionTagList full-width margin-none"></ul>\
+<ul class="actionTagList full-width margin-none"></ul>\
+<ul class="actionTagList full-width margin-none"></ul>\
+<ul class="actionTagList full-width margin-none"></ul>\
+</div>\
+'
+
         // // turn off click listener
         // offListen()
         // delete free-your-hand element
@@ -389,7 +452,9 @@
 
         // read local storage
         let fyhStorage = getLocalData()
-        let strN = '', strP = '', strC = '', strAC = ''
+
+
+        let strN = '>', strP = '<', strC = ']', strAC = '['
         if (fyhStorage) {
             if (fyhStorage.shortcut.next.label) {
                 strN = fyhStorage.shortcut.next.label
@@ -413,25 +478,28 @@
 
         }
 
-        // add specific shortcut : next
-        $('#id-free-your-hand-shortcut').append(
-            shortcutItemHTML('next', 'Next high-point', strN)
-        )
 
-        // add specific shortcut : previous
+
         $('#id-free-your-hand-shortcut').append(
-            shortcutItemHTML('previous', 'Previous high-point', strP)
+            tableHTML
         )
+        $('#id-free-your-hand-shortcut').append(
+            '<div class="reset"></div>'
+        )
+        
+
+        // add specific shortcut : next
+        insertKeyHTML(0, 'next', 'Next', strN)
+        
+        // add specific shortcut : previous
+        insertKeyHTML(2, 'previous', 'Previous',strP)
 
         // add specific shortcut : clockwise
-        $('#id-free-your-hand-shortcut').append(
-            shortcutItemHTML('clockwise', 'Next high-point', strC)
-        )
+        insertKeyHTML(0, 'clockwise', 'clockwise', strC)
 
         // add specific shortcut : anticlockwise
-        $('#id-free-your-hand-shortcut').append(
-            shortcutItemHTML('anticlockwise', 'Next high-point', strAC)
-        )
+        insertKeyHTML(2, 'anticlockwise', 'anticlockwise', strAC)
+
 
         // // add specific shortcut : speed up
         // $('#id-free-your-hand-shortcut').append(
@@ -749,14 +817,14 @@
                 // console.log($("video:has(source[src])").get(0).duration)
                 $("video:has(source[src])").on('loadedmetadata', function () {
                     actionVideo()
-                    // insertMenu()
+                    insertMenu()
                 })
             } else {
                 // console.log("load directly")
                 // console.log($("video:has(source[src])").get(0))
                 // console.log($("video:has(source[src])").get(0).duration)
                 actionVideo()
-                // insertMenu()
+                insertMenu()
             }
 
         }, false)
