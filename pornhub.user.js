@@ -163,35 +163,39 @@
 
     }
 
-    function shortcutItemHTML(name, label) {
+    function shortcutItemHTML(name, description, keyLabel) {
 
-        let v = '<div class="video-info-row">\
+        let v = '<li class="alpha omega">\
         <span '+ name + '>\
-            <button free-your-hand name="'+ name + '" style="width:100%">'+ label +'</button>\
+            <button free-your-hand name="'+ name + '" style="width:70%">'+ description +'</button>\
+            <a free-your-hand name="'+ name + '" style="width:70%;text-align:center">\
+            '+keyLabel+'\
+            </a>\
+            <input free-your-hand name="'+ name + '" type="text" size="1" maxlength="1" placeholder="' + keyLabel + '" style="display:none;width:20%"></input>\
         </span>\
-        </div>'
+        </li>'
 
         return v
     }
 
-    function shortcutKeyStrHTML(name, label, strKey){
-        return '<div class="video-info-row">\
+    function shortcutKeyStrHTML(name, description, keyLabel){
+        return '<li class="alpha omega" >\
         <span '+ name + '>\
         <a free-your-hand name="'+ name + '">\
-            '+strKey+'\
+            '+keyLabel+'\
         </a>\
-        <input free-your-hand name="'+ name + '" type="text" size="1" maxlength="1" placeholder="' + strKey + '" style="display:none"></input>\
-        </span></div>'
+        <input free-your-hand name="'+ name + '" type="text" size="1" maxlength="1" placeholder="' + keyLabel + '" style="display:none"></input>\
+        </span></li>'
 
     }
 
-    function insertKeyHTML(numPlace, name, label, strKey){
+    function insertKeyHTML(numPlace, name, description, keyLabel){
         $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList:eq('+numPlace+')').append(
-            shortcutItemHTML(name, label)
+            shortcutItemHTML(name, description, keyLabel)
         )
-        $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList:eq('+(numPlace+1)+')').append(
-            shortcutKeyStrHTML(name, label, strKey)
-        )
+        // $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList:eq('+(numPlace+1)+')').append(
+        //     shortcutKeyStrHTML(name, description, keyLabel)
+        // )
         // $('input[free-your-hand][name="'+ name + '"]').hide()
     }
 
@@ -216,20 +220,18 @@
 
         })
 
-        $(document).on('keypress', 'input[free-your-hand]', (event) => {
+        // set new shortcut : observed keydown
+        $(document).on('keydown', 'input[free-your-hand]', (event) => {
 
             let e = document.activeElement
 
             if ($(e).is('input[free-your-hand]')) {
 
                 var key = event.keyCode;
-
                 let value = String.fromCharCode(key)
-                console.log('keypress', e.name, event.which, key)
 
-                // fresh input
-                // only value is saved here. value is set by keydown.
-                // e.value = value
+
+                // console.log('keypress', e.name, event.which, key)
 
                 let name = e.name
                 $('#id-free-your-hand-shortcut a[name="'+ name +'"]').text(value)
@@ -238,6 +240,19 @@
                 $('#id-free-your-hand-shortcut a[name="'+ name +'"]').show()
                 $('#id-free-your-hand-shortcut input[name="'+ name +'"]').hide()
 
+                // store
+                let data = getLocalData()
+                if (data === undefined) {
+                    data = defaultData()
+                }
+                data.shortcut[name] = {
+                    label: value, code: key
+                }
+                saveLocalData(data)
+    
+                setShortcutArrayFromLocalStorage()
+    
+                $('video').focus()
             }
 
         })
@@ -262,32 +277,26 @@
             let name = $(event.target).attr('name')
             console.log('click button: ', name)
 
-        })
 
+            let nodevideo = $("video:has(source[src])").get(0);
+            // console.log(array_peek_index)
 
-        $(document).on('click', '#id-free-your-hand-shortcut-save', () => {
-            // save settings , and reload
+            let array_peek_index = getMarkPosition(nodevideo.duration)
+            // console.log(array_peek_index)
 
-            let data = getLocalData()
-            if (data === undefined) {
-                data = defaultData()
+            if(name == 'previous'){
+                preHighPoint(nodevideo, array_peek_index)
+            }else if (name == 'next') {
+                nextHighPoint(nodevideo, array_peek_index)
+            }else if (name == 'anticlockwise') {
+                anticlockwise(nodevideo)
+            }else if (name == 'clockwise') {
+                clockwise(nodevideo)
+            }else if (name == 'speedup') {
+                speedUp(nodevideo)
+            }else if (name == 'speeddn') {
+                speedDown(nodevideo)
             }
-
-            $('input[free-your-hand]').each((index, element) => {
-                data.shortcut[element.name] = {
-                    label: element.value, code: element.code
-                }
-            })
-            saveLocalData(data)
-
-            $('#id-free-your-hand-shortcut-save').text('done!')
-            setTimeout(() => {
-                $('#id-free-your-hand-shortcut-save').text('save shortcut')
-            }, 300);
-
-            setShortcutArrayFromLocalStorage()
-
-            $('video').focus()
 
         })
 
@@ -322,6 +331,8 @@
             }, 300);
 
             setShortcutArrayFromLocalStorage()
+
+            showShortcut()
 
             $('video').focus()
         })
@@ -382,19 +393,78 @@
             array_anticlock = default_array_anticlock
         }
 
-        // if (data && data.shortcut.speedup["code"]) {
-        //     array_speed_up = [data.shortcut.speedup.code]
-        // } else {
+        if (data && data.shortcut.speedup["code"]) {
+            array_speed_up = [data.shortcut.speedup.code]
+        } else {
             array_speed_up = default_array_speed_up
-        // }
+        }
 
-        // if (data && data.shortcut.speeddn["code"]) {
-        //     array_speed_down = [data.shortcut.speeddn.code]
-        // } else {
+        if (data && data.shortcut.speeddn["code"]) {
+            array_speed_down = [data.shortcut.speeddn.code]
+        } else {
             array_speed_down = default_array_speed_down
-        // }
+        }
 
         array_speed_list = default_array_speed_list
+
+    }
+
+    function showShortcut(){
+
+        // read local storage
+        let fyhStorage = getLocalData()
+
+
+        let strN = '>', strP = '<', 
+        strC = ']', strAC = '[',
+        strSU = 'i', strSD = 'u'
+
+        if (fyhStorage) {
+            if (fyhStorage.shortcut.next.label) {
+                strN = fyhStorage.shortcut.next.label
+            }
+            if (fyhStorage.shortcut.previous.label) {
+                strP = fyhStorage.shortcut.previous.label
+            }
+            if (fyhStorage.shortcut.clockwise.label) {
+                strC = fyhStorage.shortcut.clockwise.label
+            }
+            if (fyhStorage.shortcut.anticlockwise.label) {
+                strAC = fyhStorage.shortcut.anticlockwise.label
+            }
+            if (fyhStorage.shortcut.speedup.label) {
+                strSU = fyhStorage.shortcut.speedup.label
+            }
+            if (fyhStorage.shortcut.speeddn.label) {
+                strSD = fyhStorage.shortcut.speeddn.label
+            }
+
+
+        }
+
+        $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList').empty()
+
+        // add specific shortcut : next
+        insertKeyHTML(1, 'next', 'Next', strN)
+        
+        // add specific shortcut : previous
+        insertKeyHTML(0, 'previous', 'Previous',strP)
+
+        // add specific shortcut : clockwise
+        insertKeyHTML(1, 'clockwise', 'clockwise', strC)
+
+        // add specific shortcut : anticlockwise
+        insertKeyHTML(0, 'anticlockwise', 'anticlockwise', strAC)
+
+
+        // // add specific shortcut : speed up
+        insertKeyHTML(1, 'speedup', 'speedup', strSU)
+
+        // // add specific shortcut : speed down
+        insertKeyHTML(0, 'speeddn', 'speeddn', strSD)
+
+        // // add click listener
+        // onListen()
 
     }
 
@@ -417,7 +487,6 @@
     <div class="reset"></div>\
     <div class="float-left">\
         <div id="id-free-your-hand-shortcut">\
-            <button id="id-free-your-hand-shortcut-save" >save shortcut</button>\
             <button id="id-free-your-hand-shortcut-reset" >reset shortcut</button>\
         </div>\
     </div>\
@@ -445,40 +514,10 @@
         $('.free-your-hand').remove()
 
         // append free-your-hand element to tab-menu
-        $('.tab-menu-wrapper-row').append(menuHTML)
+        $('.tab-menu-wrapper-row').prepend(menuHTML)
 
         // append free-your-hand element to content
         $('.video-actions-container > .video-actions-tabs').append(contentHTML)
-
-        // read local storage
-        let fyhStorage = getLocalData()
-
-
-        let strN = '>', strP = '<', strC = ']', strAC = '['
-        if (fyhStorage) {
-            if (fyhStorage.shortcut.next.label) {
-                strN = fyhStorage.shortcut.next.label
-            }
-            if (fyhStorage.shortcut.previous.label) {
-                strP = fyhStorage.shortcut.previous.label
-            }
-            if (fyhStorage.shortcut.clockwise.label) {
-                strC = fyhStorage.shortcut.clockwise.label
-            }
-            if (fyhStorage.shortcut.anticlockwise.label) {
-                strAC = fyhStorage.shortcut.anticlockwise.label
-            }
-            // if (fyhStorage.shortcut.speedup.label) {
-            //     strAC = fyhStorage.shortcut.speedup.label
-            // }
-            // if (fyhStorage.shortcut.speeddn.label) {
-            //     strAC = fyhStorage.shortcut.speeddn.label
-            // }
-
-
-        }
-
-
 
         $('#id-free-your-hand-shortcut').append(
             tableHTML
@@ -487,33 +526,7 @@
             '<div class="reset"></div>'
         )
         
-
-        // add specific shortcut : next
-        insertKeyHTML(0, 'next', 'Next', strN)
-        
-        // add specific shortcut : previous
-        insertKeyHTML(2, 'previous', 'Previous',strP)
-
-        // add specific shortcut : clockwise
-        insertKeyHTML(0, 'clockwise', 'clockwise', strC)
-
-        // add specific shortcut : anticlockwise
-        insertKeyHTML(2, 'anticlockwise', 'anticlockwise', strAC)
-
-
-        // // add specific shortcut : speed up
-        // $('#id-free-your-hand-shortcut').append(
-        //     shortcutItemHTML('speedup', 'Next high-point', strAC)
-        // )
-
-        // // add specific shortcut : speed down
-        // $('#id-free-your-hand-shortcut').append(
-        //     shortcutItemHTML('speeddown', 'Next high-point', strAC)
-        // )
-
-        // // add click listener
-        // onListen()
-
+        showShortcut()
     }
 
     // Returns rotation in degrees when obtaining transform-styles using javascript
@@ -818,6 +831,7 @@
                 $("video:has(source[src])").on('loadedmetadata', function () {
                     actionVideo()
                     insertMenu()
+                    activeTab()
                 })
             } else {
                 // console.log("load directly")
@@ -825,13 +839,142 @@
                 // console.log($("video:has(source[src])").get(0).duration)
                 actionVideo()
                 insertMenu()
+                activeTab()
             }
 
         }, false)
 
     });
 
+    // <============keyDown function============>
+    function nextHighPoint(nodevideo, array_peek_index){
 
+        for (let i = 0; i < array_peek_index.length; i++) {
+
+            if (array_peek_index[i] > nodevideo.currentTime) {
+                nodevideo.currentTime = array_peek_index[i];
+                break;
+            }
+        }
+    }
+
+    function preHighPoint(nodevideo, array_peek_index){
+
+        let setDuration = null
+        let currentTime = nodevideo.currentTime
+        for (let i = array_peek_index.length - 1; i >= 0; i--) {
+            // console.log('i : ', i ,array_peek_index[i] , currentTime, array_peek_index[i] < currentTime )
+            if (array_peek_index[i] < currentTime) {
+
+                if (i == 0) {
+
+                    if ((currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
+                        setDuration = 0;
+                        break;
+                    } else {
+                        setDuration = array_peek_index[i];
+                        break;
+                    }
+
+                } else if (i == array_peek_index.length - 1) {
+                    if ((currentTime - array_peek_index[i]) < (nodevideo.duration - array_peek_index[i]) / 3.) {
+                        setDuration = array_peek_index[i - 1];
+                        break;
+                    } else {
+                        setDuration = array_peek_index[i];
+                        break;
+                    }
+                } else {
+                    // console.log('i : ', i , 
+                    // (currentTime - array_peek_index[i]) ,
+                    //  (array_peek_index[i + 1] - array_peek_index[i]) / 3., 
+                    //  (currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.)
+
+                    if ((currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
+                        setDuration = array_peek_index[i - 1];
+                        break;
+                    } else {
+                        setDuration = array_peek_index[i];
+                        break;
+                    }
+                }
+            }
+        }
+        // console.log('set duration : ', setDuration)
+        if (setDuration != null) {
+            nodevideo.currentTime = setDuration
+        }
+    }
+
+    function anticlockwise(nodevideo){
+        // console.log("press H")
+        var angle = getRotationDegrees($(nodevideo)) - 90;
+        // console.log(angle);
+        if (Math.abs(angle) === 90 || Math.abs(angle) === 270) {
+            $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(" 
+            + (nodevideo.videoHeight > nodevideo.videoWidth 
+            ? nodevideo.videoWidth/nodevideo.videoHeight 
+            : nodevideo.videoHeight/nodevideo.videoWidth )
+            + "))")
+            
+        }
+        else {
+            $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
+        }
+
+        showMSG('Rotate '+angle, 2000)
+    }
+
+    function clockwise(nodevideo){
+        // console.log("press J")
+        var angle = getRotationDegrees($(nodevideo)) + 90;
+        // console.log(angle);
+        if (Math.abs(angle) === 90 || Math.abs(angle) === 270) {
+            $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(" 
+            + (nodevideo.videoHeight > nodevideo.videoWidth 
+            ? nodevideo.videoWidth/nodevideo.videoHeight 
+            : nodevideo.videoHeight/nodevideo.videoWidth )
+            + "))")
+        }
+        else {
+            $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
+        }
+        
+        showMSG('Rotate '+angle, 2000)
+    }
+
+    function speedUp(nodevideo){
+        var cSpeed = $(nodevideo).get(0).playbackRate
+
+        let array_larger = array_speed_list.filter((el)=>{ return el > cSpeed })
+        
+        if(array_larger.length == 0){
+            $(nodevideo).get(0).playbackRate = Math.max.apply(Math,array_speed_list); 
+        }else{
+            $(nodevideo).get(0).playbackRate = Math.min.apply(Math,array_larger); 
+        }
+
+        showMSG('Speed x'+$(nodevideo).get(0).playbackRate, 2000)
+
+        // console.log($(nodevideo).get(0).playbackRate)
+    }
+
+    function speedDown(nodevideo){
+
+        var cSpeed = $(nodevideo).get(0).playbackRate
+
+        let array_smaller = array_speed_list.filter((el)=>{ return el < cSpeed })
+        
+        if(array_smaller.length == 0){
+            $(nodevideo).get(0).playbackRate = Math.min.apply(Math,array_speed_list); 
+        }else{
+            $(nodevideo).get(0).playbackRate = Math.max.apply(Math,array_smaller); 
+        }
+
+        showMSG('Speed x'+$(nodevideo).get(0).playbackRate, 2000)
+
+        // console.log($(nodevideo).get(0).playbackRate)
+    }    
 
     // <============listen keyboard============>
     $(document).keydown(function (event) {
@@ -840,7 +983,7 @@
             return
         }
 
-        // console.log('press:', event.keyCode)
+        console.log('press:', event.keyCode)
 
         let nodevideo = $("video:has(source[src])").get(0);
         // console.log(array_peek_index)
@@ -850,57 +993,13 @@
 
         if (array_next_key.includes(event.keyCode)) { // next point (N)
 
-            for (let i = 0; i < array_peek_index.length; i++) {
-
-                if (array_peek_index[i] > nodevideo.currentTime) {
-                    nodevideo.currentTime = array_peek_index[i];
-                    break;
-                }
-            }
+            nextHighPoint(nodevideo, array_peek_index)
 
             event.stopImmediatePropagation();
 
         } else if (array_pre_key.includes(event.keyCode)) { // previous point (B)
 
-            let setDuration = null
-            let currentTime = nodevideo.currentTime
-            for (let i = array_peek_index.length - 1; i >= 0; i--) {
-                // console.log('i : ', i ,array_peek_index[i] , currentTime, array_peek_index[i] < currentTime )
-                if (array_peek_index[i] < currentTime) {
-
-                    if (i == 0) {
-
-                        if ((currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
-                            setDuration = 0;
-                            break;
-                        } else {
-                            setDuration = array_peek_index[i];
-                            break;
-                        }
-
-                    } else if (i == array_peek_index.length - 1) {
-                        if ((currentTime - array_peek_index[i]) < (nodevideo.duration - array_peek_index[i]) / 3.) {
-                            setDuration = array_peek_index[i - 1];
-                            break;
-                        } else {
-                            setDuration = array_peek_index[i];
-                            break;
-                        }
-                    } else {
-                        if ((currentTime - array_peek_index[i]) < (array_peek_index[i + 1] - array_peek_index[i]) / 3.) {
-                            setDuration = array_peek_index[i - 1];
-                            break;
-                        } else {
-                            setDuration = array_peek_index[i];
-                            break;
-                        }
-                    }
-                }
-            }
-            // console.log('set duration : ', setDuration)
-            if (setDuration) {
-                nodevideo.currentTime = setDuration
-            }
+            preHighPoint(nodevideo, array_peek_index)
 
             event.stopImmediatePropagation();
 
@@ -917,74 +1016,22 @@
             event.stopImmediatePropagation();
 
         } else if (array_anticlock.includes(event.keyCode)) { // Rotate anticlockwise (H)
-            // console.log("press H")
-            var angle = getRotationDegrees($(nodevideo)) - 90;
-            // console.log(angle);
-            if (Math.abs(angle) === 90 || Math.abs(angle) === 270) {
-                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(" 
-                + (nodevideo.videoHeight > nodevideo.videoWidth 
-                ? nodevideo.videoWidth/nodevideo.videoHeight 
-                : nodevideo.videoHeight/nodevideo.videoWidth )
-                + "))")
-                
-            }
-            else {
-                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
-            }
 
-            showMSG('Rotate '+angle, 2000)
+            anticlockwise(nodevideo)
             event.stopImmediatePropagation();
 
         } else if (array_clock.includes(event.keyCode)) { // Rotate clockwise (J)
-            // console.log("press J")
-            var angle = getRotationDegrees($(nodevideo)) + 90;
-            // console.log(angle);
-            if (Math.abs(angle) === 90 || Math.abs(angle) === 270) {
-                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(calc(" 
-                + (nodevideo.videoHeight > nodevideo.videoWidth 
-                ? nodevideo.videoWidth/nodevideo.videoHeight 
-                : nodevideo.videoHeight/nodevideo.videoWidth )
-                + "))")
-            }
-            else {
-                $(nodevideo).css("transform", "rotate(" + angle + "deg)" + " scale(1)")
-            }
-            
-            showMSG('Rotate '+angle, 2000)
+
+            clockwise(nodevideo)
             event.stopImmediatePropagation();
+
         } else if (array_speed_up.includes(event.keyCode)) { // Speed up (A)
 
-            var cSpeed = $(nodevideo).get(0).playbackRate
-
-            let array_larger = array_speed_list.filter((el)=>{ return el > cSpeed })
-            
-            if(array_larger.length == 0){
-                $(nodevideo).get(0).playbackRate = Math.max.apply(Math,array_speed_list); 
-            }else{
-                $(nodevideo).get(0).playbackRate = Math.min.apply(Math,array_larger); 
-            }
-
-            showMSG('Speed x'+$(nodevideo).get(0).playbackRate, 2000)
-
-            // console.log($(nodevideo).get(0).playbackRate)
-
+            speedUp(nodevideo)
             event.stopImmediatePropagation();
         } else if (array_speed_down.includes(event.keyCode)) { // Speed down (s)
 
-            var cSpeed = $(nodevideo).get(0).playbackRate
-
-            let array_smaller = array_speed_list.filter((el)=>{ return el < cSpeed })
-            
-            if(array_smaller.length == 0){
-                $(nodevideo).get(0).playbackRate = Math.min.apply(Math,array_speed_list); 
-            }else{
-                $(nodevideo).get(0).playbackRate = Math.max.apply(Math,array_smaller); 
-            }
-
-            showMSG('Speed x'+$(nodevideo).get(0).playbackRate, 2000)
-
-            // console.log($(nodevideo).get(0).playbackRate)
-
+            speedDown(nodevideo)
             event.stopImmediatePropagation();
         }
 
