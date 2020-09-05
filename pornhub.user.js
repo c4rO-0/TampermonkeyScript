@@ -30,12 +30,15 @@
      * - speed list : 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0
      */
 
-    let default_array_next_key = [78, 190]
-    let default_array_pre_key = [66, 188]
-    let default_array_anticlock = [72, 219]
-    let default_array_clock = [74, 221]
-    let default_array_speed_up = [73]
-    let default_array_speed_down = [85]
+    let default_array_next_key      = []
+    let default_array_pre_key       = []
+    let default_array_anticlock     = []
+    let default_array_clock         = []
+    let default_array_speed_up      = []
+    let default_array_speed_down    = []
+
+
+
     let default_array_speed_list = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0] 
 
     let sensitive = 0.8
@@ -163,40 +166,43 @@
 
     }
 
-    function shortcutItemHTML(name, description, keyLabel) {
+    function shortcutItemHTML(name, description, keyLabel, isDefault) {
 
-        let v = '<li class="alpha omega">\
-        <span '+ name + '>\
-            <button free-your-hand name="'+ name + '" style="width:70%">'+ description +'</button>\
-            <a free-your-hand name="'+ name + '" style="width:70%;text-align:center">\
-            '+keyLabel+'\
-            </a>\
-            <input free-your-hand name="'+ name + '" type="text" size="1" maxlength="1" placeholder="' + keyLabel + '" style="display:none;width:20%"></input>\
-        </span>\
-        </li>'
+        let v = ''
+
+        let keyLabelLocal = (keyLabel == '' || keyLabel == null) ? 'No' : keyLabel
+        
+        if(isDefault){
+            v = '<li class="alpha omega">\
+            <span '+ name + '>\
+                <button free-your-hand-default name="'+ name + '" style="width:70%">'+ description +'</button>\
+                <a free-your-hand-default name="'+ name + '" style="width:70%;text-align:center">\
+                '+ keyLabelLocal +'\
+                </a>\
+            </span>\
+            </li>'
+        }else{
+            v = '<li class="alpha omega">\
+            <span '+ name + '>\
+                <button free-your-hand name="'+ name + '" style="width:70%">'+ description +'</button>\
+                <a free-your-hand name="'+ name + '" style="width:70%;text-align:center">\
+                '+keyLabelLocal+'\
+                </a>\
+                <input free-your-hand name="'+ name + '" type="text" size="1" maxlength="1" placeholder="' + keyLabelLocal + '" style="display:none;width:20%"></input>\
+            </span>\
+            </li>'
+        }
 
         return v
     }
 
-    function shortcutKeyStrHTML(name, description, keyLabel){
-        return '<li class="alpha omega" >\
-        <span '+ name + '>\
-        <a free-your-hand name="'+ name + '">\
-            '+keyLabel+'\
-        </a>\
-        <input free-your-hand name="'+ name + '" type="text" size="1" maxlength="1" placeholder="' + keyLabel + '" style="display:none"></input>\
-        </span></li>'
 
-    }
+    function insertKeyHTML(numPlace, name, description, keyLabel, isDefault = true){
 
-    function insertKeyHTML(numPlace, name, description, keyLabel){
         $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList:eq('+numPlace+')').append(
-            shortcutItemHTML(name, description, keyLabel)
+            shortcutItemHTML(name, description, keyLabel, isDefault)
         )
-        // $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList:eq('+(numPlace+1)+')').append(
-        //     shortcutKeyStrHTML(name, description, keyLabel)
-        // )
-        // $('input[free-your-hand][name="'+ name + '"]').hide()
+
     }
 
 
@@ -206,8 +212,8 @@
             activeTab()
         })
 
-        // set new shortcut : observed keydown
-        $(document).on('keydown', 'input[free-your-hand]', (event) => {
+        // set new shortcut : observed keypress
+        $(document).on('keypress', 'input[free-your-hand]', (event) => {
 
 
             if (event.isComposing || event.keyCode === 229) {
@@ -333,6 +339,16 @@
         })
 
     }
+
+    $(document).on('click', '#id-free-your-hand-shortcut-official-default', () => {
+        
+        if($('.mhp1138_keyboardShortcuts').hasClass('mhp1138_active')){
+            $('.mhp1138_keyboardShortcuts').removeClass('mhp1138_active')
+        }else{
+            $('.mhp1138_keyboardShortcuts').addClass('mhp1138_active')
+        }
+    })
+    
 
     function defaultData() {
         return {
@@ -464,23 +480,23 @@
         $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList').empty()
 
         // add specific shortcut : next
-        insertKeyHTML(1, 'next', 'Next', strN)
+        insertKeyHTML(1, 'next', 'Next', strN, false)
         
         // add specific shortcut : previous
-        insertKeyHTML(0, 'previous', 'Previous',strP)
+        insertKeyHTML(0, 'previous', 'Previous',strP, false)
 
         // add specific shortcut : clockwise
-        insertKeyHTML(1, 'clockwise', 'clockwise', strC)
+        insertKeyHTML(1, 'clockwise', 'clockwise', strC, false)
 
         // add specific shortcut : anticlockwise
-        insertKeyHTML(0, 'anticlockwise', 'anticlockwise', strAC)
+        insertKeyHTML(0, 'anticlockwise', 'anticlockwise', strAC, false)
 
 
         // // add specific shortcut : speed up
-        insertKeyHTML(1, 'speedup', 'speedup', strSU)
+        insertKeyHTML(1, 'speedup', 'speedup', strSU, false)
 
         // // add specific shortcut : speed down
-        insertKeyHTML(0, 'speeddn', 'speeddn', strSD)
+        insertKeyHTML(0, 'speeddn', 'speeddn', strSD, false)
 
         // // add click listener
         // onListen()
@@ -506,6 +522,7 @@
     <div class="reset"></div>\
     <div class="float-left">\
         <div id="id-free-your-hand-shortcut">\
+            <button id="id-free-your-hand-shortcut-official-default" >official shortcut</button>\
             <button id="id-free-your-hand-shortcut-reset" >reset shortcut</button>\
         </div>\
     </div>\
@@ -865,7 +882,7 @@
 
     });
 
-    // <============keyDown function============>
+    // <============keypress function============>
     function nextHighPoint(nodevideo, array_peek_index){
 
         for (let i = 0; i < array_peek_index.length; i++) {
@@ -996,7 +1013,7 @@
     }    
 
     // <============listen keyboard============>
-    $(document).keydown(function (event) {
+    $(document).keypress(function (event) {
 
         if (event.isComposing || event.keyCode === 229) {
             return;
