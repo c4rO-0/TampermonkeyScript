@@ -206,32 +206,25 @@
             activeTab()
         })
 
-        $(document).on('keydown', 'input[free-your-hand]', (event) => {
-
-            let e = document.activeElement
-
-            if ($(e).is('input[free-your-hand]')) {
-
-                var key = event.keyCode;
-                // fresh input
-                // only code is saved here. value is set by keypress.
-                e.code = key
-            }
-
-        })
-
         // set new shortcut : observed keydown
         $(document).on('keydown', 'input[free-your-hand]', (event) => {
 
+
+            if (event.isComposing || event.keyCode === 229) {
+                return;
+            }
+
             let e = document.activeElement
 
             if ($(e).is('input[free-your-hand]')) {
 
-                var key = event.keyCode;
-                let value = String.fromCharCode(key)
+                event = event || window.event
+                var keyCode = event.which || event.keyCode;
+
+                let value = String.fromCharCode(keyCode)
 
 
-                // console.log('keypress', e.name, event.which, key)
+                console.log('keypress', e.name, event.which, event.keyCode, e.charCode)
 
                 let name = e.name
                 $('#id-free-your-hand-shortcut a[name="'+ name +'"]').text(value)
@@ -246,13 +239,15 @@
                     data = defaultData()
                 }
                 data.shortcut[name] = {
-                    label: value, code: key
+                    label: value, code: keyCode
                 }
                 saveLocalData(data)
     
                 setShortcutArrayFromLocalStorage()
     
                 $('video').focus()
+
+                event.stopImmediatePropagation();
             }
 
         })
@@ -409,15 +404,39 @@
 
     }
 
+
+    function genCharFromArryCode(array_key_code, connector = ' '){
+
+        if(array_key_code.length == 0 ){
+            return ''
+        }else{
+            let str = ''
+            array_key_code.forEach( (charCode,index) => {
+                if(index != array_key_code.length){
+                    str += String.fromCharCode(charCode) + connector
+                }else{
+                    str += String.fromCharCode(charCode)
+                }
+                
+            });
+
+            return str
+        }
+
+    }
+
     function showShortcut(){
 
         // read local storage
         let fyhStorage = getLocalData()
 
 
-        let strN = '>', strP = '<', 
-        strC = ']', strAC = '[',
-        strSU = 'i', strSD = 'u'
+        let strN = genCharFromArryCode(default_array_next_key), 
+        strP = genCharFromArryCode(default_array_pre_key), 
+        strC = genCharFromArryCode(default_array_anticlock), 
+        strAC = genCharFromArryCode(default_array_clock),
+        strSU = genCharFromArryCode(default_array_speed_up), 
+        strSD = genCharFromArryCode(default_array_speed_down)
 
         if (fyhStorage) {
             if (fyhStorage.shortcut.next.label) {
@@ -979,11 +998,18 @@
     // <============listen keyboard============>
     $(document).keydown(function (event) {
 
+        if (event.isComposing || event.keyCode === 229) {
+            return;
+        }
+
         if ($(document.activeElement).is('input[free-your-hand]')) {
             return
         }
 
-        console.log('press:', event.keyCode)
+        event = event || window.event
+        var keyCode = event.which || event.keyCode;
+
+        console.log('press:', keyCode)
 
         let nodevideo = $("video:has(source[src])").get(0);
         // console.log(array_peek_index)
@@ -991,45 +1017,45 @@
         let array_peek_index = getMarkPosition(nodevideo.duration)
         // console.log(array_peek_index)
 
-        if (array_next_key.includes(event.keyCode)) { // next point (N)
+        if (array_next_key.includes(keyCode)) { // next point (N)
 
             nextHighPoint(nodevideo, array_peek_index)
 
             event.stopImmediatePropagation();
 
-        } else if (array_pre_key.includes(event.keyCode)) { // previous point (B)
+        } else if (array_pre_key.includes(keyCode)) { // previous point (B)
 
             preHighPoint(nodevideo, array_peek_index)
 
             event.stopImmediatePropagation();
 
-        } else if (event.keyCode >= 48 && event.keyCode <= 57) { // number key
+        } else if (keyCode >= 48 && keyCode <= 57) { // number key
 
-            // console.log("press ", (event.keyCode - 48))
-            nodevideo.currentTime = (event.keyCode - 48) * nodevideo.duration / 10.
+            // console.log("press ", (keyCode - 48))
+            nodevideo.currentTime = (keyCode - 48) * nodevideo.duration / 10.
             event.stopImmediatePropagation();
 
-        } else if (event.keyCode >= 96 && event.keyCode <= 105) { // numpad number key
+        } else if (keyCode >= 96 && keyCode <= 105) { // numpad number key
 
-            // console.log("press ", (event.keyCode - 96))
-            nodevideo.currentTime = (event.keyCode - 96) * nodevideo.duration / 10.
+            // console.log("press ", (keyCode - 96))
+            nodevideo.currentTime = (keyCode - 96) * nodevideo.duration / 10.
             event.stopImmediatePropagation();
 
-        } else if (array_anticlock.includes(event.keyCode)) { // Rotate anticlockwise (H)
+        } else if (array_anticlock.includes(keyCode)) { // Rotate anticlockwise (H)
 
             anticlockwise(nodevideo)
             event.stopImmediatePropagation();
 
-        } else if (array_clock.includes(event.keyCode)) { // Rotate clockwise (J)
+        } else if (array_clock.includes(keyCode)) { // Rotate clockwise (J)
 
             clockwise(nodevideo)
             event.stopImmediatePropagation();
 
-        } else if (array_speed_up.includes(event.keyCode)) { // Speed up (A)
+        } else if (array_speed_up.includes(keyCode)) { // Speed up (A)
 
             speedUp(nodevideo)
             event.stopImmediatePropagation();
-        } else if (array_speed_down.includes(event.keyCode)) { // Speed down (s)
+        } else if (array_speed_down.includes(keyCode)) { // Speed down (s)
 
             speedDown(nodevideo)
             event.stopImmediatePropagation();
