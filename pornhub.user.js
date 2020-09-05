@@ -1026,7 +1026,7 @@
         event = event || window.event
         var keyCode = event.which || event.keyCode;
 
-        console.log('press:', keyCode)
+        // console.log('press:', keyCode)
 
         let nodevideo = $("video:has(source[src])").get(0);
         // console.log(array_peek_index)
@@ -1046,17 +1046,17 @@
 
             event.stopImmediatePropagation();
 
-        } else if (keyCode >= 48 && keyCode <= 57) { // number key
+        // } else if (keyCode >= 48 && keyCode <= 57) { // number key
 
-            // console.log("press ", (keyCode - 48))
-            nodevideo.currentTime = (keyCode - 48) * nodevideo.duration / 10.
-            event.stopImmediatePropagation();
+        //     // console.log("press ", (keyCode - 48))
+        //     nodevideo.currentTime = (keyCode - 48) * nodevideo.duration / 10.
+        //     event.stopImmediatePropagation();
 
-        } else if (keyCode >= 96 && keyCode <= 105) { // numpad number key
+        // } else if (keyCode >= 96 && keyCode <= 105) { // numpad number key
 
-            // console.log("press ", (keyCode - 96))
-            nodevideo.currentTime = (keyCode - 96) * nodevideo.duration / 10.
-            event.stopImmediatePropagation();
+        //     // console.log("press ", (keyCode - 96))
+        //     nodevideo.currentTime = (keyCode - 96) * nodevideo.duration / 10.
+        //     event.stopImmediatePropagation();
 
         } else if (array_anticlock.includes(keyCode)) { // Rotate anticlockwise (H)
 
