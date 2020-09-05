@@ -1114,3 +1114,48 @@
     });
 
 })();
+
+
+//  README
+
+// # easily fast forward video, rotate video, and set playback speed of the video.
+
+// High time are marked as red on progress-bar.
+
+// **NOTE :**
+
+// **To serve users with different keyboard layouts, the shortcut should be setup before first using.**
+
+// No default shortcut keys are provided any more after version 2.0.
+
+// Thank you for your understanding.
+
+// ## Function Available
+
+// ### 1. back or fast forward 
+// To easily draw back or fast forward the Pornhub video to the next high time.
+
+// ### 2. use key `0-9`
+// To the relevant point directly
+
+// ### 3. rotate video
+// rotate the video with 90 degrees at each press.
+
+// ### 4. play with speed up/down
+// Indicates the current playback speed of the video.
+// default available speed : `0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0`
+
+// ## Custom
+// You can find a tag with name 'Hand' located in front of the official tags, like 'about', 'share'  ...
+
+// In the 'Hand' tag, 
+// - clicking the grey button will active the relative function. i.e. 'Next' is for jumping to the next high point.
+// - clicking the text following the button (default is 'No') and pressing a key will set the shortcut as your wish. 
+
+// ---
+
+// # Feedback :
+// If you want some new functions, or have suggestions.
+// Welcome to leave feedback.
+
+// Your **c4r** team
