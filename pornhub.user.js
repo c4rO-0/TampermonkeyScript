@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand - Pornhub
 // @namespace    
-// @version      1.5.4
+// @version      2.0.0
 // @license      MPL-2.0
 // @description  easily fast forward video, rotate video, and set playback speed of the video.
 // @author       c4r, foolool
@@ -9,26 +9,12 @@
 // @match        https://*.pornhubpremium.com/view_video.php?viewkey=*
 // @match        www.pornhubselect.com/*
 // @require      https://code.jquery.com/jquery-latest.js
-// @require      https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js
-// @resource      https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css
-// @grant        none
+// @grant        GM.setValue
+// @grant        GM.getValue
 // ==/UserScript==
 
-(function () {
+(async () => {
     'use strict';
-
-    /**
-     * Custom : the shortcut
-     * you can specific your code via : https://keycode.info/ 
-     * default : 
-     * - next : n(78), >(190)
-     * - previous : b(66), 188(<)
-     * - antic clockwise rotate : h(72), [(219) 
-     * - clockwise rotate : j(74) , ](219)
-     * - speed up : i(73)
-     * - speed down : u(85)
-     * - speed list : 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0
-     */
 
     let default_array_next_key      = []
     let default_array_pre_key       = []
@@ -150,6 +136,10 @@
         waitForKeyElements.controlObj = controlObj;
     }
 
+    let callbackShortcut = function (mutationList, observer) {
+
+    }
+
     function showMSG(msg, duration) {
         $('.mhp1138_ccContainer').text(msg)
         setTimeout(() => {
@@ -230,7 +220,7 @@
                 let value = String.fromCharCode(keyCode)
 
 
-                console.log('keypress', e.name, event.which, event.keyCode, e.charCode)
+                // console.log('keypress', e.name, event.which, event.keyCode, e.charCode)
 
                 let name = e.name
                 $('#id-free-your-hand-shortcut a[name="'+ name +'"]').text(value)
@@ -325,6 +315,7 @@
             }
 
             saveLocalData(data)
+            saveGMData(data)
 
             $('#id-free-your-hand-shortcut-reset').text('done!')
             setTimeout(() => {
@@ -336,6 +327,8 @@
             showShortcut()
 
             $('video').focus()
+
+
         })
 
     }
@@ -376,6 +369,21 @@
             return JSON.parse(rawData)
         }
     }
+
+    async function saveGMData(data) {
+        await GM.setValue('free-your-hand', JSON.stringify(data))
+    }
+
+    async function getGMData() {
+        let rawData = await GM.getValue('free-your-hand', JSON.stringify(defaultData()) )
+
+        if (rawData == undefined || rawData == '') {
+            return undefined
+        } else {
+            return JSON.parse(rawData)
+        }
+    }
+
 
     function setShortcutArrayFromLocalStorage() {
         let data = getLocalData()
@@ -853,32 +861,57 @@
 
         console.log("loading your hand assistant...");
 
-        setShortcutArrayFromLocalStorage()
+        getGMData().then((data)=>{
+            saveLocalData(data)
+            setShortcutArrayFromLocalStorage()
 
-        onListen()
-
-        // waiting video appeared
-        waitForKeyElements("video:has(source[src])", function () {
-
-            if (isNaN($("video:has(source[src])").get(0).duration)) {
-                // console.log("wait load")
-                // console.log($("video:has(source[src])"))
-                // console.log($("video:has(source[src])").get(0).duration)
-                $("video:has(source[src])").on('loadedmetadata', function () {
+            onListen()
+    
+            // waiting video appeared
+            waitForKeyElements("video:has(source[src])", function () {
+    
+                if (isNaN($("video:has(source[src])").get(0).duration)) {
+                    // console.log("wait load")
+                    // console.log($("video:has(source[src])"))
+                    // console.log($("video:has(source[src])").get(0).duration)
+                    $("video:has(source[src])").on('loadedmetadata', function () {
+                        actionVideo()
+                        insertMenu()
+                        activeTab()
+                    })
+                } else {
+                    // console.log("load directly")
+                    // console.log($("video:has(source[src])").get(0))
+                    // console.log($("video:has(source[src])").get(0).duration)
                     actionVideo()
                     insertMenu()
                     activeTab()
-                })
-            } else {
-                // console.log("load directly")
-                // console.log($("video:has(source[src])").get(0))
-                // console.log($("video:has(source[src])").get(0).duration)
-                actionVideo()
-                insertMenu()
-                activeTab()
-            }
+                }
+    
+            }, false)
 
-        }, false)
+        })
+
+
+
+        // wait input changed
+        let observerShortcut = new MutationObserver((mutationList, observer)=>{
+
+            mutationList.forEach((mutation) => {
+                // console.log(mutation)
+                if ($(mutation.target).is('a[free-your-hand]') && mutation.addedNodes.length > 0 ) {
+                    console.log('shortcut changed')
+                    saveGMData(getLocalData())
+                }
+
+            })
+        })
+        observerShortcut.observe($('body').get(0),
+        {
+            subtree: true, childList: true, characterData: true, attributes: false,
+            attributeOldValue: false, characterDataOldValue: false
+        })
+
 
     });
 
