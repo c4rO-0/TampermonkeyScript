@@ -1,13 +1,14 @@
 // ==UserScript==
-// @name         Free your hand - Pornhub
+// @name         Free your hand
 // @namespace    
-// @version      2.0.0
+// @version      2.1.0
 // @license      MPL-2.0
 // @description  easily fast forward video, rotate video, and set playback speed of the video.
 // @author       c4r, foolool
 // @match        https://*.pornhub.com/view_video.php?viewkey=*
 // @match        https://*.pornhubpremium.com/view_video.php?viewkey=*
 // @match        www.pornhubselect.com/*
+// @match        */MonkeyPage*
 // @require      https://code.jquery.com/jquery-latest.js
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -156,42 +157,56 @@
 
     }
 
-    function shortcutItemHTML(name, description, keyLabel, isDefault) {
+    function shortcutItemHTML(name, icon, description, keyLabel, isDefault, isMonkeySetting) {
 
         let v = ''
 
         let keyLabelLocal = (keyLabel == '' || keyLabel == null) ? 'No' : keyLabel
+
+        let label = isMonkeySetting ? 'td' : 'li'
+
+        let style = isMonkeySetting ? 'style="width:50%"' : 'class="alpha omega"' 
+
         
         if(isDefault){
-            v = '<li class="alpha omega">\
+            v = '<'+label+' '+style+'>\
             <span '+ name + '>\
-                <button free-your-hand-default name="'+ name + '" style="width:70%">'+ description +'</button>\
+                <button free-your-hand-default name="'+ name + '" style="width:70%"  title="'+description+'">'+ icon +'</button>\
                 <a free-your-hand-default name="'+ name + '" style="width:70%;text-align:center">\
                 '+ keyLabelLocal +'\
                 </a>\
             </span>\
-            </li>'
+            </'+label+'>'
         }else{
-            v = '<li class="alpha omega">\
+            v = '<'+label+' '+style+'>\
             <span '+ name + '>\
-                <button free-your-hand name="'+ name + '" style="width:70%">'+ description +'</button>\
+                <button free-your-hand name="'+ name + '" style="width:70%" title="'+description+'">'+ icon +'</button>\
                 <a free-your-hand name="'+ name + '" style="width:70%;text-align:center">\
                 '+keyLabelLocal+'\
                 </a>\
                 <input free-your-hand name="'+ name + '" type="text" size="1" maxlength="1" placeholder="' + keyLabelLocal + '" style="display:none;width:20%"></input>\
             </span>\
-            </li>'
+            </'+label+'>'
         }
 
         return v
     }
 
 
-    function insertKeyHTML(numPlace, name, description, keyLabel, isDefault = true){
+    function insertKeyHTML(numPlace, name, icon, description, keyLabel, isDefault = true, isMonkeySetting = false){
 
-        $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList:eq('+numPlace+')').append(
-            shortcutItemHTML(name, description, keyLabel, isDefault)
-        )
+        if(isMonkeySetting){
+
+            $('#id-free-your-hand-shortcut table tbody tr:eq('+numPlace+')').append(
+                shortcutItemHTML(name, icon, description, keyLabel, isDefault, isMonkeySetting)
+            )
+
+        }else{
+            $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList:eq('+numPlace+')').append(
+                shortcutItemHTML(name, icon, description, keyLabel, isDefault)
+            )
+        }
+
 
     }
 
@@ -324,9 +339,13 @@
 
             setShortcutArrayFromLocalStorage()
 
-            showShortcut()
+            if(isMonkeySetting()){
+                showShortcut(true)
+            }else{
+                showShortcut()
+                $('video').focus()
+            }
 
-            $('video').focus()
 
 
         })
@@ -449,7 +468,7 @@
 
     }
 
-    function showShortcut(){
+    function showShortcut(isMonkeySetting){
 
         // read local storage
         let fyhStorage = getLocalData()
@@ -485,29 +504,55 @@
 
         }
 
-        $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList').empty()
+        if(isMonkeySetting){
 
-        // add specific shortcut : next
-        insertKeyHTML(1, 'next', 'Next', strN, false)
-        
-        // add specific shortcut : previous
-        insertKeyHTML(0, 'previous', 'Previous',strP, false)
+            $('#id-free-your-hand-shortcut table tbody tr').empty()
 
-        // add specific shortcut : clockwise
-        insertKeyHTML(1, 'clockwise', 'clockwise', strC, false)
+            // add specific shortcut : previous
+            insertKeyHTML(0, 'previous', '←', 'previous high-point',strP, false, true)
 
-        // add specific shortcut : anticlockwise
-        insertKeyHTML(0, 'anticlockwise', 'anticlockwise', strAC, false)
+            // add specific shortcut : next
+            insertKeyHTML(0, 'next', '→', 'next high-point', strN, false, true)
+            
 
+            // add specific shortcut : anticlockwise
+            insertKeyHTML(1, 'anticlockwise', '↶', 'anticlockwise rotation', strAC, false, true)
 
-        // // add specific shortcut : speed up
-        insertKeyHTML(1, 'speedup', 'speedup', strSU, false)
+            // add specific shortcut : clockwise
+            insertKeyHTML(1, 'clockwise', '↷', 'clockwise rotation', strC, false, true)
+    
+            // // add specific shortcut : speed down
+            insertKeyHTML(2, 'speeddn', '⏪', 'play speed down', strSD, false, true)
+    
+            // // add specific shortcut : speed up
+            insertKeyHTML(2, 'speedup', '⏩', 'play speed up', strSU, false, true)
 
-        // // add specific shortcut : speed down
-        insertKeyHTML(0, 'speeddn', 'speeddn', strSD, false)
+        }else{
+            $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList').empty()
 
-        // // add click listener
-        // onListen()
+            // add specific shortcut : next
+            insertKeyHTML(1, 'next', '→', 'previous high-point', strN, false, false)
+            
+            // add specific shortcut : previous
+            insertKeyHTML(0, 'previous', '←', 'next high-point',strP, false, false)
+    
+            // add specific shortcut : clockwise
+            insertKeyHTML(1, 'clockwise', '↷', 'clockwise rotation', strC, false, false)
+    
+            // add specific shortcut : anticlockwise
+            insertKeyHTML(0, 'anticlockwise', '↶', 'anticlockwise rotation', strAC, false, false)
+    
+    
+            // // add specific shortcut : speed up
+            insertKeyHTML(1, 'speedup', '⏩', 'play speed up', strSU, false, false)
+    
+            // // add specific shortcut : speed down
+            insertKeyHTML(0, 'speeddn', '⏪', 'play speed down', strSD, false, false)
+    
+            // // add click listener
+            // onListen()
+        }
+
 
     }
 
@@ -526,7 +571,10 @@
 </div>'
         let contentHTML =
             '<div class="video-action-tab free-your-hand">\
-    <div class="title">Free your hand</div>\
+    <h1 class="title">Free your hand</h1>\
+    <div>NOTE : The setting adjustment will NOT be stored in the Incognito(🕵️)/Private Window.</div>\
+    <div> You could set with normal mode via <a href="http:/papercomment.tech/MonkeyPage">Monkey Setting</a> page to hide your activity in this website.</div>\
+    <div> After closing ALL the Incognito/Private Windows and re-open this website, your settings will appear. </div>\
     <div class="reset"></div>\
     <div class="float-left">\
         <div id="id-free-your-hand-shortcut">\
@@ -543,7 +591,7 @@
 
 
     let tableHTML = 
-'<div class="display-grid col-4 gap-row-none sortBy seconds">\
+'<div class="display-grid col-2 gap-row-none sortBy seconds">\
 <ul class="actionTagList full-width margin-none"></ul>\
 <ul class="actionTagList full-width margin-none"></ul>\
 <ul class="actionTagList full-width margin-none"></ul>\
@@ -571,6 +619,63 @@
         )
         
         showShortcut()
+    }
+
+
+    function insertMonkeyMenu(){
+
+        if ($('.free-your-hand').length > 0) {
+            return
+        }
+
+        let contentHTML =
+            '<div class="container free-your-hand">\
+    <h1 class="title">Free your hand</h1>\
+    <div class="reset"></div>\
+    <div class="container">\
+        <div id="id-free-your-hand-shortcut">\
+            <button id="id-free-your-hand-shortcut-reset" >reset shortcut</button>\
+        </div>\
+    </div>\
+    <div class="container">\
+        <div id="id-free-your-hand-support">\
+        </div>\
+    </div>\
+    <div class="reset"></div>\
+</div>'
+
+
+    let tableHTML = 
+'\
+<table class="table">\
+  <thead>\
+    <tr>\
+      <th scope="col">set shortcut</th>\
+    </tr>\
+  </thead>\
+  <tbody>\
+    <tr></tr>\
+    <tr></tr>\
+    <tr></tr>\
+    <tr></tr>\
+  </tbody>\
+</table>\
+'
+
+        // // turn off click listener
+        // offListen()
+        // delete free-your-hand element
+
+        $('.free-your-hand').remove()
+
+        // append free-your-hand element to content
+        $('body').append(contentHTML)
+
+        $('#id-free-your-hand-shortcut').append(
+            tableHTML
+        )
+        
+        showShortcut(true)
     }
 
     // Returns rotation in degrees when obtaining transform-styles using javascript
@@ -855,45 +960,68 @@
 
     }
 
+    function isMonkeySetting(){
+        return window.location.href.indexOf('MonkeyPage') != -1
+    }
+
 
     // <============Start Here============>
     $(document).ready(function () {
 
         console.log("loading your hand assistant...");
 
-        getGMData().then((data)=>{
-            saveLocalData(data)
-            setShortcutArrayFromLocalStorage()
+        
+        if(  isMonkeySetting()  ){
+            // setting page
 
-            onListen()
+            getGMData().then((data)=>{
+                saveLocalData(data)
+                setShortcutArrayFromLocalStorage()
     
-            // waiting video appeared
-            waitForKeyElements("video:has(source[src])", function () {
+                onListen()
+
+                insertMonkeyMenu()
+
+            })
+
+
+        }else{
+
+
+            getGMData().then((data)=>{
+                saveLocalData(data)
+                setShortcutArrayFromLocalStorage()
     
-                if (isNaN($("video:has(source[src])").get(0).duration)) {
-                    // console.log("wait load")
-                    // console.log($("video:has(source[src])"))
-                    // console.log($("video:has(source[src])").get(0).duration)
-                    $("video:has(source[src])").on('loadedmetadata', function () {
+                onListen()
+        
+                // waiting video appeared
+                waitForKeyElements("video:has(source[src])", function () {
+        
+                    if (isNaN($("video:has(source[src])").get(0).duration)) {
+                        // console.log("wait load")
+                        // console.log($("video:has(source[src])"))
+                        // console.log($("video:has(source[src])").get(0).duration)
+                        $("video:has(source[src])").on('loadedmetadata', function () {
+                            actionVideo()
+                            insertMenu()
+                            activeTab()
+                        })
+                    } else {
+                        // console.log("load directly")
+                        // console.log($("video:has(source[src])").get(0))
+                        // console.log($("video:has(source[src])").get(0).duration)
                         actionVideo()
                         insertMenu()
                         activeTab()
-                    })
-                } else {
-                    // console.log("load directly")
-                    // console.log($("video:has(source[src])").get(0))
-                    // console.log($("video:has(source[src])").get(0).duration)
-                    actionVideo()
-                    insertMenu()
-                    activeTab()
-                }
+                    }
+        
+                }, false)
     
-            }, false)
+            })
+    
+        }
 
-        })
-
-
-
+    
         // wait input changed
         let observerShortcut = new MutationObserver((mutationList, observer)=>{
 
@@ -1114,3 +1242,66 @@
     });
 
 })();
+
+
+//  README
+
+// # easily fast forward to High Time, rotate video, and set playback speed.
+
+// - **only for Pornhub**
+
+// - works for Chrome and Firefox
+
+
+// High time are marked as red on progress-bar.
+
+// ---
+
+// **NOTE :**
+
+// To serve users with different keyboard layouts, **NO** default shortcut keys are provided after version 2.0.x
+
+// The shortcut should be setup before first using.
+
+// Thank you for your understanding.
+
+// ---
+
+
+// ## Function Available
+
+// ### 1. back or fast forward 
+// To easily draw back or fast forward the Pornhub video to the next high time.
+
+// ### 2. use key `0-9`
+// To the relevant point directly
+
+// ### 3. rotate video
+// rotate the video with 90 degrees at each press.
+
+// ### 4. play with speed up/down
+// Indicates the current playback speed of the video.
+// default available speed : `0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 4.0`
+
+// ## Custom/Setting
+// With opening any video, you can find a tag with name 'Hand' located in front of the official tags, like 'about', 'share'  ... (3rd Screenshot)
+
+// In the 'Hand' tag, 
+
+// - clicking the grey button will active the relative function. i.e. 'Next' is for jumping to the next high point.
+
+// - clicking the text following the button (default is 'No') and pressing a key will set the shortcut as your wish. 
+
+// **NOTE**
+
+// The setting adjustment will NOT be stored in the Incognito(🕵️) Window.
+// You could set with normal mode via [Monkey Setting](http://papercomment.tech/MonkeyPage) page to hide your activity in this website.(4th Screenshot)
+// After re-opening the whole Incognito Window, your settings will appear.
+
+// ---
+
+// # Feedback :
+// If you want some new functions, or have suggestions.
+// Welcome to leave feedback.
+
+// Your **c4r** team
