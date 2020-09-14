@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Free your hand
 // @namespace    
-// @version      2.1.0
+// @version      2.1.1
 // @license      MPL-2.0
 // @description  easily fast forward video, rotate video, and set playback speed of the video.
 // @author       c4r, foolool
@@ -531,10 +531,10 @@
             $('#id-free-your-hand-shortcut div.display-grid  ul.actionTagList').empty()
 
             // add specific shortcut : next
-            insertKeyHTML(1, 'next', '→', 'previous high-point', strN, false, false)
+            insertKeyHTML(1, 'next', '→', 'next high-point', strN, false, false)
             
             // add specific shortcut : previous
-            insertKeyHTML(0, 'previous', '←', 'next high-point',strP, false, false)
+            insertKeyHTML(0, 'previous', '←', 'previous high-point',strP, false, false)
     
             // add specific shortcut : clockwise
             insertKeyHTML(1, 'clockwise', '↷', 'clockwise rotation', strC, false, false)
