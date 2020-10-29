@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎-匿名提问者标注
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  在问题页, 标注匿名提问, 防止钓鱼
 // @author       C4r
 // @match        https://www.zhihu.com/*
@@ -289,12 +289,12 @@
                         if (authorInfo == undefined) {
                             if ($(section).find('[AnonymousNote]').length > 0) {
                                 $(section).find('[AnonymousNote]').empty()
-                                $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://www.zhihu.com/people/c4rO-0">👻 匿名 </a>')
+                                $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a>')
 
                                 $(section).find('[AnonymousNote]').removeAttr('checking')
                                 $(section).find('[AnonymousNote]').attr('done', '')
                             } else {
-                                $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://www.zhihu.com/people/c4rO-0">👻 匿名 </a></span>')
+                                $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
                             }
 
                         } else {
@@ -310,7 +310,7 @@
 
                             getAuthorInfoDetail(authorInfo.url).then(author => {
                                 if( $(section).find('[AnonymousNote] [valueAuthor]').length == 0){
-                                    $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor title="score : '+ author.score.toString() +' by C4r" href="https://www.zhihu.com/people/c4rO-0">' + author.scoreMarker + '</a>')
+                                    $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
                                 }
                                 
                             })
@@ -358,7 +358,7 @@
 
                 getAuthorUrl(logURL).then(authorInfo => {
                     if (authorInfo == undefined) {
-                        addNoteQuestionPage('<a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://www.zhihu.com/people/c4rO-0"> ⚠ 注意 : 这是一篇匿名提问 👻 </a>', '<a href=' + logURL + '>问题日志</a>')
+                        addNoteQuestionPage('<a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286"> ⚠ 注意 : 这是一篇匿名提问 👻 </a>', '<a href=' + logURL + '>问题日志</a>')
                         let oText = $('.PageHeader h1.QuestionHeader-title').text()
                         $('.PageHeader h1.QuestionHeader-title').text('👻 ' + oText)
                     } else {
@@ -370,7 +370,7 @@
                         getAuthorInfoDetail(authorInfo.url).then(author => {
                             addNoteQuestionPage( 
                                 '👤 ' + authorInfo.a + 
-                                '<a class="Profile-lightItem" valueAuthor title="score : '+ author.score.toString() +' by C4r" href="https://www.zhihu.com/people/c4rO-0">' + author.scoreMarker + '</a>', 
+                                '<a class="Profile-lightItem" valueAuthor title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>', 
                                 '<a href=' + logURL + '>问题日志</a>')
                             let oText = $('.PageHeader h1.QuestionHeader-title').text()
                             $('.PageHeader h1.QuestionHeader-title').text(author.scoreMarker + oText)
@@ -382,7 +382,7 @@
                 getAuthorUrl(logURL).then(authorInfo => {
                     getAuthorInfoDetail(authorInfo.url).then(author => {
 
-                        $('.QuestionAuthor div.AuthorInfo-content').append('<a class="Profile-lightItem" valueAuthor title="score : '+ author.score.toString() +' by C4r" href="https://www.zhihu.com/people/c4rO-0">' + author.scoreMarker + '</a>')
+                        $('.QuestionAuthor div.AuthorInfo-content').append('<a class="Profile-lightItem" valueAuthor title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
 
                         let oText = $('.PageHeader h1.QuestionHeader-title').text()
                         $('.PageHeader h1.QuestionHeader-title').text(author.scoreMarker + oText)
@@ -393,7 +393,7 @@
         } else if (isAuthorPage()) {
 
             $('.Profile-lightList').prepend(
-                '<a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://www.zhihu.com/people/c4rO-0"><span class="Profile-lightItemName">题主估分</span><span class="Profile-lightItemValue">🖩</span></a>')
+                '<a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286"><span class="Profile-lightItemName">题主估分</span><span class="Profile-lightItemValue">🖩</span></a>')
 
             let author = new Author(window.location.href)
 
@@ -413,7 +413,7 @@
 
             } else {
                 $('.Profile-lightList').prepend(
-                    '<a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://www.zhihu.com/people/c4rO-0"><span class="Profile-lightItemName">题主估分</span><span class="Profile-lightItemValue">' + scoreString + '</span></a>')
+                    '<a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286"><span class="Profile-lightItemName">题主估分</span><span class="Profile-lightItemValue">' + scoreString + '</span></a>')
             }
 
 
