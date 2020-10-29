@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎-匿名提问者标注
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  在问题页, 标注匿名提问, 防止钓鱼
 // @author       C4r
 // @match        https://www.zhihu.com/*
@@ -185,9 +185,9 @@
             if (this.score > 6) {
                 this.scoreMarker = '☼'
             } else if (this.score < 4) {
-                this.scoreMarker = '☉'
-            } else {
                 this.scoreMarker = '🔥'
+            } else {
+                this.scoreMarker = '☉' 
             }
 
         }
