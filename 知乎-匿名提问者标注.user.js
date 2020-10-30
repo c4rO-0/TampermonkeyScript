@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎-匿名提问者标注
 // @namespace    http://tampermonkey.net/
-// @version      1.4.0
+// @version      1.4.1
 // @license      MPL-2.0
 // @description  在问题页, 标注匿名提问, 防止钓鱼
 // @author       C4r
@@ -451,7 +451,29 @@
             })
         } 
     })
-
+    let c4rHTML ='<svg version="1.0" xmlns="http://www.w3.org/2000/svg"\
+    width="12.000000pt" height="12.000000pt" viewBox="0 0 500.000000 500.000000"\
+    preserveAspectRatio="xMidYMid meet">\
+   <g transform="translate(0.000000,500.000000) scale(0.100000,-0.100000)"\
+   fill="#000000" stroke="none">\
+   <path d="M3125 4985 c-337 -63 -703 -242 -1077 -527 -570 -434 -1157 -1137\
+   -1467 -1757 -100 -198 -183 -442 -216 -630 -19 -109 -19 -315 0 -404 44 -207\
+   196 -374 412 -451 141 -50 221 -61 438 -61 286 1 470 33 850 147 293 88 301\
+   92 447 245 68 70 142 147 166 171 33 33 43 49 40 70 l-3 27 -250 9 c-185 6\
+   -265 5 -310 -3 -33 -7 -170 -48 -304 -93 -270 -88 -376 -114 -520 -128 -100\
+   -9 -241 0 -326 21 -53 13 -119 67 -145 120 -112 219 73 755 462 1338 581 870\
+   1323 1498 1887 1596 102 18 148 19 271 3 110 -13 137 -9 183 32 63 55 70 155\
+   17 223 -39 49 -88 60 -290 63 -133 2 -208 -1 -265 -11z"/>\
+   <path d="M2874 2941 c-37 -16 -64 -60 -64 -106 0 -31 14 -68 54 -146 115 -221\
+   186 -497 216 -836 11 -119 10 -123 -13 -170 -84 -166 -208 -603 -263 -922 -34\
+   -197 -43 -447 -20 -546 33 -138 109 -215 213 -215 50 0 57 3 103 46 110 103\
+   190 338 264 775 45 263 66 465 66 634 0 154 5 168 103 315 164 247 316 385\
+   472 426 105 29 276 11 414 -43 36 -14 89 -28 117 -30 46 -4 53 -2 82 27 28 28\
+   32 38 32 87 0 55 -1 56 -61 114 -86 83 -188 147 -288 183 -74 26 -100 30 -191\
+   30 -124 0 -198 -17 -316 -74 -109 -53 -229 -143 -341 -257 l-92 -93 -11 42\
+   c-33 128 -98 294 -176 451 -68 135 -145 266 -173 291 -23 21 -95 30 -127 17z"/>\
+   </g>\
+   </svg>'
     $(document).ready(() => {
 
         if (isHome()) {
@@ -464,7 +486,7 @@
                             <input type="radio" class="toggle_option" id="AnonymousToggleOff" name="toggle_option"   '+ (anonymousToggle == 0 ? 'checked' : '') + '>\
                             <input type="radio" class="toggle_option" id="AnonymousToggleLight" name="toggle_option" '+ (anonymousToggle == 1 ? 'checked' : '') + '>\
                             <input type="radio" class="toggle_option" id="AnonymousToggleTight" name="toggle_option" '+ (anonymousToggle == 2 ? 'checked' : '') + '>\
-                            <label for="AnonymousToggleOff" title="关闭问题过滤" ><p>Cr</p></label>\
+                            <label for="AnonymousToggleOff" title="关闭问题过滤" ><p>'+c4rHTML+'</p></label>\
                             <label for="AnonymousToggleLight" title="隐藏匿名问题" ><p>👻</p></label>\
                             <label for="AnonymousToggleTight" title="隐藏匿名和低质问题"><p>🔥</p></label>\
                             <div class="toggle_option_slider">\
