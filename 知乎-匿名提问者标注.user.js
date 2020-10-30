@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         知乎-匿名提问者标注
 // @namespace    http://tampermonkey.net/
-// @version      1.3.0
+// @version      1.4.0
+// @license      MPL-2.0
 // @description  在问题页, 标注匿名提问, 防止钓鱼
 // @author       C4r
 // @match        https://www.zhihu.com/*
@@ -15,50 +16,69 @@
     'use strict';
 
     GM_addStyle(' \
-    .switch { \
-        position: relative; \
-        display: inline-block; \
-        width: 60px; \
-        height: 34px; \
-      } \
-      .switch input { \
-        opacity: 0; \
-        width: 0; \
-        height: 0; \
-      } \
-      .slider { \
-        position: absolute; \
-        cursor: pointer; \
-        top: 0; \
-        left: 0; \
-        right: 0; \
-        bottom: 0; \
-        background-color: #ccc; \
-        -webkit-transition: .4s; \
-        transition: .4s; \
-      } \
-      .slider:before { \
-        position: absolute; \
-        content: ""; \
-        height: 26px; \
-        width: 26px; \
-        left: 4px; \
-        bottom: 4px; \
-        background-color: white; \
-        -webkit-transition: .4s; \
-        transition: .4s; \
-      } \
-      input:checked + .slider { \
-        background-color: #2196F3; \
-      }       \
-      input:focus + .slider { \
-        box-shadow: 0 0 1px #2196F3; \
-      } \
-      input:checked + .slider:before { \
-        -webkit-transform: translateX(26px); \
-        -ms-transform: translateX(26px); \
-        transform: translateX(26px); \
-      }  \
+    .wrapper { \
+        margin: 102px 0;\
+      }\
+      .toggle_radio{\
+        position: relative;\
+        background: #497dd0;\
+        margin: 4px auto;\
+        overflow: hidden;\
+        padding: 0 !important;\
+        -webkit-border-radius: 50px;\
+        -moz-border-radius: 50px;\
+        border-radius: 50px;\
+        position: relative;\
+        height: 26px;\
+        width: 110px;\
+      }\
+      .toggle_radio > * {\
+        float: left;\
+      }\
+      .toggle_radio input[type=radio]{\
+        display: none;\
+      }\
+      .toggle_radio label{\
+        font: 90%/1.618 "Source Sans Pro";\
+        color: rgba(255,255,255,.9);\
+        z-index: 0;\
+        display: block;\
+        width: 30px;\
+        height: 20px;\
+        margin: 3px 3px;\
+        -webkit-border-radius: 50px;\
+        -moz-border-radius: 50px;\
+        border-radius: 50px;\
+        cursor: pointer;\
+        z-index: 1;\
+        /*background: rgba(0,0,0,.1);*/\
+        text-align: center;\
+      }\
+      .toggle_option_slider{\
+        width: 30px;\
+        height: 20px;\
+        position: absolute;\
+        top: 3px;\
+        -webkit-border-radius: 15px;\
+        -moz-border-radius: 15px;\
+        border-radius: 15px;\
+        -webkit-transition: all .4s ease;\
+        -moz-transition: all .4s ease;\
+        -o-transition: all .4s ease;\
+        -ms-transition: all .4s ease;\
+        transition: all .4s ease;\
+      }\
+      #AnonymousToggleOff:checked ~ .toggle_option_slider{\
+        background: rgba(255,255,255,.3);\
+        left: 3px;\
+      }\
+      #AnonymousToggleLight:checked ~ .toggle_option_slider{\
+        background: rgba(255,255,255,.3);\
+        left: 38px;\
+      }\
+      #AnonymousToggleTight:checked ~ .toggle_option_slider{\
+        background: rgba(255,255,255,.3);\
+        left: 75px;\
     ');
 
     function isHome() {
@@ -353,7 +373,7 @@
                                 $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor  score="0"   title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
                             }
 
-                            if($('[AnonymousToggle]').length > 0 && $('[AnonymousToggle] input').prop('checked')){
+                            if($('[AnonymousToggle]').length > 0 && ($('#AnonymousToggleTight').prop('checked') || $('#AnonymousToggleLight').prop('checked'))  ){
                                 $(section).hide()
                             }
 
@@ -372,7 +392,7 @@
                                 if( $(section).find('[AnonymousNote] [valueAuthor]').length == 0){
                                     $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor score="'+author.score.toString()+'" title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
 
-                                    if($('[AnonymousToggle]').length > 0 && $('[AnonymousToggle] input').prop('checked')){
+                                    if($('[AnonymousToggle]').length > 0 && $('#AnonymousToggleTight').prop('checked') ){
                                         if(author.score < 4 ){
                                             $(section).hide()
                                         }
@@ -396,17 +416,32 @@
     }
 
     $(document).on('click', '[AnonymousToggle]', ()=>{
-        if($('[AnonymousToggle] input').prop('checked')){
-            GM.setValue("zhihu-AnonymousToggle", true)
+        if($('#AnonymousToggleLight').prop('checked')){
+
+            GM.setValue("zhihu-AnonymousToggle", 1)
+
             $('.HotList-list section').each((index, section) => {
                 if ($(section).find('[AnonymousNote]').length > 0) {
-                    if($(section).find('[valueAuthor]') && parseInt($(section).find('[valueAuthor]').attr('score')) <4 ){
+                    if($(section).find('[valueAuthor]') && parseInt($(section).find('[valueAuthor]').attr('score')) == 0 ){
+                        $(section).hide()
+                    }else{
+                        $(section).show()
+                    }
+                }
+            })
+        }else if($('#AnonymousToggleTight').prop('checked')){
+            GM.setValue("zhihu-AnonymousToggle", 2)
+
+            $('.HotList-list section').each((index, section) => {
+                if ($(section).find('[AnonymousNote]').length > 0) {
+                    if($(section).find('[valueAuthor]') && parseInt($(section).find('[valueAuthor]').attr('score')) < 4 ){
                         $(section).hide()
                     }
                 }
             })
         }else{
-            GM.setValue("zhihu-AnonymousToggle", false)
+        // if($('#AnonymousToggleOff').prop('checked')){
+            GM.setValue("zhihu-AnonymousToggle", 0)
             $('.HotList-list section').each((index, section) => {
                 if ($(section).find('[AnonymousNote]').length > 0) {
                     if($(section).find('[valueAuthor]') && $(section).is(":hidden") ){
@@ -414,34 +449,32 @@
                     }
                 }
             })
-        }
+        } 
     })
 
     $(document).ready(() => {
 
         if (isHome()) {
 
-            GM.getValue("zhihu-AnonymousToggle", false).then((anonymousToggle)=>{
-                // console.log('AnonymousToggle',anonymousToggle )
-                $('.AppHeader-userInfo').prepend(
-                    '<div class="Popover" AnonymousToggle  title="显示/隐藏低质问题">\
-                        <label class="switch">\
-                        <input type="checkbox"' + ( anonymousToggle ?  'checked="checked">' : '') + '>' + 
-                        '<span class="slider"></span>\
-                        </label>\
-                    </div>')
+            GM.getValue("zhihu-AnonymousToggle", 0).then((anonymousToggle)=>{
 
+                    $('.AppHeader-userInfo').prepend(
+                        '<div class="wrapper" AnonymousToggle>\
+                          <div class="toggle_radio">\
+                            <input type="radio" class="toggle_option" id="AnonymousToggleOff" name="toggle_option"   '+ (anonymousToggle == 0 ? 'checked' : '') + '>\
+                            <input type="radio" class="toggle_option" id="AnonymousToggleLight" name="toggle_option" '+ (anonymousToggle == 1 ? 'checked' : '') + '>\
+                            <input type="radio" class="toggle_option" id="AnonymousToggleTight" name="toggle_option" '+ (anonymousToggle == 2 ? 'checked' : '') + '>\
+                            <label for="AnonymousToggleOff" title="关闭问题过滤" ><p>Cr</p></label>\
+                            <label for="AnonymousToggleLight" title="隐藏匿名问题" ><p>👻</p></label>\
+                            <label for="AnonymousToggleTight" title="隐藏匿名和低质问题"><p>🔥</p></label>\
+                            <div class="toggle_option_slider">\
+                            </div>\
+                          </div>')
+                        
 
             }).catch((error)=>{
                 // console.log('AnonymousToggle error ',error )
             })
-            // $('.AppHeader-userInfo').prepend(
-            //     '<div class="Popover" AnonymousToggle  title="显示/隐藏低质问题">\
-            //         <label class="switch">\
-            //         <input type="checkbox"' + ( true ?  'checked="checked"' : '') + '>' + 
-            //         '<span class="slider"></span>\
-            //         </label>\
-            //     </div>')
 
             // 热榜
             if ($('.HotList-list').length > 0) {
