@@ -1,16 +1,65 @@
 // ==UserScript==
 // @name         知乎-匿名提问者标注
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3.0
 // @description  在问题页, 标注匿名提问, 防止钓鱼
 // @author       C4r
 // @match        https://www.zhihu.com/*
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.5.0/dist/jquery.min.js
-// @grant        none
+// @grant          GM_addStyle
+// @grant       GM.setValue
+// @grant       GM.getValue
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    GM_addStyle(' \
+    .switch { \
+        position: relative; \
+        display: inline-block; \
+        width: 60px; \
+        height: 34px; \
+      } \
+      .switch input { \
+        opacity: 0; \
+        width: 0; \
+        height: 0; \
+      } \
+      .slider { \
+        position: absolute; \
+        cursor: pointer; \
+        top: 0; \
+        left: 0; \
+        right: 0; \
+        bottom: 0; \
+        background-color: #ccc; \
+        -webkit-transition: .4s; \
+        transition: .4s; \
+      } \
+      .slider:before { \
+        position: absolute; \
+        content: ""; \
+        height: 26px; \
+        width: 26px; \
+        left: 4px; \
+        bottom: 4px; \
+        background-color: white; \
+        -webkit-transition: .4s; \
+        transition: .4s; \
+      } \
+      input:checked + .slider { \
+        background-color: #2196F3; \
+      }       \
+      input:focus + .slider { \
+        box-shadow: 0 0 1px #2196F3; \
+      } \
+      input:checked + .slider:before { \
+        -webkit-transform: translateX(26px); \
+        -ms-transform: translateX(26px); \
+        transform: translateX(26px); \
+      }  \
+    ');
 
     function isHome() {
         return $("#TopstoryContent").length > 0
@@ -147,17 +196,24 @@
             } else if (this.agree <= 0.2 * this.answer) {
                 score = score - 2
                 // console.log('agree down')
-            } else if (this.answer <= 0.5 * this.ask) {
+            } else if (this.agree <= 0.5 * this.answer) {
                 score = score - 1
             }
 
-            if (this.answer >= 1.5 * this.ask) {
+            if (this.answer >= 2. * this.ask) {
                 score = score + 1
                 // console.log('answer up')
-            } else if (this.answer <= 0.2 * this.ask) {
-                score = score - 2
+            } else if (this.answer <= 0.5 * this.ask) {
+                score = score - 3
             } else if (this.answer <= 0.7 * this.ask) {
+                score = score - 2
+            } else if (this.answer <= 1. * this.ask) {
                 score = score - 1
+            }
+
+            if (this.follower < 10) {
+                score = score - 1
+                // console.log('follower up')
             }
 
             if (this.follower < 100) {
@@ -289,12 +345,16 @@
                         if (authorInfo == undefined) {
                             if ($(section).find('[AnonymousNote]').length > 0) {
                                 $(section).find('[AnonymousNote]').empty()
-                                $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a>')
+                                $(section).find('[AnonymousNote]').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor score="0" title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
 
                                 $(section).find('[AnonymousNote]').removeAttr('checking')
                                 $(section).find('[AnonymousNote]').attr('done', '')
                             } else {
-                                $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
+                                $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor  score="0"   title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
+                            }
+
+                            if($('[AnonymousToggle]').length > 0 && $('[AnonymousToggle] input').prop('checked')){
+                                $(section).hide()
                             }
 
                         } else {
@@ -310,7 +370,13 @@
 
                             getAuthorInfoDetail(authorInfo.url).then(author => {
                                 if( $(section).find('[AnonymousNote] [valueAuthor]').length == 0){
-                                    $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
+                                    $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor score="'+author.score.toString()+'" title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
+
+                                    if($('[AnonymousToggle]').length > 0 && $('[AnonymousToggle] input').prop('checked')){
+                                        if(author.score < 4 ){
+                                            $(section).hide()
+                                        }
+                                    }
                                 }
                                 
                             })
@@ -329,9 +395,53 @@
         }
     }
 
+    $(document).on('click', '[AnonymousToggle]', ()=>{
+        if($('[AnonymousToggle] input').prop('checked')){
+            GM.setValue("zhihu-AnonymousToggle", true)
+            $('.HotList-list section').each((index, section) => {
+                if ($(section).find('[AnonymousNote]').length > 0) {
+                    if($(section).find('[valueAuthor]') && parseInt($(section).find('[valueAuthor]').attr('score')) <4 ){
+                        $(section).hide()
+                    }
+                }
+            })
+        }else{
+            GM.setValue("zhihu-AnonymousToggle", false)
+            $('.HotList-list section').each((index, section) => {
+                if ($(section).find('[AnonymousNote]').length > 0) {
+                    if($(section).find('[valueAuthor]') && $(section).is(":hidden") ){
+                        $(section).show()
+                    }
+                }
+            })
+        }
+    })
+
     $(document).ready(() => {
 
         if (isHome()) {
+
+            GM.getValue("zhihu-AnonymousToggle", false).then((anonymousToggle)=>{
+                // console.log('AnonymousToggle',anonymousToggle )
+                $('.AppHeader-userInfo').prepend(
+                    '<div class="Popover" AnonymousToggle  title="显示/隐藏低质问题">\
+                        <label class="switch">\
+                        <input type="checkbox"' + ( anonymousToggle ?  'checked="checked">' : '') + '>' + 
+                        '<span class="slider"></span>\
+                        </label>\
+                    </div>')
+
+
+            }).catch((error)=>{
+                // console.log('AnonymousToggle error ',error )
+            })
+            // $('.AppHeader-userInfo').prepend(
+            //     '<div class="Popover" AnonymousToggle  title="显示/隐藏低质问题">\
+            //         <label class="switch">\
+            //         <input type="checkbox"' + ( true ?  'checked="checked"' : '') + '>' + 
+            //         '<span class="slider"></span>\
+            //         </label>\
+            //     </div>')
 
             // 热榜
             if ($('.HotList-list').length > 0) {
