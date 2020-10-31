@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎-匿名提问者标注
 // @namespace    http://tampermonkey.net/
-// @version      1.4.1
+// @version      1.4.4
 // @license      MPL-2.0
 // @description  在问题页, 标注匿名提问, 防止钓鱼
 // @author       C4r
@@ -350,72 +350,123 @@
 
 
     function loadHotlist() {
+
+        $('div[AnonymousToggleCount]').text('🏃')
+
+        let num_section = $('.HotList-list section').length
+
+        let arrayHide = new Array(num_section)
+
         $('.HotList-list section').each((index, section) => {
-
-            if ($(section).find('[AnonymousNote]').length == 0) {
-                // if($(section).find('[AnonymousNote]').length == 0 ){   
-                let questionURL = $(section).find('.HotItem-content a').attr('href')
-                let logURL = getLogURL(questionURL)
-                if (logURL.includes('question')) {
-                    if ($(section).find('[AnonymousNote][checking]').length == 0) {
-                        $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote checking> 🔍 👤 </span>')
-                    }
-
-                    getAuthorUrl(logURL).then(authorInfo => {
-                        if (authorInfo == undefined) {
-                            if ($(section).find('[AnonymousNote]').length > 0) {
-                                $(section).find('[AnonymousNote]').empty()
-                                $(section).find('[AnonymousNote]').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor score="0" title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
-
-                                $(section).find('[AnonymousNote]').removeAttr('checking')
-                                $(section).find('[AnonymousNote]').attr('done', '')
+            arrayHide[index] = new Promise(resolveHide =>{
+                if ($(section).find('[AnonymousNote]').length == 0) {
+                    // if($(section).find('[AnonymousNote]').length == 0 ){   
+                    let questionURL = $(section).find('.HotItem-content a').attr('href')
+                    let logURL = getLogURL(questionURL)
+                    if (logURL.includes('question')) {
+                        if ($(section).find('[AnonymousNote][checking]').length == 0) {
+                            $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote checking> 🔍 👤 </span>')
+                        }
+    
+                        getAuthorUrl(logURL).then(authorInfo => {
+                            if (authorInfo == undefined) {
+                                if ($(section).find('[AnonymousNote]').length > 0) {
+                                    $(section).find('[AnonymousNote]').empty()
+                                    $(section).find('[AnonymousNote]').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor score="0" title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
+    
+                                    $(section).find('[AnonymousNote]').removeAttr('checking')
+                                    $(section).find('[AnonymousNote]').attr('done', '')
+                                } else {
+                                    $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor  score="0"   title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
+                                }
+    
+                                if($('[AnonymousToggle]').length > 0 && ($('#AnonymousToggleTight').prop('checked') || $('#AnonymousToggleLight').prop('checked'))  ){
+                                    $(section).hide()
+                                    resolveHide(true)
+                                }else{
+                                    resolveHide(false)
+                                }
+    
                             } else {
-                                $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor  score="0"   title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
-                            }
+                                // console.log('找到题主 : ', authorInfo)
+                                if ($(section).find('[AnonymousNote]').length > 0) {
+                                    $(section).find('[AnonymousNote]').empty()
+                                    $(section).find('[AnonymousNote]').append(' 👤 ' + authorInfo.a + ' <a class="Profile-lightItem" valueAuthor >🔍</a>')
+                                    $(section).find('[AnonymousNote]').removeAttr('checking')
+                                    $(section).find('[AnonymousNote]').attr('done', '')
+                                } else {
+                                    $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="题主"> 👤 ' + authorInfo.a + ' <a class="Profile-lightItem" valueAuthor>🔍</a> </span>')
+                                }
+    
+                                getAuthorInfoDetail(authorInfo.url).then(author => {
+                                    if( $(section).find('[AnonymousNote] [valueAuthor]').length > 0){
+                                        $(section).find('[AnonymousNote] [valueAuthor]').remove()
+                                    }
 
-                            if($('[AnonymousToggle]').length > 0 && ($('#AnonymousToggleTight').prop('checked') || $('#AnonymousToggleLight').prop('checked'))  ){
-                                $(section).hide()
-                            }
-
-                        } else {
-                            // console.log('找到题主 : ', authorInfo)
-                            if ($(section).find('[AnonymousNote]').length > 0) {
-                                $(section).find('[AnonymousNote]').empty()
-                                $(section).find('[AnonymousNote]').append(' 👤 ' + authorInfo.a)
-                                $(section).find('[AnonymousNote]').removeAttr('checking')
-                                $(section).find('[AnonymousNote]').attr('done', '')
-                            } else {
-                                $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="题主"> 👤 ' + authorInfo.a + ' </span>')
-                            }
-
-                            getAuthorInfoDetail(authorInfo.url).then(author => {
-                                if( $(section).find('[AnonymousNote] [valueAuthor]').length == 0){
                                     $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor score="'+author.score.toString()+'" title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
 
-                                    if($('[AnonymousToggle]').length > 0 && $('#AnonymousToggleTight').prop('checked') ){
-                                        if(author.score < 4 ){
-                                            $(section).hide()
-                                        }
-                                    }
-                                }
-                                
-                            })
-                        }
-                    })
-                }
+                                    if($('[AnonymousToggle]').length > 0 && $('#AnonymousToggleTight').prop('checked') && author.score < 4){
 
-            }
+                                        $(section).hide()
+                                        resolveHide(true)
+                                    }else{
+                                        resolveHide(false)
+                                    }
+                                    
+                                    
+                                })
+                            }
+                        })
+                    }else{
+                        resolveHide(undefined)
+                    }
+    
+                }else{
+                    resolveHide(undefined)
+                }
+            })
+
         })
+
+        Promise.all(arrayHide).then((values) => {
+
+            // console.log(num_section, ' hide ', values)
+            let countHide = values.filter(isHide => isHide).length
+
+            if(countHide > 0 ){
+                $('div[AnonymousToggleCount]').text('-'+countHide.toString())
+                setTimeout(() => {
+                    $('div[AnonymousToggleCount]').text('')
+                }, 1000);
+            }else{
+                $('div[AnonymousToggleCount]').text('')
+            }
+
+
+        });
+
     }
 
-    function callbackHotList() {
+    function callbackHotList(mutationsList) {
         if ($('.HotList-list').length > 0) {
             // console.log('refresh author info...')
-            loadHotlist()
+            let count = 0 
+            for(let mutation of mutationsList) {
+                if ($(mutation.target).find('[AnonymousNote]').length == 0 
+                && $(mutation.target).find('.HotItem-content a').attr('href').includes('question')) {
+                    count = count + 1
+                }
+            }
+            if(count>0){
+                loadHotlist()
+            }
         }
     }
 
     $(document).on('click', '[AnonymousToggle]', ()=>{
+
+        let countHide = 0
+        let countShow = 0
         if($('#AnonymousToggleLight').prop('checked')){
 
             GM.setValue("zhihu-AnonymousToggle", 1)
@@ -424,11 +475,20 @@
                 if ($(section).find('[AnonymousNote]').length > 0) {
                     if($(section).find('[valueAuthor]') && parseInt($(section).find('[valueAuthor]').attr('score')) == 0 ){
                         $(section).hide()
+                        countHide = countHide + 1
                     }else{
                         $(section).show()
+                        countShow = countShow + 1
                     }
                 }
             })
+
+            $('div[AnonymousToggleCount]').text('-'+countHide.toString())
+            setTimeout(() => {
+                $('div[AnonymousToggleCount]').text('')
+            }, 1000);
+
+
         }else if($('#AnonymousToggleTight').prop('checked')){
             GM.setValue("zhihu-AnonymousToggle", 2)
 
@@ -436,9 +496,17 @@
                 if ($(section).find('[AnonymousNote]').length > 0) {
                     if($(section).find('[valueAuthor]') && parseInt($(section).find('[valueAuthor]').attr('score')) < 4 ){
                         $(section).hide()
+                        countHide = countHide + 1
                     }
                 }
             })
+
+
+            $('div[AnonymousToggleCount]').text('-'+countHide.toString())
+            setTimeout(() => {
+                $('div[AnonymousToggleCount]').text('')
+            }, 1000);
+
         }else{
         // if($('#AnonymousToggleOff').prop('checked')){
             GM.setValue("zhihu-AnonymousToggle", 0)
@@ -446,9 +514,16 @@
                 if ($(section).find('[AnonymousNote]').length > 0) {
                     if($(section).find('[valueAuthor]') && $(section).is(":hidden") ){
                         $(section).show()
+                        countShow = countShow + 1
                     }
                 }
             })
+
+            $('div[AnonymousToggleCount]').text('+'+countShow.toString())
+            setTimeout(() => {
+                $('div[AnonymousToggleCount]').text('')
+            }, 1000);
+
         } 
     })
     let c4rHTML ='<svg version="1.0" xmlns="http://www.w3.org/2000/svg"\
@@ -474,15 +549,49 @@
    c-33 128 -98 294 -176 451 -68 135 -145 266 -173 291 -23 21 -95 30 -127 17z"/>\
    </g>\
    </svg>'
+
+    // setTimeout(() => {
+    //     if($('.AppHeader-userInfo').length > 0 && $('[AnonymousToggle]').length == 0){
+    //         $('.AppHeader-userInfo').prepend(
+    //             '<div class="wrapper" AnonymousToggle><div AnonymousToggleCount class="Popover" style="background-color: #f6f6f6;"></div>\
+    //               <div class="Popover toggle_radio">\
+    //                 <input type="radio" class="toggle_option" id="AnonymousToggleOff" name="toggle_option"   >\
+    //                 <input type="radio" class="toggle_option" id="AnonymousToggleLight" name="toggle_option" >\
+    //                 <input type="radio" class="toggle_option" id="AnonymousToggleTight" name="toggle_option" >\
+    //                 <label for="AnonymousToggleOff" title="关闭问题过滤" ><p>'+c4rHTML+'</p></label>\
+    //                 <label for="AnonymousToggleLight" title="隐藏匿名问题" ><p>👻</p></label>\
+    //                 <label for="AnonymousToggleTight" title="隐藏匿名和低质问题"><p>🔥</p></label>\
+    //                 <div class="toggle_option_slider">\
+    //                 </div>\
+    //               </div>')
+    //     }
+    // }, 100);
+
+
     $(document).ready(() => {
 
         if (isHome()) {
 
             GM.getValue("zhihu-AnonymousToggle", 0).then((anonymousToggle)=>{
+                if($('[AnonymousToggle]').length > 0){
+                    switch (anonymousToggle) {
+                        case 0:
+                            $('#AnonymousToggleOff').prop('checked', true);
+                            break;
+                        case 1:
+                            $('#AnonymousToggleLight').prop('checked', true);
+                            break;
+                        case 2:
+                            $('#AnonymousToggleTight').prop('checked', true);
+                            break;
+                        default:
+                            break;
+                    }
 
+                }else{
                     $('.AppHeader-userInfo').prepend(
-                        '<div class="wrapper" AnonymousToggle>\
-                          <div class="toggle_radio">\
+                        '<div class="wrapper" AnonymousToggle><div AnonymousToggleCount class="Popover" style="color: #497dd0;">🏃</div>\
+                          <div class="Popover toggle_radio">\
                             <input type="radio" class="toggle_option" id="AnonymousToggleOff" name="toggle_option"   '+ (anonymousToggle == 0 ? 'checked' : '') + '>\
                             <input type="radio" class="toggle_option" id="AnonymousToggleLight" name="toggle_option" '+ (anonymousToggle == 1 ? 'checked' : '') + '>\
                             <input type="radio" class="toggle_option" id="AnonymousToggleTight" name="toggle_option" '+ (anonymousToggle == 2 ? 'checked' : '') + '>\
@@ -492,8 +601,7 @@
                             <div class="toggle_option_slider">\
                             </div>\
                           </div>')
-                        
-
+                }
             }).catch((error)=>{
                 // console.log('AnonymousToggle error ',error )
             })
@@ -506,7 +614,7 @@
             let observerHotList = new MutationObserver(callbackHotList)
             observerHotList.observe($('#TopstoryContent').get(0),
                 {
-                    subtree: true, childList: true, characterData: false, attributes: true,
+                    subtree: true, childList: false, characterData: false, attributes: true, attributeFilter:['data-za-detail-view-path-module'],
                     attributeOldValue: false, characterDataOldValue: false
                 })
 
@@ -528,7 +636,7 @@
                         $('.PageHeader h1.QuestionHeader-title').text('👻 ' + oText)
                     } else {
                         // console.log('找到题主 : ', authorInfo)
-                        addNoteQuestionPage('👤 ' + authorInfo.a, '<a href=' + logURL + '>问题日志</a>')
+                        addNoteQuestionPage('👤 ' + authorInfo.a + ' <a class="Profile-lightItem" valueAuthor >🔍</a>', '<a href=' + logURL + '>问题日志</a>')
                         // let oText = $('.PageHeader h1.QuestionHeader-title').text()
                         // $('.PageHeader h1.QuestionHeader-title').text('👤 ' + oText)
 
@@ -544,8 +652,15 @@
                 })
             } else {
                 $('.QuestionAuthor').append('<a href=' + logURL + '>问题日志</a>')
+
+                $('.QuestionAuthor div.AuthorInfo-content').append(' <a class="Profile-lightItem" valueAuthor >🔍</a>')
+
                 getAuthorUrl(logURL).then(authorInfo => {
                     getAuthorInfoDetail(authorInfo.url).then(author => {
+
+                        if($('.QuestionAuthor div.AuthorInfo-content [valueAuthor]').length > 0){
+                            $('.QuestionAuthor div.AuthorInfo-content [valueAuthor]').remove() 
+                        }
 
                         $('.QuestionAuthor div.AuthorInfo-content').append('<a class="Profile-lightItem" valueAuthor title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
 
