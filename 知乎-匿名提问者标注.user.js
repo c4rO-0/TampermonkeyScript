@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎-匿名提问者标注
 // @namespace    http://tampermonkey.net/
-// @version      1.4.4
+// @version      1.5.0
 // @license      MPL-2.0
 // @description  在问题页, 标注匿名提问, 防止钓鱼
 // @author       C4r
@@ -118,7 +118,6 @@
 
                 let repHTML = $.parseHTML(responseText)
 
-
                 let author = $(repHTML).find('.zm-item:last > div > a').attr('href')
 
                 if (author != undefined) {
@@ -156,22 +155,26 @@
             this.agree = undefined
             this.score = undefined
             this.scoreMarker = undefined
+
+            this.timeStamp = undefined
         }
 
 
         print() {
-            console.log('url        : ', this.url)
-            console.log('name       : ', this.name)
-            console.log('avatar     : ', this.avatar)
-            console.log('isOrg      : ', this.isOrg)
-            console.log('isVerified : ', this.isVerified)
-            console.log('ask        : ', this.ask)
-            console.log('answer     : ', this.answer)
-            console.log('following  : ', this.following)
-            console.log('follower   : ', this.follower)
-            console.log('post       : ', this.post)
-            console.log('agree      : ', this.agree)
-            console.log('score      : ', this.score)
+            console.log('url        : ', this.url           )
+            console.log('name       : ', this.name          )
+            console.log('avatar     : ', this.avatar        )
+            console.log('isOrg      : ', this.isOrg         )
+            console.log('isVerified : ', this.isVerified    )
+            console.log('ask        : ', this.ask           )
+            console.log('answer     : ', this.answer        )
+            console.log('following  : ', this.following     )
+            console.log('follower   : ', this.follower      )
+            console.log('post       : ', this.post          )
+            console.log('agree      : ', this.agree         )
+            console.log('score      : ', this.score         )
+            console.log('scoreMarker: ', this.scoreMarker   )
+            console.log('timeStamp  : ', this.timeStamp     )
         }
 
         updateAuthorFromPage(pageHTML) {
@@ -192,14 +195,20 @@
             this.follower = parseInt($(pageHTML).find('.FollowshipCard a:eq(1) .NumberBoard-itemValue').attr('title'))
 
             let arrayAgree = $($(pageHTML).find('.Zi--Like').closest('.css-12ofpn8').find('.css-vurnku').contents().get(0)).text().match(/\d+/g)
-            if(arrayAgree){
+            if (arrayAgree) {
                 this.agree = parseInt(arrayAgree.join(''))
-            }else{
+            } else {
                 this.agree = 0
             }
             // this.agree = parseInt($($(pageHTML).find('.Zi--Like').closest('.css-12ofpn8').find('.css-vurnku').contents().get(0)).text().match(/\d+/g).join(''))
-        }
 
+
+            this.evaluateAuthor()
+
+            this.timeStamp = Date.now()
+
+            this.store()
+        }
 
 
         /**
@@ -263,12 +272,83 @@
             } else if (this.score < 4) {
                 this.scoreMarker = '🔥'
             } else {
-                this.scoreMarker = '☉' 
+                this.scoreMarker = '☉'
             }
 
         }
 
+        toJSON() {
+            return {
+                'url'        : this.url        , 
+                'name'       : this.name       , 
+                'avatar'     : this.avatar     , 
+                'isOrg'      : this.isOrg      , 
+                'isVerified' : this.isVerified , 
+                'ask'        : this.ask        , 
+                'answer'     : this.answer     , 
+                'following'  : this.following  , 
+                'follower'   : this.follower   , 
+                'post'       : this.post       , 
+                'agree'      : this.agree      , 
+                'score'      : this.score      , 
+                'scoreMarker': this.scoreMarker, 
+                'timeStamp'  : this.timeStamp  
+            }
+        }
+
+        fromJSON(json) {
+            
+            this.url        =  json['url'         ]  
+            this.name       =  json['name'        ]  
+            this.avatar     =  json['avatar'      ]  
+            this.isOrg      =  json['isOrg'       ]  
+            this.isVerified =  json['isVerified'  ]  
+            this.ask        =  json['ask'         ]  
+            this.answer     =  json['answer'      ]  
+            this.following  =  json['following'   ]  
+            this.follower   =  json['follower'    ]  
+            this.post       =  json['post'        ]  
+            this.agree      =  json['agree'       ]  
+            this.score      =  json['score'       ]  
+            this.scoreMarker=  json['scoreMarker' ]  
+            this.timeStamp  =  json['timeStamp'   ]             
+        }
+
+        store() {
+            let allData = JSON.parse(localStorage.getItem('zhihu-Anonymous') || '{}')
+
+            if (allData['author'] == undefined || allData['author'][this.url] == undefined) {
+                allData['author'][this.url] = this.toJSON()
+                localStorage.setItem('zhihu-Anonymous', JSON.stringify(allData))
+            } else {
+                if ( (this.timeStamp - allData[this.url]['timeStamp']) > 24 * 60 * 60 * 1000) {
+                    allData['author'][this.url] = this.toJSON()
+                    // console.log(this.toJSON())
+                    // localStorage.setItem('zhihu-Anonymous', JSON.stringify(allData))
+                }
+            }
+        }
+
+        get() {
+            let allData = JSON.parse(localStorage.getItem('zhihu-Anonymous') || '{}')
+
+            // console.log(allData)
+
+            if (allData['author'] == undefined) {
+                return false
+            } else {
+                if (allData['author'][this.url]){
+                    this.fromJSON( allData['author'][this.url])
+
+                    return true
+                }else{
+                    return false
+                }
+            } 
+        }
+
     }
+
 
     /**
      * 
@@ -281,21 +361,24 @@
     function getAuthorInfoDetail(authorUrl) {
         return new Promise((resolve, reject) => {
 
-            httpGetAsync(authorUrl, (responseText) => {
+            let author = new Author(authorUrl)
 
-                // console.log('get response')
-
-                let repHTML = $.parseHTML(responseText)
-
-                let author = new Author(authorUrl)
-
-                author.updateAuthorFromPage(repHTML)
-
-                author.evaluateAuthor()
-
+            if(author.get()){
+                // console.log('author exist ', author.name)
                 resolve(author)
+            }else{
 
-            })
+                httpGetAsync(authorUrl, (responseText) => {
+    
+                    let repHTML = $.parseHTML(responseText)
+    
+                    author.updateAuthorFromPage(repHTML)
+    
+                    resolve(author)
+    
+                })
+            }
+
         })
     }
 
@@ -358,7 +441,7 @@
         let arrayHide = new Array(num_section)
 
         $('.HotList-list section').each((index, section) => {
-            arrayHide[index] = new Promise(resolveHide =>{
+            arrayHide[index] = new Promise(resolveHide => {
                 if ($(section).find('[AnonymousNote]').length == 0) {
                     // if($(section).find('[AnonymousNote]').length == 0 ){   
                     let questionURL = $(section).find('.HotItem-content a').attr('href')
@@ -367,26 +450,26 @@
                         if ($(section).find('[AnonymousNote][checking]').length == 0) {
                             $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote checking> 🔍 👤 </span>')
                         }
-    
+
                         getAuthorUrl(logURL).then(authorInfo => {
                             if (authorInfo == undefined) {
                                 if ($(section).find('[AnonymousNote]').length > 0) {
                                     $(section).find('[AnonymousNote]').empty()
                                     $(section).find('[AnonymousNote]').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor score="0" title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
-    
+
                                     $(section).find('[AnonymousNote]').removeAttr('checking')
                                     $(section).find('[AnonymousNote]').attr('done', '')
                                 } else {
                                     $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="匿名提问"><a class="Profile-lightItem" valueAuthor  score="0"   title="powered by C4r" href="https://zhuanlan.zhihu.com/p/269994286">👻 匿名 </a></span>')
                                 }
-    
-                                if($('[AnonymousToggle]').length > 0 && ($('#AnonymousToggleTight').prop('checked') || $('#AnonymousToggleLight').prop('checked'))  ){
+
+                                if ($('[AnonymousToggle]').length > 0 && ($('#AnonymousToggleTight').prop('checked') || $('#AnonymousToggleLight').prop('checked'))) {
                                     $(section).hide()
                                     resolveHide(true)
-                                }else{
+                                } else {
                                     resolveHide(false)
                                 }
-    
+
                             } else {
                                 // console.log('找到题主 : ', authorInfo)
                                 if ($(section).find('[AnonymousNote]').length > 0) {
@@ -397,31 +480,31 @@
                                 } else {
                                     $(section).find('.HotItem-metrics').append('<span class="HotItem-action" AnonymousNote done title="题主"> 👤 ' + authorInfo.a + ' <a class="Profile-lightItem" valueAuthor>🔍</a> </span>')
                                 }
-    
+
                                 getAuthorInfoDetail(authorInfo.url).then(author => {
-                                    if( $(section).find('[AnonymousNote] [valueAuthor]').length > 0){
+                                    if ($(section).find('[AnonymousNote] [valueAuthor]').length > 0) {
                                         $(section).find('[AnonymousNote] [valueAuthor]').remove()
                                     }
 
-                                    $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor score="'+author.score.toString()+'" title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
+                                    $(section).find('[AnonymousNote]').append('<a class="Profile-lightItem" valueAuthor score="' + author.score.toString() + '" title="score : ' + author.score.toString() + ' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
 
-                                    if($('[AnonymousToggle]').length > 0 && $('#AnonymousToggleTight').prop('checked') && author.score < 4){
+                                    if ($('[AnonymousToggle]').length > 0 && $('#AnonymousToggleTight').prop('checked') && author.score < 4) {
 
                                         $(section).hide()
                                         resolveHide(true)
-                                    }else{
+                                    } else {
                                         resolveHide(false)
                                     }
-                                    
-                                    
+
+
                                 })
                             }
                         })
-                    }else{
+                    } else {
                         resolveHide(undefined)
                     }
-    
-                }else{
+
+                } else {
                     resolveHide(undefined)
                 }
             })
@@ -433,12 +516,12 @@
             // console.log(num_section, ' hide ', values)
             let countHide = values.filter(isHide => isHide).length
 
-            if(countHide > 0 ){
-                $('div[AnonymousToggleCount]').text('-'+countHide.toString())
+            if (countHide > 0) {
+                $('div[AnonymousToggleCount]').text('-' + countHide.toString())
                 setTimeout(() => {
                     $('div[AnonymousToggleCount]').text('')
                 }, 1000);
-            }else{
+            } else {
                 $('div[AnonymousToggleCount]').text('')
             }
 
@@ -450,51 +533,51 @@
     function callbackHotList(mutationsList) {
         if ($('.HotList-list').length > 0) {
             // console.log('refresh author info...')
-            let count = 0 
-            for(let mutation of mutationsList) {
-                if ($(mutation.target).find('[AnonymousNote]').length == 0 
-                && $(mutation.target).find('.HotItem-content a').attr('href').includes('question')) {
+            let count = 0
+            for (let mutation of mutationsList) {
+                if ($(mutation.target).find('[AnonymousNote]').length == 0
+                    && $(mutation.target).find('.HotItem-content a').attr('href').includes('question')) {
                     count = count + 1
                 }
             }
-            if(count>0){
+            if (count > 0) {
                 loadHotlist()
             }
         }
     }
 
-    $(document).on('click', '[AnonymousToggle]', ()=>{
+    $(document).on('click', '[AnonymousToggle]', () => {
 
         let countHide = 0
         let countShow = 0
-        if($('#AnonymousToggleLight').prop('checked')){
+        if ($('#AnonymousToggleLight').prop('checked')) {
 
             GM.setValue("zhihu-AnonymousToggle", 1)
 
             $('.HotList-list section').each((index, section) => {
                 if ($(section).find('[AnonymousNote]').length > 0) {
-                    if($(section).find('[valueAuthor]') && parseInt($(section).find('[valueAuthor]').attr('score')) == 0 ){
+                    if ($(section).find('[valueAuthor]') && parseInt($(section).find('[valueAuthor]').attr('score')) == 0) {
                         $(section).hide()
                         countHide = countHide + 1
-                    }else{
+                    } else {
                         $(section).show()
                         countShow = countShow + 1
                     }
                 }
             })
 
-            $('div[AnonymousToggleCount]').text('-'+countHide.toString())
+            $('div[AnonymousToggleCount]').text('-' + countHide.toString())
             setTimeout(() => {
                 $('div[AnonymousToggleCount]').text('')
             }, 1000);
 
 
-        }else if($('#AnonymousToggleTight').prop('checked')){
+        } else if ($('#AnonymousToggleTight').prop('checked')) {
             GM.setValue("zhihu-AnonymousToggle", 2)
 
             $('.HotList-list section').each((index, section) => {
                 if ($(section).find('[AnonymousNote]').length > 0) {
-                    if($(section).find('[valueAuthor]') && parseInt($(section).find('[valueAuthor]').attr('score')) < 4 ){
+                    if ($(section).find('[valueAuthor]') && parseInt($(section).find('[valueAuthor]').attr('score')) < 4) {
                         $(section).hide()
                         countHide = countHide + 1
                     }
@@ -502,31 +585,31 @@
             })
 
 
-            $('div[AnonymousToggleCount]').text('-'+countHide.toString())
+            $('div[AnonymousToggleCount]').text('-' + countHide.toString())
             setTimeout(() => {
                 $('div[AnonymousToggleCount]').text('')
             }, 1000);
 
-        }else{
-        // if($('#AnonymousToggleOff').prop('checked')){
+        } else {
+            // if($('#AnonymousToggleOff').prop('checked')){
             GM.setValue("zhihu-AnonymousToggle", 0)
             $('.HotList-list section').each((index, section) => {
                 if ($(section).find('[AnonymousNote]').length > 0) {
-                    if($(section).find('[valueAuthor]') && $(section).is(":hidden") ){
+                    if ($(section).find('[valueAuthor]') && $(section).is(":hidden")) {
                         $(section).show()
                         countShow = countShow + 1
                     }
                 }
             })
 
-            $('div[AnonymousToggleCount]').text('+'+countShow.toString())
+            $('div[AnonymousToggleCount]').text('+' + countShow.toString())
             setTimeout(() => {
                 $('div[AnonymousToggleCount]').text('')
             }, 1000);
 
-        } 
+        }
     })
-    let c4rHTML ='<svg version="1.0" xmlns="http://www.w3.org/2000/svg"\
+    let c4rHTML = '<svg version="1.0" xmlns="http://www.w3.org/2000/svg"\
     width="12.000000pt" height="12.000000pt" viewBox="0 0 500.000000 500.000000"\
     preserveAspectRatio="xMidYMid meet">\
    <g transform="translate(0.000000,500.000000) scale(0.100000,-0.100000)"\
@@ -550,30 +633,61 @@
    </g>\
    </svg>'
 
-    // setTimeout(() => {
-    //     if($('.AppHeader-userInfo').length > 0 && $('[AnonymousToggle]').length == 0){
-    //         $('.AppHeader-userInfo').prepend(
-    //             '<div class="wrapper" AnonymousToggle><div AnonymousToggleCount class="Popover" style="background-color: #f6f6f6;"></div>\
-    //               <div class="Popover toggle_radio">\
-    //                 <input type="radio" class="toggle_option" id="AnonymousToggleOff" name="toggle_option"   >\
-    //                 <input type="radio" class="toggle_option" id="AnonymousToggleLight" name="toggle_option" >\
-    //                 <input type="radio" class="toggle_option" id="AnonymousToggleTight" name="toggle_option" >\
-    //                 <label for="AnonymousToggleOff" title="关闭问题过滤" ><p>'+c4rHTML+'</p></label>\
-    //                 <label for="AnonymousToggleLight" title="隐藏匿名问题" ><p>👻</p></label>\
-    //                 <label for="AnonymousToggleTight" title="隐藏匿名和低质问题"><p>🔥</p></label>\
-    //                 <div class="toggle_option_slider">\
-    //                 </div>\
-    //               </div>')
-    //     }
-    // }, 100);
 
+    // fresh data
+    /**
+     * zhihu-Anonymous :{
+     *  lastFreshTimeStamp : sec
+     *  author :{
+     *  url : author class
+     *  ...
+     *  }
+     *  question :{
+     *  url : { timeStamp: sec; author : url}
+     *  }
+     * }
+     */
+    let allData = JSON.parse(localStorage.getItem('zhihu-Anonymous') || '{}')
+
+    if (allData['lastFreshTimeStamp'] == undefined) {
+        allData['lastFreshTimeStamp'] = Date.now()
+        allData['author'] = {}
+        allData['question'] = {}
+
+        localStorage.setItem('zhihu-Anonymous', JSON.stringify(allData))
+    } else {
+        let nowTimeStamp = Date.now()
+
+        if (nowTimeStamp - allData['lastFreshTimeStamp'] > 7 * 24 * 60 * 60 * 1000) {
+            let authorList = {}
+            for (let authorValue of Object.values(allData['author'])) {
+                if (nowTimeStamp - authorValue['timeStamp'] < 24 * 60 * 60 * 1000) {
+                    authorList[authorValue['url']] = authorValue
+                }
+            }
+
+            let questionList = {}
+            for (let [qKey, qValue] of Object.entries(allData['question'])) {
+
+                if (nowTimeStamp - qValue['timeStamp'] < 24 * 60 * 60 * 1000) {
+                    questionList[qKey] = qValue
+                }
+            }
+
+            allData['author'] = authorList
+            allData['question'] = questionList
+            allData['lastFreshTimeStamp'] = nowTimeStamp
+
+            localStorage.setItem('zhihu-Anonymous', JSON.stringify(allData))
+        }
+    }
 
     $(document).ready(() => {
 
         if (isHome()) {
 
-            GM.getValue("zhihu-AnonymousToggle", 0).then((anonymousToggle)=>{
-                if($('[AnonymousToggle]').length > 0){
+            GM.getValue("zhihu-AnonymousToggle", 0).then((anonymousToggle) => {
+                if ($('[AnonymousToggle]').length > 0) {
                     switch (anonymousToggle) {
                         case 0:
                             $('#AnonymousToggleOff').prop('checked', true);
@@ -588,21 +702,21 @@
                             break;
                     }
 
-                }else{
+                } else {
                     $('.AppHeader-userInfo').prepend(
                         '<div class="wrapper" AnonymousToggle><div AnonymousToggleCount class="Popover" style="color: #497dd0;">🏃</div>\
                           <div class="Popover toggle_radio">\
                             <input type="radio" class="toggle_option" id="AnonymousToggleOff" name="toggle_option"   '+ (anonymousToggle == 0 ? 'checked' : '') + '>\
                             <input type="radio" class="toggle_option" id="AnonymousToggleLight" name="toggle_option" '+ (anonymousToggle == 1 ? 'checked' : '') + '>\
                             <input type="radio" class="toggle_option" id="AnonymousToggleTight" name="toggle_option" '+ (anonymousToggle == 2 ? 'checked' : '') + '>\
-                            <label for="AnonymousToggleOff" title="关闭问题过滤" ><p>'+c4rHTML+'</p></label>\
+                            <label for="AnonymousToggleOff" title="关闭问题过滤" ><p>'+ c4rHTML + '</p></label>\
                             <label for="AnonymousToggleLight" title="隐藏匿名问题" ><p>👻</p></label>\
                             <label for="AnonymousToggleTight" title="隐藏匿名和低质问题"><p>🔥</p></label>\
                             <div class="toggle_option_slider">\
                             </div>\
                           </div>')
                 }
-            }).catch((error)=>{
+            }).catch((error) => {
                 // console.log('AnonymousToggle error ',error )
             })
 
@@ -614,7 +728,7 @@
             let observerHotList = new MutationObserver(callbackHotList)
             observerHotList.observe($('#TopstoryContent').get(0),
                 {
-                    subtree: true, childList: false, characterData: false, attributes: true, attributeFilter:['data-za-detail-view-path-module'],
+                    subtree: true, childList: false, characterData: false, attributes: true, attributeFilter: ['data-za-detail-view-path-module'],
                     attributeOldValue: false, characterDataOldValue: false
                 })
 
@@ -641,9 +755,9 @@
                         // $('.PageHeader h1.QuestionHeader-title').text('👤 ' + oText)
 
                         getAuthorInfoDetail(authorInfo.url).then(author => {
-                            addNoteQuestionPage( 
-                                '👤 ' + authorInfo.a + 
-                                '<a class="Profile-lightItem" valueAuthor title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>', 
+                            addNoteQuestionPage(
+                                '👤 ' + authorInfo.a +
+                                '<a class="Profile-lightItem" valueAuthor title="score : ' + author.score.toString() + ' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>',
                                 '<a href=' + logURL + '>问题日志</a>')
                             let oText = $('.PageHeader h1.QuestionHeader-title').text()
                             $('.PageHeader h1.QuestionHeader-title').text(author.scoreMarker + oText)
@@ -658,11 +772,11 @@
                 getAuthorUrl(logURL).then(authorInfo => {
                     getAuthorInfoDetail(authorInfo.url).then(author => {
 
-                        if($('.QuestionAuthor div.AuthorInfo-content [valueAuthor]').length > 0){
-                            $('.QuestionAuthor div.AuthorInfo-content [valueAuthor]').remove() 
+                        if ($('.QuestionAuthor div.AuthorInfo-content [valueAuthor]').length > 0) {
+                            $('.QuestionAuthor div.AuthorInfo-content [valueAuthor]').remove()
                         }
 
-                        $('.QuestionAuthor div.AuthorInfo-content').append('<a class="Profile-lightItem" valueAuthor title="score : '+ author.score.toString() +' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
+                        $('.QuestionAuthor div.AuthorInfo-content').append('<a class="Profile-lightItem" valueAuthor title="score : ' + author.score.toString() + ' by C4r" href="https://zhuanlan.zhihu.com/p/269994286">' + author.scoreMarker + '</a>')
 
                         let oText = $('.PageHeader h1.QuestionHeader-title').text()
                         $('.PageHeader h1.QuestionHeader-title').text(author.scoreMarker + oText)
@@ -677,9 +791,12 @@
 
             let author = new Author(window.location.href)
 
-            author.updateAuthorFromPage(document)
-
-            author.evaluateAuthor()
+            if(! author.get()){
+                // console.log('not found author')
+                author.updateAuthorFromPage(document)
+            }else{
+                // console.log('author exist ')
+            }
 
             // author.print()
 
