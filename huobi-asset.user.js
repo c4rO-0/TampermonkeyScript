@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         huobi-子账户历史资产
 // @namespace    http://tampermonkey.net/
-// @version      0.4.6
+// @version      0.1.0
 // @license      MPL-2.0
 // @description  记录并绘制子账户历史资产
 // @author       C4r
@@ -104,7 +104,7 @@
     }
 
 
-    function getData(storageName, api_key=undefined) {
+    function getData(storageName, bin_id=undefined) {
 
         return new Promise((resolve,reject)=>{
             let dataStr = localStorage.getItem(storageName)
@@ -114,24 +114,51 @@
                 data = JSON.parse(dataStr)
             }
     
-            let api_key_local = undefined
-            if(data['key'] && data['key']  !== undefined && data['key'].trim() !== ''){
-                api_key_local = data['key']
+            let bin_id_local = undefined
+            if(data['id'] && data['id']  !== undefined && data['id'].trim() !== ''){
+                bin_id_local = data['id']
             }
     
             
-            if(api_key || api_key_local){ 
-                $.ajaxSetup({
-                    headers:{
-                       'secret-key': (api_key == undefined ? api_key_local : api_key) 
+            if(bin_id || bin_id_local){ 
+
+                let req = new XMLHttpRequest();
+
+                req.onreadystatechange = () => {
+                  if (req.readyState == XMLHttpRequest.DONE) {
+                    console.log('req : ', req.responseText);
+                    
+                    let dataReq = JSON.parse(req.responseText)
+                    console.log("get data : ", dataReq)
+                    if(dataReq['success']){
+                        let dataCloud = dataReq['data']
+                        if(dataCloud['data'] && dataCloud['data']  !== undefined && dataCloud['data'].trim() !== ''){
+                            data['data'] = {...data['data'], ...dataCloud['data']}
+                            
+                        }
                     }
-                });
-                $.getJSON( "https://api.jsonbin.io/b/"+storageName, function( dataReq ) {
-                    if(dataReq['data'] && dataReq['data']  !== undefined && dataReq['data'].trim() !== ''){
-                        data['data'] = {...data['data'], ...dataReq['data']}
-                        resolve(data)
-                    }
-                });
+                    data['id'] = (bin_id == undefined ? bin_id_local : bin_id)
+                    resolve(data)
+                  }
+                };
+                
+                req.open("GET", "https://api.jsonbin.io/b/"+(bin_id == undefined ? bin_id_local : bin_id), true);
+                // req.setRequestHeader("secret-key", (bin_id == undefined ? bin_id_local : bin_id));
+                req.send();
+
+                // $.ajaxSetup({
+                //     headers:{
+                //        'secret-key': (bin_id == undefined ? bin_id_local : bin_id) 
+                //     }
+                // });
+                // $.getJSON( "https://api.jsonbin.io/b/"+storageName, function( dataReq ) {
+
+                //     console.log("get data : ", dataReq)
+                //     if(dataReq['data'] && dataReq['data']  !== undefined && dataReq['data'].trim() !== ''){
+                //         data['data'] = {...data['data'], ...dataReq['data']}
+                //         resolve(data)
+                //     }
+                // });
             }else{
                 resolve(data)
             }
@@ -139,16 +166,18 @@
  
     }
 
-    function storeData(storageName, data, api_key=undefined){
+    function storeData(storageName, data, bin_id=undefined){
 
         return new Promise((resolve,reject)=>{
             localStorage.setItem(storageName, JSON.stringify(data))
 
-            let api_key_local = undefined
-            if(data['key'] && data['key']  != undefined && data['key']  != {} && data['key'].trim() != ''){
-                api_key_local = data['key']
+            // console.log('stroe :', data)
+
+            let bin_id_local = undefined
+            if(data['id'] && data['id']  != undefined && data['id']  != {} && data['id'].trim() != ''){
+                bin_id_local = data['id']
             }
-            if(api_key || api_key_local){
+            if(bin_id || bin_id_local){
                 let req = new XMLHttpRequest();
 
                 req.onreadystatechange = () => {
@@ -158,10 +187,10 @@
                   }
                 };
                 
-                req.open("POST", "https://api.jsonbin.io/b/"+storageName, true);
+                req.open("PUT", "https://api.jsonbin.io/b/"+(bin_id == undefined ? bin_id_local : bin_id), true);
                 req.setRequestHeader("Content-Type", "application/json");
-                req.setRequestHeader("secret-key", api_key);
-                req.send(data);
+                // req.setRequestHeader("secret-key", bin_id);
+                req.send(JSON.stringify(data));
             }
         })
 
@@ -173,48 +202,62 @@
      * @param {*} cAsset {'asset':valAsset, 'convAsset':valConvAsset}
      * @returns data { date:{'asset':valAsset, 'convAsset':valConvAsset}}
      */
-    function updateData(cAsset) {
+    function updateData(cAsset, onlySync=false) {
 
         return new Promise((resolve, reject)=>{
             let cDate = new Date()
 
 
-            let api_key = undefined
-            if($('#sync-key') && $('#sync-key').val() && $('#sync-key').val().trim() != ''){
-                api_key = $('#sync-key').val().trim()
+            let bin_id = undefined
+            if($('#sync-id') && $('#sync-id').val() && $('#sync-id').val().trim() != ''){
+                bin_id = $('#sync-id').val().trim()
             }
     
-            getData(storageName, api_key).then(data =>{
+            getData(storageName, bin_id).then(data =>{
                 
                 let isStore = true
-                console.log(data, data['data'])
-                if(data['data'] && Object.keys(data['data']).length > 0 ){
-                    let timeSort = Object.keys(data['data']).sort()
-                    let lastTime = timeSort[timeSort.length - 1]
-                    let lastAsset = data['data'][lastTime]
-        
-                    if (Math.abs(lastAsset['convAsset'] - cAsset['convAsset']) > 100 ) {
-        
-                        data['data'][cDate.getTime()] = cAsset
+                console.log('gotten ', data, data['data'])
+                if(onlySync){
 
-                    }else if(cDate.getTime() - lastTime > 1000*60*60*24){
-                        data['data'][cDate.getTime()] = cAsset
-        
-                    }else{
-                        data['data'][cDate.getTime()] = cAsset
-                        isStore = false
-                    }
                 }else{
-                    // initial log file 
-                    data['data'] = {}
-                    data['key'] = undefined
-                    data['data'][cDate.getTime()] = cAsset
+                    if(data['data'] && Object.keys(data['data']).length > 0 ){
+                        let timeSort = Object.keys(data['data']).sort()
+                        let lastTime = timeSort[timeSort.length - 1]
+                        let lastAsset = data['data'][lastTime]
+            
+                        if (Math.abs(lastAsset['convAsset'] - cAsset['convAsset']) > 100 ) {
+            
+                            data['data'][cDate.getTime()] = cAsset
+    
+                        }else if(cDate.getTime() - lastTime > 1000*60*60*24){
+                            data['data'][cDate.getTime()] = cAsset
+            
+                        }else{
+                            data['data'][cDate.getTime()] = cAsset
+                            isStore = false
+                        }
+                    }else{
+                        // initial log file 
+                        console.log('initial')
+                        data['data'] = {}
+                        data['id'] = undefined
+                        data['data'][cDate.getTime()] = cAsset
+                    }
                 }
 
-                if(isStore){
-                    storeData(storageName, data, api_key).then(()=>{
 
+                if(isStore){
+                    console.log('start store')
+                    storeData(storageName, data, bin_id).then(()=>{
+                        if(data['id'] && data['id']  != undefined && data['id']  != {} && data['id'].trim() != ''){
+                            $('#sync-button').text('同步完成')
+                            setTimeout(() => {
+                                $('#sync-button').text('同步')
+                            }, 2000);
+                        }
                     })
+                }else{
+                    console.log('no need store')
                 }
 
                 resolve(data)
@@ -362,10 +405,10 @@
                     <div class="column" style="width:80%"><canvas id="assetDetailChart"></canvas></div>\
                     <div class="column" style="width:20%">\
                         <div class="flex-container" id="sync">\
-                            <label class="full-row" for="key"><a href="https://jsonbin.io/api-keys" target="_blank">JSONBIN.io key:</a></label>\
-                            <textarea class="full-row" type="text" id="sync-key" name="key"></textarea>\
+                            <label class="full-row" for="key"><a href="https://jsonbin.io/api-keys" target="_blank">JSONBIN.io bin id:</a></label>\
+                            <textarea class="full-row" type="text" id="sync-id" name="key"></textarea>\
                             <div class="full-row">\
-                            <button type="button" class="w3-btn w3-white w3-border w3-border-green w3-round-xlarge">\
+                            <button type="button" class="w3-btn w3-white w3-border w3-border-green w3-round-xlarge" id="sync-button">\
                                 同步\
                             </button>\
                         </div>\
@@ -373,14 +416,42 @@
                     </div>\
                 </div>\
             </div>').insertAfter('.subaccount-assets')
-                    let ctx = document.getElementById("assetDetailChart");
-            
-                    plotAssetDetail(ctx, data['data'])
+
+            if( data['id'] && data['id']  != undefined && data['id']  != {} && data['id'].trim() != ''){
+                $('#sync-id').val(data['id'])
+            }
+
+            let ctx = document.getElementById("assetDetailChart");
+    
+            plotAssetDetail(ctx, data['data'])
         })
-
-
     }
 
+
+    function freshAsset(){
+        if(isAssetDetailShown()){
+
+            $('sync-button').text('同步中...')
+
+            let cAsset = getAssetHTML()
+            if (cAsset == undefined) return
+    
+            updateData(cAsset).then(data =>{
+    
+                if( data['id'] && data['id']  != undefined && data['id']  != {} && data['id'].trim() != ''){
+                    $('#sync-id').val(data['id'])
+                }
+    
+                let ctx = document.getElementById("assetDetailChart");
+        
+                plotAssetDetail(ctx, data['data'])
+
+                $('sync-button').text('同步')
+            })
+        }else{
+            showAsset()
+        }
+    }
 
     function callbackAsset() {
         // console.log('found Level bar')
@@ -412,5 +483,13 @@
         showAsset()
     })
     // }
+
+    $(document).on('click', '#sync-button', ()=>{
+
+        let cAsset = getAssetHTML()
+        if (cAsset == undefined) return
+
+        updateData(cAsset, true)
+    })
 
 })();
