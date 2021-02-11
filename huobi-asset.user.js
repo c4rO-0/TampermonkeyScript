@@ -104,6 +104,70 @@
     }
 
 
+    function getData(storageName, api_key=undefined) {
+
+        return new Promise((resolve,reject)=>{
+            let dataStr = localStorage.getItem(storageName)
+
+            let data = {}
+            if (dataStr !== null && dataStr !== undefined && dataStr.trim() !== '') {
+                data = JSON.parse(dataStr)
+            }
+    
+            let api_key_local = undefined
+            if(data['key'] && data['key']  !== undefined && data['key'].trim() !== ''){
+                api_key_local = data['key']
+            }
+    
+            
+            if(api_key || api_key_local){ 
+                $.ajaxSetup({
+                    headers:{
+                       'secret-key': (api_key == undefined ? api_key_local : api_key) 
+                    }
+                });
+                $.getJSON( "https://api.jsonbin.io/b/"+storageName, function( dataReq ) {
+                    if(dataReq['data'] && dataReq['data']  !== undefined && dataReq['data'].trim() !== ''){
+                        data['data'] = {...data['data'], ...dataReq['data']}
+                        resolve(data)
+                    }
+                });
+            }else{
+                resolve(data)
+            }
+        })
+ 
+    }
+
+    function storeData(storageName, data, api_key=undefined){
+
+        return new Promise((resolve,reject)=>{
+            localStorage.setItem(storageName, JSON.stringify(data))
+
+            let api_key_local = undefined
+            if(data['key'] && data['key']  != undefined && data['key']  != {} && data['key'].trim() != ''){
+                api_key_local = data['key']
+            }
+            if(api_key || api_key_local){
+                let req = new XMLHttpRequest();
+
+                req.onreadystatechange = () => {
+                  if (req.readyState == XMLHttpRequest.DONE) {
+                    console.log(req.responseText);
+                    resolve()
+                  }
+                };
+                
+                req.open("POST", "https://api.jsonbin.io/b/"+storageName, true);
+                req.setRequestHeader("Content-Type", "application/json");
+                req.setRequestHeader("secret-key", api_key);
+                req.send(data);
+            }
+        })
+
+    }
+
+
     /**
      * 
      * @param {*} cAsset {'asset':valAsset, 'convAsset':valConvAsset}
@@ -111,57 +175,57 @@
      */
     function updateData(cAsset) {
 
-        let dataStr = localStorage.getItem(storageName)
-        // console.log('zhihu level dataStr  ', dataStr)
-        let cDate = new Date()
+        return new Promise((resolve, reject)=>{
+            let cDate = new Date()
 
-        let data = {}
-        if (dataStr !== null && dataStr !== undefined && dataStr.trim() !== '') {
-            data = JSON.parse(dataStr)
-            // console.log('zhihu level data  ', data)
-            let timeSort = Object.keys(data).sort()
-            let lastTime = timeSort[timeSort.length - 1]
-            let lastAsset = data[lastTime]
-            // console.log('zhihu level timeSort ', timeSort)
-            // console.log('zhihu level lastTime ', lastTime)
-            // console.log('zhihu level lastLevel ', lastLevel)
 
-            if (Math.abs(lastAsset['convAsset'] - cAsset['convAsset']) > 100 ) {
-                // level drop
-                // console.error('c4r zhihu level drop from ', lastLevel, ' to ', cLevel)
-                data[cDate.getTime()] = cAsset
-
-                localStorage.setItem(storageName, JSON.stringify(data))
-            }else if(cDate.getTime() - lastTime > 1000*60*60*24){
-                data[cDate.getTime()] = cAsset
-
-                localStorage.setItem(storageName, JSON.stringify(data))
-            }else{
-                data[cDate.getTime()] = cAsset
+            let api_key = undefined
+            if($('#sync-key') && $('#sync-key').val() && $('#sync-key').val().trim() != ''){
+                api_key = $('#sync-key').val().trim()
             }
+    
+            getData(storageName, api_key).then(data =>{
+                
+                let isStore = true
+                console.log(data, data['data'])
+                if(data['data'] && Object.keys(data['data']).length > 0 ){
+                    let timeSort = Object.keys(data['data']).sort()
+                    let lastTime = timeSort[timeSort.length - 1]
+                    let lastAsset = data['data'][lastTime]
+        
+                    if (Math.abs(lastAsset['convAsset'] - cAsset['convAsset']) > 100 ) {
+        
+                        data['data'][cDate.getTime()] = cAsset
 
-        } else {
-            // initial log file 
+                    }else if(cDate.getTime() - lastTime > 1000*60*60*24){
+                        data['data'][cDate.getTime()] = cAsset
+        
+                    }else{
+                        data['data'][cDate.getTime()] = cAsset
+                        isStore = false
+                    }
+                }else{
+                    // initial log file 
+                    data['data'] = {}
+                    data['key'] = undefined
+                    data['data'][cDate.getTime()] = cAsset
+                }
 
-            data[cDate.getTime()] = cAsset
+                if(isStore){
+                    storeData(storageName, data, api_key).then(()=>{
 
-            localStorage.setItem(storageName, JSON.stringify(data))
-        }
+                    })
+                }
 
-        return data
+                resolve(data)
+
+            })
+    
+    
+        })
+
     }
 
-
-    function getData() {
-        let dataStr = localStorage.getItem(storageName)
-
-        let data = {}
-        if (dataStr !== null && dataStr !== undefined && dataStr.trim() !== '') {
-            data = JSON.parse(dataStr)
-        }
-
-        return data
-    }
 
     /**
      * 画图
@@ -290,28 +354,30 @@
 
         addAssetDetailTag()
 
-        let data = updateData(cAsset)
+        updateData(cAsset).then(data =>{
 
-        $('\
-<div class="flex-container" >\
-    <div class="row">\
-        <div class="column" style="width:80%"><canvas id="assetDetailChart"></canvas></div>\
-        <div class="column" style="width:20%">\
-            <div class="flex-container" id="sync">\
-                <label class="full-row" for="key"><a href="https://jsonbin.io/api-keys" target="_blank">JSONBIN.io key:</a></label>\
-                <textarea class="full-row" type="text" id="sync-key" name="key"></textarea>\
-                <div class="full-row">\
-                <button type="button" class="w3-btn w3-white w3-border w3-border-green w3-round-xlarge">\
-                    同步\
-                </button>\
-            </div>\
-            </div>\
-        </div>\
-    </div>\
-</div>').insertAfter('.subaccount-assets')
-        let ctx = document.getElementById("assetDetailChart");
+            $('\
+            <div class="flex-container" >\
+                <div class="row">\
+                    <div class="column" style="width:80%"><canvas id="assetDetailChart"></canvas></div>\
+                    <div class="column" style="width:20%">\
+                        <div class="flex-container" id="sync">\
+                            <label class="full-row" for="key"><a href="https://jsonbin.io/api-keys" target="_blank">JSONBIN.io key:</a></label>\
+                            <textarea class="full-row" type="text" id="sync-key" name="key"></textarea>\
+                            <div class="full-row">\
+                            <button type="button" class="w3-btn w3-white w3-border w3-border-green w3-round-xlarge">\
+                                同步\
+                            </button>\
+                        </div>\
+                        </div>\
+                    </div>\
+                </div>\
+            </div>').insertAfter('.subaccount-assets')
+                    let ctx = document.getElementById("assetDetailChart");
+            
+                    plotAssetDetail(ctx, data['data'])
+        })
 
-        plotAssetDetail(ctx, data)
 
     }
 
