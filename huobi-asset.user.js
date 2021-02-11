@@ -15,7 +15,23 @@
 (function () {
     'use strict';
 
-    GM_addStyle('.chart-container {width: 1000px;height:300px}');
+    GM_addStyle('\
+.flex-container {\
+    width: 95%;\
+    margin: 0 auto;   \
+    display: flex;\
+    flex-direction: column;\
+}\
+.flex-container .full-row {\
+    width: 100%;\
+}\
+.flex-container .row {\
+    width: 100%;\
+    display: flex;\
+}\
+.flex-container .column {\
+    width: 50%;\
+}');
 
     let storageName = 'C4rHuobiSubAsset'
 
@@ -272,7 +288,13 @@
 
         let data = updateData(cAsset)
 
-        $('<div class="chart-container"><canvas id="assetDetailChart"></canvas></div>').insertAfter('.subaccount-assets')
+        $('\
+<div class="flex-container" >\
+    <div class="row">\
+        <div class="column" style="width:20%"></div>\
+        <div class="column" style="width:80%"><canvas id="assetDetailChart"></canvas></div>\
+    </div>\
+</div>').insertAfter('.subaccount-assets')
         let ctx = document.getElementById("assetDetailChart");
 
         plotAssetDetail(ctx, data)
