@@ -7,9 +7,12 @@
 // @author       C4r
 // @match        https://account.huobi.com/zh-cn/subaccount/management/
 // @grant        GM_addStyle
+// @grant        GM_getResourceText
+// @grant        GM_getResourceURL
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.5.0/dist/jquery.min.js
 // @require      https://cdn.jsdelivr.net/npm/moment@2.24.0/min/moment.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js
+// @resource     w3CSS https://www.w3schools.com/w3css/4/w3.css
 // ==/UserScript==
 
 (function () {
@@ -32,6 +35,7 @@
 .flex-container .column {\
     width: 50%;\
 }');
+    $("head").append("<style>" + GM_getResourceText("w3CSS") + "</style>");
 
     let storageName = 'C4rHuobiSubAsset'
 
@@ -229,7 +233,7 @@
                         },
                         ticks: {
                             max: Math.max(...chartData['y1Array'])*1.2,
-                            min: 0,
+                            min: Math.min(...chartData['y1Array'])*0.9,
                             fontColor: 'blue'
                         }
                     },{
@@ -246,7 +250,7 @@
                         },
                         ticks: {
                             max: Math.max(...chartData['y2Array'])*1.1,
-                            min: 0,
+                            min: Math.min(...chartData['y2Array'])*0.9,
                             fontColor: 'red'
                         },
                         gridLines: {
@@ -291,8 +295,18 @@
         $('\
 <div class="flex-container" >\
     <div class="row">\
-        <div class="column" style="width:20%"></div>\
         <div class="column" style="width:80%"><canvas id="assetDetailChart"></canvas></div>\
+        <div class="column" style="width:20%">\
+            <div class="flex-container" id="sync">\
+                <label class="full-row" for="key"><a href="https://jsonbin.io/api-keys" target="_blank">JSONBIN.io key:</a></label>\
+                <textarea class="full-row" type="text" id="sync-key" name="key"></textarea>\
+                <div class="full-row">\
+                <button type="button" class="w3-btn w3-white w3-border w3-border-green w3-round-xlarge">\
+                    同步\
+                </button>\
+            </div>\
+            </div>\
+        </div>\
     </div>\
 </div>').insertAfter('.subaccount-assets')
         let ctx = document.getElementById("assetDetailChart");
