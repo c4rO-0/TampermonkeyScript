@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         huobi-子账户历史资产
 // @namespace    http://tampermonkey.net/
-// @version      0.1.0
+// @version      0.1.1
 // @license      MPL-2.0
 // @description  记录并绘制子账户历史资产
 // @author       C4r
@@ -339,9 +339,10 @@
                             fontColor: 'blue'
                         },
                         ticks: {
-                            max: Math.max(...chartData['y1Array'])*1.2,
-                            min: Math.min(...chartData['y1Array'])*0.9,
-                            fontColor: 'blue'
+                            suggestedMax: Math.max(...chartData['y1Array'])*1.2,
+                            suggestedMin: Math.min(...chartData['y1Array'])*0.9,
+                            fontColor: 'blue',
+                            autoSkip: true
                         }
                     },{
                         id: 'B',
@@ -356,9 +357,10 @@
                             fontColor: 'red'
                         },
                         ticks: {
-                            max: Math.max(...chartData['y2Array'])*1.1,
-                            min: Math.min(...chartData['y2Array'])*0.9,
-                            fontColor: 'red'
+                            suggestedMax: Math.max(...chartData['y2Array'])*1.1,
+                            suggestedMin: Math.min(...chartData['y2Array'])*0.9,
+                            fontColor: 'red',
+                            autoSkip: true
                         },
                         gridLines: {
                             drawOnChartArea: false,
