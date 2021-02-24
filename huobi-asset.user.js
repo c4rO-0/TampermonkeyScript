@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         huobi-子账户历史资产
 // @namespace    http://tampermonkey.net/
-// @version      0.1.1
+// @version      0.1.2
 // @license      MPL-2.0
 // @description  记录并绘制子账户历史资产
 // @author       C4r
@@ -12,7 +12,8 @@
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.5.0/dist/jquery.min.js
 // @require      https://cdn.jsdelivr.net/npm/moment@2.24.0/min/moment.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js
-// @resource     w3CSS https://www.w3schools.com/w3css/4/w3.css
+// // @resource     w3CSS https://www.w3schools.com/w3css/4/w3.css
+// @resource     w3CSS https://7npmedia.w3cschool.cn/w3.css
 // ==/UserScript==
 
 (function () {
