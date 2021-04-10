@@ -458,12 +458,14 @@
 
     function callbackAsset() {
         // console.log('found Level bar')
-        showAsset()
+        setTimeout(() => {
+            showAsset()
+        }, 1000);
     }
 
     // ===============================================
     // if (isSubAssetPage()) {
-    showAsset()
+    // showAsset()
     $(document).ready(() => {
 
         let observerLevel = new MutationObserver(callbackAsset)
@@ -482,8 +484,11 @@
         //     1585692000000: 3.24
         // }
         // localStorage.setItem(storageName, JSON.stringify(debugData))
-
-        showAsset()
+        
+        setTimeout(() => {
+            showAsset()
+        }, 1000);
+        
     })
     // }
 
