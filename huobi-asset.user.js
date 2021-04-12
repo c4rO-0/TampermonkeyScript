@@ -460,7 +460,7 @@
         // console.log('found Level bar')
         setTimeout(() => {
             showAsset()
-        }, 1000);
+        }, 3000);
     }
 
     // ===============================================
@@ -485,9 +485,9 @@
         // }
         // localStorage.setItem(storageName, JSON.stringify(debugData))
         
-        setTimeout(() => {
-            showAsset()
-        }, 1000);
+        // setTimeout(() => {
+        //     showAsset()
+        // }, 1000);
         
     })
     // }
