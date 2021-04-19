@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         huobi-子账户历史资产
 // @namespace    http://tampermonkey.net/
-// @version      0.1.2
+// @version      0.2.0
 // @license      MPL-2.0
 // @description  记录并绘制子账户历史资产
 // @author       C4r
@@ -51,8 +51,26 @@
     }
 
 
+
+    function isSameDay(d1, d2) {
+        return d1.getFullYear() === d2.getFullYear() &&
+          d1.getMonth() === d2.getMonth() &&
+          d1.getDate() === d2.getDate();
+    }
+
+    function isSameDayInt(d1, d2) {
+
+        return isSameDay((new Date(parseInt(d1))), (new Date(parseInt(d2))))
+    
+    }
+
+
     function dataToChartData(data) {
         
+        let isAverage = false
+        let isMax = true
+        let isMin = false
+
         let timeSort = Object.keys(data).sort()
 
         let xArray = []
@@ -61,14 +79,152 @@
 
         let y2Array = []
 
-        for (let time of timeSort) {
-            // xyArray.push({ x: Math.round((time - minTime) / timeStep), y: (data[time]) })
+        let index = 0 
+        let days = 0
+
+        let y1 = 0.
+        let y2 = 0.
+
+        while (index < timeSort.length) {
+
+            if(days == 0){
+                if(index == (timeSort.length-1) ){
+                    let time = timeSort[index]
+                    xArray.push(new Date(parseInt(time)))
+                    y1Array.push((data[time]['asset']))
+                    y2Array.push((data[time]['convAsset']))
+
+                    days = 0
+                    y1 = 0.
+                    y2 = 0.
+
+                    index = index + 1
+                }else{
+                    let isInOneDay = isSameDayInt(timeSort[index], timeSort[index+1])
+                    if(isInOneDay){
+                        days = days + 1
+                        let time = timeSort[index]
+
+                        if(isAverage){
+                            y1 = y1 + (data[time]['asset'])
+                            y2 = y2 + (data[time]['convAsset'])
+                        }else if(isMax){
+                            y1 = Math.max(y1 , (data[time]['asset'])) 
+                            y2 = Math.max(y2 , (data[time]['convAsset']))
+                        }else if(isMin){
+                            y1 = Math.min(y1 , (data[time]['asset'])) 
+                            y2 = Math.min(y2 , (data[time]['convAsset']))
+                        }
+
+                        index = index + 1
+
+                        // console.log('is in one day. ', new Date(parseInt(timeSort[index])), new Date(parseInt(timeSort[index+1])) )
+                    }else{
+                        let time = timeSort[index]
+                        xArray.push(new Date(parseInt(time)))
+                        y1Array.push((data[time]['asset']))
+                        y2Array.push((data[time]['convAsset']))
+                        
+                        days = 0
+                        y1 = 0.
+                        y2 = 0.
+
+                        index = index + 1
+
+                    }
+                }
+
+            }else{
+                if(index == (timeSort.length-1) ){
+                    days = days + 1
+                    let time = timeSort[index]
+                    xArray.push(new Date(parseInt(time)))
+
+                    if(isAverage){
+                        y1 = y1 + (data[time]['asset'])
+                        y2 = y2 + (data[time]['convAsset'])
+                        y1Array.push(y1/(days))
+                        y2Array.push(y2/(days))
+                    }else if(isMax){
+                        y1 = Math.max(y1 , (data[time]['asset'])) 
+                        y2 = Math.max(y2 , (data[time]['convAsset']))
+
+                        y1Array.push(y1)
+                        y2Array.push(y2)
+                    }else if(isMin){
+                        y1 = Math.min(y1 , (data[time]['asset'])) 
+                        y2 = Math.min(y2 , (data[time]['convAsset']))
+
+                        y1Array.push(y1)
+                        y2Array.push(y2)
+                    }
+
+
+                    days = 0
+                    y1 = 0.
+                    y2 = 0.
+
+                    index = index + 1
+                }else{
+                    let isInOneDay = isSameDayInt(timeSort[index], timeSort[index+1])
+                    if(isInOneDay){
+                        days = days + 1
+                        let time = timeSort[index]
+                        if(isAverage){
+                            y1 = y1 + (data[time]['asset'])
+                            y2 = y2 + (data[time]['convAsset'])
+                        }else if(isMax){
+                            y1 = Math.max(y1 , (data[time]['asset'])) 
+                            y2 = Math.max(y2 , (data[time]['convAsset']))
+                        }else if(isMin){
+                            y1 = Math.min(y1 , (data[time]['asset'])) 
+                            y2 = Math.min(y2 , (data[time]['convAsset']))
+                        }
+
+                        index = index + 1
+                    }else{
+                        days = days + 1
+                        let time = timeSort[index]
+                        xArray.push(new Date(parseInt(time)))
+                        if(isAverage){
+                            y1 = y1 + (data[time]['asset'])
+                            y2 = y2 + (data[time]['convAsset'])
+                            y1Array.push(y1/(days))
+                            y2Array.push(y2/(days))
+                        }else if(isMax){
+                            y1 = Math.max(y1 , (data[time]['asset'])) 
+                            y2 = Math.max(y2 , (data[time]['convAsset']))
+    
+                            y1Array.push(y1)
+                            y2Array.push(y2)
+                        }else if(isMin){
+                            y1 = Math.min(y1 , (data[time]['asset'])) 
+                            y2 = Math.min(y2 , (data[time]['convAsset']))
+    
+                            y1Array.push(y1)
+                            y2Array.push(y2)
+                        }
+                        
+                        days = 0
+                        y1 = 0.
+                        y2 = 0.
+
+                        index = index + 1
+
+                    }
+                }                
+            }
+            
+        }
+
+        // for (let time of timeSort) {
+        //     // xyArray.push({ x: Math.round((time - minTime) / timeStep), y: (data[time]) })
 
             
-            xArray.push(new Date(parseInt(time)))
-            y1Array.push((data[time]['asset']))
-            y2Array.push((data[time]['convAsset']))
-        }
+        //     xArray.push(new Date(parseInt(time)))
+        //     y1Array.push((data[time]['asset']))
+        //     y2Array.push((data[time]['convAsset']))
+        // }
 
         return {
             'xArray': xArray,
