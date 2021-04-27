@@ -614,9 +614,12 @@
 
     function callbackAsset() {
         // console.log('found Level bar')
-        setTimeout(() => {
-            showAsset()
-        }, 3000);
+        if(getAssetHTML()){
+            setTimeout(() => {
+                showAsset()
+            }, 3000);
+        }
+
     }
 
     // ===============================================
