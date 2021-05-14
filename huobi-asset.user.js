@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         huobi-子账户历史资产
 // @namespace    http://tampermonkey.net/
-// @version      0.2.0
+// @version      0.3.0
 // @license      MPL-2.0
 // @description  记录并绘制子账户历史资产
 // @author       C4r
 // @match        https://account.huobi.com/zh-cn/subaccount/management/
+// @match        */MonkeyPage*
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // @grant        GM_getResourceURL
@@ -50,7 +51,9 @@
         xmlHttp.send(null);
     }
 
-
+    function isMonkeySetting(){
+        return window.location.href.indexOf('MonkeyPage') != -1
+    }
 
     function isSameDay(d1, d2) {
         return d1.getFullYear() === d2.getFullYear() &&
@@ -286,20 +289,28 @@
                     console.log('req : ', req.responseText);
                     
                     let dataReq = JSON.parse(req.responseText)
-                    console.log("get data : ", dataReq)
-                    if(dataReq['success']){
-                        let dataCloud = dataReq['data']
-                        if(dataCloud['data'] && dataCloud['data']  !== undefined && dataCloud['data'].trim() !== ''){
+                    if(dataReq['data']){
+                        console.log("get data success: ")
+                    }else{
+                        console.log("get data failed: ")
+                    }
+                    
+                    if(dataReq['data']){
+                        let dataCloud = dataReq
+                        if(dataCloud['data'] && dataCloud['data']  !== undefined ){
                             data['data'] = {...data['data'], ...dataCloud['data']}
-                            
+                            console.log('combine cloud:', data)
+                        }else{
+                            console.log('cloud is empty.', dataCloud['data'] , dataCloud['data']  !== undefined )
                         }
                     }
                     data['id'] = (bin_id == undefined ? bin_id_local : bin_id)
+                    // console.log('resolve data:', data)
                     resolve(data)
                   }
                 };
                 
-                req.open("GET", "https://api.jsonbin.io/b/"+(bin_id == undefined ? bin_id_local : bin_id), true);
+                req.open("GET", "https://api.jsonbin.io/b/"+(bin_id == undefined ? bin_id_local : bin_id)+'/latest', true);
                 // req.setRequestHeader("secret-key", (bin_id == undefined ? bin_id_local : bin_id));
                 req.send();
 
@@ -403,7 +414,7 @@
                 }
 
 
-                if(isStore){
+                if(isStore && (! isMonkeySetting())){
                     console.log('start store')
                     storeData(storageName, data, bin_id).then(()=>{
                         if(data['id'] && data['id']  != undefined && data['id']  != {} && data['id'].trim() != ''){
@@ -552,11 +563,17 @@
         }
 
         let cAsset = getAssetHTML()
-        if (cAsset == undefined) return
+        if (cAsset == undefined && (!isMonkeySetting()) ) return
+        let onlySync = false
+        if(isMonkeySetting()){
+            onlySync = true
+        }else{
+            onlySync = false
+        }
 
         addAssetDetailTag()
 
-        updateData(cAsset).then(data =>{
+        updateData(cAsset, onlySync).then(data =>{
 
             $('\
             <div class="flex-container" >\
@@ -622,31 +639,45 @@
 
     }
 
+
+    function insertMonkeyMenu(){
+
+        if ($('.subaccount-assets').length > 0) {
+            return
+        }
+
+        let contentHTML =
+'<div class="container">\
+    <h1 class="title">huobi asset</h1>\
+    <div class="container">\
+        <div class="subaccount-assets">\
+        </div>\
+    </div>\
+</div>'
+
+        $('body').append(contentHTML)
+
+    }
+
+
     // ===============================================
     // if (isSubAssetPage()) {
     // showAsset()
     $(document).ready(() => {
 
-        let observerLevel = new MutationObserver(callbackAsset)
+        if(isMonkeySetting()){
+            insertMonkeyMenu()
+            showAsset()
+        }else{
+            let observerLevel = new MutationObserver(callbackAsset)
 
-        observerLevel.observe($('body').get(0),
-            {
-                subtree: true, childList: true, characterData: true, attributes: true,
-                attributeFilter: ['.subaccount-assets'],
-                attributeOldValue: false, characterDataOldValue: false
-            })
-
-        // debug
-        // let debugData = {
-        //     1580511600000: 3.00,
-        //     1577833200000: 2.10,
-        //     1585692000000: 3.24
-        // }
-        // localStorage.setItem(storageName, JSON.stringify(debugData))
-        
-        // setTimeout(() => {
-        //     showAsset()
-        // }, 1000);
+            observerLevel.observe($('body').get(0),
+                {
+                    subtree: true, childList: true, characterData: true, attributes: true,
+                    attributeFilter: ['.subaccount-assets'],
+                    attributeOldValue: false, characterDataOldValue: false
+                })
+        }
         
     })
     // }
@@ -654,7 +685,7 @@
     $(document).on('click', '#sync-button', ()=>{
 
         let cAsset = getAssetHTML()
-        if (cAsset == undefined) return
+        if (cAsset == undefined && (! isMonkeySetting())) return
 
         updateData(cAsset, true)
     })
