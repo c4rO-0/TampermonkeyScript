@@ -414,9 +414,9 @@
                 }
 
 
-                if(isStore && (! isMonkeySetting())){
+                if(isStore){
                     console.log('start store')
-                    storeData(storageName, data, bin_id).then(()=>{
+                    storeData(storageName, data, isMonkeySetting() ? undefined : bin_id ).then(()=>{
                         if(data['id'] && data['id']  != undefined && data['id']  != {} && data['id'].trim() != ''){
                             $('#sync-button').text('同步完成')
                             setTimeout(() => {
