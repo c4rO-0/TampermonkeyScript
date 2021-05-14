@@ -447,9 +447,22 @@
     function plotAssetDetail(ctx, data) {
 
         let chartData = dataToChartData(data)
-        // console.log('c4r zhihu level chartData :', chartData)
-        // console.log(Math.max(chartData['y1Array']), Math.max(chartData['y2Array']))
+        /**
+         * data is stored in 3 arrays with same length:
+         * looks like:
+         * chartData['xArray'] : [ d1, d2, d3, ...]
+         * chartData['y1Array']: [ y1, y2, y3, ...]
+         * chartData['y2Array']: [ z1, z2, z3, ...]
+         * ----
+         * x axis is time, which type is Date() i.e. d1 = new Date()
+         * y1 is BTC amount , type is float : i.e. y1 = 0.11
+         * y2 is RMB amount , type is float : i.e. z1 = 1000.
+         */
 
+        /**
+         * The following code is for drawing figure using chart.js
+         * The figure is inserted into the element 'ctx'
+         */
         var myChart = new Chart(ctx, {
             type: 'line',
             data: {
