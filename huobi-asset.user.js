@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         huobi-子账户历史资产
 // @namespace    http://tampermonkey.net/
-// @version      0.3.0
+// @version      0.3.1
 // @license      MPL-2.0
 // @description  记录并绘制子账户历史资产
 // @author       C4r
@@ -33,13 +33,83 @@
 .flex-container .row {\
     width: 100%;\
     display: flex;\
+    flex: 0 1 100%;\
 }\
 .flex-container .column {\
     width: 50%;\
 }');
     $("head").append("<style>" + GM_getResourceText("w3CSS") + "</style>");
 
+
+    GM_addStyle(' \
+    .wrapper { \
+        margin: 102px 0;\
+      }\
+      .toggle_radio{\
+        position: relative;\
+        background: #497dd0;\
+        margin: 4px auto;\
+        overflow: hidden;\
+        padding: 0 !important;\
+        -webkit-border-radius: 50px;\
+        -moz-border-radius: 50px;\
+        border-radius: 50px;\
+        position: relative;\
+        height: 26px;\
+        width: 110px;\
+      }\
+      .toggle_radio > * {\
+        float: left;\
+      }\
+      .toggle_radio input[type=radio]{\
+        display: none;\
+      }\
+      .toggle_radio label{\
+        font: 90%/1.618 "Source Sans Pro";\
+        color: rgba(255,255,255,.9);\
+        z-index: 0;\
+        display: block;\
+        width: 30px;\
+        height: 20px;\
+        margin: 3px 3px;\
+        -webkit-border-radius: 50px;\
+        -moz-border-radius: 50px;\
+        border-radius: 50px;\
+        cursor: pointer;\
+        z-index: 1;\
+        /*background: rgba(0,0,0,.1);*/\
+        text-align: center;\
+      }\
+      .toggle_option_slider{\
+        width: 30px;\
+        height: 20px;\
+        position: absolute;\
+        top: 3px;\
+        -webkit-border-radius: 15px;\
+        -moz-border-radius: 15px;\
+        border-radius: 15px;\
+        -webkit-transition: all .4s ease;\
+        -moz-transition: all .4s ease;\
+        -o-transition: all .4s ease;\
+        -ms-transition: all .4s ease;\
+        transition: all .4s ease;\
+      }\
+      #valueAverage:checked ~ .toggle_option_slider{\
+        background: rgba(255,255,255,.3);\
+        left: 3px;\
+      }\
+      #valueMax:checked ~ .toggle_option_slider{\
+        background: rgba(255,255,255,.3);\
+        left: 38px;\
+      }\
+      #valueMin:checked ~ .toggle_option_slider{\
+        background: rgba(255,255,255,.3);\
+        left: 75px;\
+    ');
+
+
     let storageName = 'C4rHuobiSubAsset'
+    let valueToggle = 0
 
     function httpGetAsync(theUrl, callback) {
         var xmlHttp = new XMLHttpRequest();
@@ -70,9 +140,9 @@
 
     function dataToChartData(data) {
         
-        let isAverage = false
-        let isMax = true
-        let isMin = false
+        let isAverage = (valueToggle == 0 ? true : false)
+        let isMax = (valueToggle == 1 ? true : false)
+        let isMin = (valueToggle == -1 ? true : false)
 
         let timeSort = Object.keys(data).sort()
 
@@ -98,8 +168,14 @@
                     y2Array.push((data[time]['convAsset']))
 
                     days = 0
-                    y1 = 0.
-                    y2 = 0.
+                    if(isMin){
+                        y1 = 1.E6
+                        y2 = 1.E6
+                    }else{
+                        y1 = 0.
+                        y2 = 0.
+                    }
+
 
                     index = index + 1
                 }else{
@@ -129,8 +205,13 @@
                         y2Array.push((data[time]['convAsset']))
                         
                         days = 0
-                        y1 = 0.
-                        y2 = 0.
+                        if(isMin){
+                            y1 = 1.E6
+                            y2 = 1.E6
+                        }else{
+                            y1 = 0.
+                            y2 = 0.
+                        }
 
                         index = index + 1
 
@@ -164,8 +245,13 @@
 
 
                     days = 0
-                    y1 = 0.
-                    y2 = 0.
+                    if(isMin){
+                        y1 = 1.E6
+                        y2 = 1.E6
+                    }else{
+                        y1 = 0.
+                        y2 = 0.
+                    }
 
                     index = index + 1
                 }else{
@@ -209,8 +295,13 @@
                         }
                         
                         days = 0
-                        y1 = 0.
-                        y2 = 0.
+                        if(isMin){
+                            y1 = 1.E6
+                            y2 = 1.E6
+                        }else{
+                            y1 = 0.
+                            y2 = 0.
+                        }
 
                         index = index + 1
 
@@ -596,15 +687,33 @@
                         <div class="flex-container" id="sync">\
                             <label class="full-row" for="key"><a href="https://jsonbin.io/api-keys" target="_blank">JSONBIN.io bin id:</a></label>\
                             <textarea class="full-row" type="text" id="sync-id" name="key"></textarea>\
-                            <div class="full-row">\
-                            <button type="button" class="w3-btn w3-white w3-border w3-border-green w3-round-xlarge" id="sync-button">\
-                                同步\
-                            </button>\
-                        </div>\
+                            <div class="flex-container">\
+                                <div class="row" style="center;">\
+                                    <div class="column" style="width:50%">\
+                                        <button type="button" class="w3-btn w3-white w3-border w3-border-green w3-round-xlarge" style="padding: 16px;font-size: 10px;" id="sync-button">\
+                                            同步\
+                                        </button>\
+                                    </div>\
+                                    <div class="column" style="width:50%;">\
+                                        <div class="" valueToggle>\
+                                            <div class="Popover toggle_radio">\
+                                                <input type="radio" class="toggle_option" id="valueAverage" name="toggle_option" '+ (valueToggle == 0 ? 'checked' : '') + '>\
+                                                <input type="radio" class="toggle_option" id="valueMax" name="toggle_option" '+ (valueToggle == 1 ? 'checked' : '') + '>\
+                                                <input type="radio" class="toggle_option" id="valueMin" name="toggle_option" '+ (valueToggle == -1 ? 'checked' : '') + '>\
+                                                <label for="valueAverage" title="average" ><p>ave</p></label>\
+                                                <label for="valueMax" title="max" ><p>🗖</p></label>\
+                                                <label for="valueMin" title="min"><p>🗕</p></label>\
+                                                <div class="toggle_option_slider"></div>\
+                                            </div>\
+                                        </div>\
+                                    </div>\
+                                </div>\
+                            </div>\
                         </div>\
                     </div>\
                 </div>\
             </div>').insertAfter('.subaccount-assets')
+
 
             if( data['id'] && data['id']  != undefined && data['id']  != {} && data['id'].trim() != ''){
                 $('#sync-id').val(data['id'])
@@ -673,10 +782,40 @@
     }
 
 
+    $(document).on('click', '[valueToggle]', () => {
+
+        let valueToggleLocal = 0
+        if ($('#valueAverage').prop('checked')) {
+
+            valueToggleLocal = 0
+            
+        } else if ($('#valueMax').prop('checked')) {
+
+            valueToggleLocal = 1
+
+        } else {
+
+            valueToggleLocal = -1
+
+        }
+
+        if(valueToggleLocal != valueToggle){
+            localStorage.setItem('huobi-asset-toggle', valueToggleLocal)
+            setTimeout(() => {
+                location.reload()
+            }, 500);
+            
+        }
+    })
+
+
     // ===============================================
     // if (isSubAssetPage()) {
     // showAsset()
     $(document).ready(() => {
+
+        // console.log(localStorage.getItem('huobi-asset-toggle'))
+        valueToggle = localStorage.getItem('huobi-asset-toggle') || 0
 
         if(isMonkeySetting()){
             insertMonkeyMenu()
