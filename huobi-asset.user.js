@@ -12,7 +12,9 @@
 // @grant        GM_getResourceURL
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.5.0/dist/jquery.min.js
 // @require      https://cdn.jsdelivr.net/npm/moment@2.24.0/min/moment.min.js
-// @require      https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js
+// // @require      https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js
+// // @require      https://cdn.jsdelivr.net/npm/echarts@5.1.1/dist/echarts.min.js
+// @require      https://cdn.jsdelivr.net/npm/echarts-nightly@5.1.2-dev.20210512/dist/echarts.min.js
 // // @resource     w3CSS https://www.w3schools.com/w3css/4/w3.css
 // @resource     w3CSS https://7npmedia.w3cschool.cn/w3.css
 // ==/UserScript==
@@ -529,6 +531,135 @@
     }
 
 
+    // /**
+    //  * 画图 chartjs v2.x
+    //  * @param {*} ctx element in Page
+    //  * @param {*} data data 
+    //  * @returns myChart
+    //  */
+    // function plotAssetDetail(ctx, data) {
+
+    //     let chartData = dataToChartData(data)
+    //     /**
+    //      * data is stored in 3 arrays with same length:
+    //      * looks like:
+    //      * chartData['xArray'] : [ d1, d2, d3, ...]
+    //      * chartData['y1Array']: [ y1, y2, y3, ...]
+    //      * chartData['y2Array']: [ z1, z2, z3, ...]
+    //      * ----
+    //      * x axis is time, which type is Date() i.e. d1 = new Date()
+    //      * y1 is BTC amount , type is float : i.e. y1 = 0.11
+    //      * y2 is RMB amount , type is float : i.e. z1 = 1000.
+    //      */
+
+    //     /**
+    //      * The following code is for drawing figure using chart.js
+    //      * The figure is inserted into the element 'ctx'
+    //      */
+    //     var myChart = new Chart(ctx, {
+    //         type: 'line',
+    //         data: {
+    //           labels: chartData['xArray'],
+    //           datasets: [{
+    //             label: 'BTC',
+    //             yAxisID: 'A',
+    //             data: chartData['y1Array'],
+    //             backgroundColor: 'rgba(123, 83, 252, 0.8)',
+    //             borderColor: 'rgba(33, 232, 234, 1)',
+    //             borderWidth: 1,
+    //             fill: false,
+    //             showLine: true,
+    //           }, {
+    //             label: 'CNY',
+    //             yAxisID: 'B',
+    //             data: chartData['y2Array'],
+    //             backgroundColor: 'red',
+    //             borderColor: 'red',
+    //             borderWidth: 1,
+    //             fill: false,
+    //             showLine: true
+    //           }]
+    //         },
+    //         options: {
+    //             responsive:true,
+    //             maintainAspectRatio: false,
+    //             title: {
+    //                 display: false,
+    //                 text: '子账户资产',
+    //             },
+    //             legend: {
+    //                 display: false
+    //             },
+    //             scales: {
+    //                 xAxes: [{
+    //                     type: 'time',
+    //                     time: {
+    //                         unit: 'day',
+    //                         displayFormats: {
+    //                             week: 'YY.M.D'
+    //                         }
+    //                     }
+    //                 }],
+    //                 yAxes: [{
+    //                     id: 'A',
+    //                     type: 'linear',
+    //                     position: 'left',
+    //                     ticks: {
+    //                         beginAtZero: true
+    //                         },
+    //                     scaleLabel: {
+    //                         display: true,
+    //                         labelString : 'BTC',
+    //                         fontColor: 'blue'
+    //                     },
+    //                     ticks: {
+    //                         suggestedMax: Math.max(...chartData['y1Array'])*1.2,
+    //                         suggestedMin: Math.min(...chartData['y1Array'])*0.9,
+    //                         fontColor: 'blue',
+    //                         autoSkip: true
+    //                     }
+    //                 },{
+    //                     id: 'B',
+    //                     type: 'linear',
+    //                     position: 'right',
+    //                     ticks: {
+    //                         beginAtZero: true
+    //                         },
+    //                     scaleLabel: {
+    //                         display: true,
+    //                         labelString : 'CYN',
+    //                         fontColor: 'red'
+    //                     },
+    //                     ticks: {
+    //                         suggestedMax: Math.max(...chartData['y2Array'])*1.1,
+    //                         suggestedMin: Math.min(...chartData['y2Array'])*0.9,
+    //                         fontColor: 'red',
+    //                         autoSkip: true
+    //                     },
+    //                     gridLines: {
+    //                         drawOnChartArea: false,
+    //                       },
+    //                 }]
+    //             }
+    //         }
+    //     });
+
+    //     return myChart
+    // }
+
+    function getEChatType(dateArray, valueArray){
+
+        let stampArray = []
+
+        for (let index = 0; index < dateArray.length; index++) {
+            let now = dateArray[index]
+            stampArray.push([ [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/'), valueArray[index]]);
+            
+        }
+
+        return stampArray
+
+    }
     /**
      * 画图
      * @param {*} ctx element in Page
@@ -554,96 +685,118 @@
          * The following code is for drawing figure using chart.js
          * The figure is inserted into the element 'ctx'
          */
-        var myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-              labels: chartData['xArray'],
-              datasets: [{
-                label: 'BTC',
-                yAxisID: 'A',
-                data: chartData['y1Array'],
-                backgroundColor: 'rgba(123, 83, 252, 0.8)',
-                borderColor: 'rgba(33, 232, 234, 1)',
-                borderWidth: 1,
-                fill: false,
-                showLine: true,
-              }, {
-                label: 'CNY',
-                yAxisID: 'B',
-                data: chartData['y2Array'],
-                backgroundColor: 'red',
-                borderColor: 'red',
-                borderWidth: 1,
-                fill: false,
-                showLine: true
-              }]
-            },
-            options: {
-                responsive:true,
-                maintainAspectRatio: false,
-                title: {
-                    display: false,
-                    text: '子账户资产',
+        // import * as echarts from 'echarts';
+        $(ctx).height($(ctx).parent().height()+'px')
+        $(ctx).width($(ctx).parent().width()+'px')
+        $(ctx).attr('height', $(ctx).parent().height()+'px')
+        $(ctx).attr('width', $(ctx).parent().width()+'px')
+        
+        var myChart = echarts.init(ctx);
+        var option;
+
+        var colors = ['#5470C6', '#EE6666'];
+        
+        option = {
+            color: colors,
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
                 },
-                legend: {
-                    display: false
-                },
-                scales: {
-                    xAxes: [{
-                        type: 'time',
-                        time: {
-                            unit: 'day',
-                            displayFormats: {
-                                week: 'YY.M.D'
-                            }
-                        }
-                    }],
-                    yAxes: [{
-                        id: 'A',
-                        type: 'linear',
-                        position: 'left',
-                        ticks: {
-                            beginAtZero: true
-                            },
-                        scaleLabel: {
-                            display: true,
-                            labelString : 'BTC',
-                            fontColor: 'blue'
-                        },
-                        ticks: {
-                            suggestedMax: Math.max(...chartData['y1Array'])*1.2,
-                            suggestedMin: Math.min(...chartData['y1Array'])*0.9,
-                            fontColor: 'blue',
-                            autoSkip: true
-                        }
-                    },{
-                        id: 'B',
-                        type: 'linear',
-                        position: 'right',
-                        ticks: {
-                            beginAtZero: true
-                            },
-                        scaleLabel: {
-                            display: true,
-                            labelString : 'CYN',
-                            fontColor: 'red'
-                        },
-                        ticks: {
-                            suggestedMax: Math.max(...chartData['y2Array'])*1.1,
-                            suggestedMin: Math.min(...chartData['y2Array'])*0.9,
-                            fontColor: 'red',
-                            autoSkip: true
-                        },
-                        gridLines: {
-                            drawOnChartArea: false,
-                          },
-                    }]
+                position: function (pt) {
+                    return [pt[0], '10%'];
                 }
-            }
-        });
+            },
+            grid: {
+                right: '20%'
+            },
+            toolbox: {
+                feature: {
+                    dataZoom: {
+                        yAxisIndex: 'none'
+                    },
+                    // dataView: {show: true, readOnly: false},
+                    restore: {show: true},
+                    saveAsImage: {show: true}
+                }
+            },
+            legend: {
+                data: ['蒸发量', '平均温度']
+            },
+            xAxis: [{
+                type: 'time',
+                boundaryGap: false,
+                axisLabel: {
+                    formatter: (function(value){
+                        return moment(value).format('YY.MM.DD');
+                    })
+                }
+            }],
+            dataZoom: [{
+                type: 'inside',
+                start: 0,
+                end: 100
+            }, {
+                start: 0,
+                end: 100
+            }],
+            yAxis: [
+                {
+                    type: 'value',
+                    name: 'BTC',
+                    min: Math.min(...chartData['y1Array'])*0.9,
+                    max: Math.max(...chartData['y1Array'])*1.2,
+                    position: 'let',
+                    axisLine: {
+                        show: true,
+                        lineStyle: {
+                            color: colors[0]
+                        }
+                    },
+                    axisLabel: {
+                        formatter: '{value} '
+                    },
+                    boundaryGap: [0, '100%']
+                },
+                {
+                    type: 'value',
+                    name: 'CNY',
+                    min: Math.min(...chartData['y2Array'])*0.7,
+                    max: Math.max(...chartData['y2Array'])*1.1,
+                    position: 'right',
+                    axisLine: {
+                        show: true,
+                        lineStyle: {
+                            color: colors[1]
+                        }
+                    },
+                    axisLabel: {
+                        formatter: '{value} '
+                    },
+                    boundaryGap: [0, '100%']
+                }
+            ],
+            series: [
+                {
+                    name: 'BTC',
+                    type: 'line',
+                    yAxisIndex: 0,
+                    data: getEChatType(chartData['xArray'], chartData['y1Array'])
+                },
+                {
+                    name: 'CNY',
+                    type: 'line',
+                    yAxisIndex: 1,
+                    data: getEChatType(chartData['xArray'], chartData['y2Array'])
+                }
+            ]
+        };
+        
+        option && myChart.setOption(option);
 
         return myChart
     }
+
 
 
     function isAssetDetailShown() {
@@ -682,7 +835,7 @@
             $('\
             <div class="flex-container" >\
                 <div class="row">\
-                    <div class="column" style="width:80%"><canvas id="assetDetailChart"></canvas></div>\
+                    <div class="column" style="width:80%"><canvas id="assetDetailChart" ></canvas></div>\
                     <div class="column" style="width:20%">\
                         <div class="flex-container" id="sync">\
                             <label class="full-row" for="key"><a href="https://jsonbin.io/api-keys" target="_blank">JSONBIN.io bin id:</a></label>\
@@ -720,6 +873,7 @@
             }
 
             let ctx = document.getElementById("assetDetailChart");
+            ctx.style.width='800px';
     
             plotAssetDetail(ctx, data['data'])
         })
@@ -741,7 +895,7 @@
                 }
     
                 let ctx = document.getElementById("assetDetailChart");
-        
+                ctx.style.width='800px';
                 plotAssetDetail(ctx, data['data'])
 
                 $('sync-button').text('同步')
